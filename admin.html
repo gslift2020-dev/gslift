@@ -23,7 +23,6 @@
     <div class="admin-card">
         <h2>🛠️ 관리자 시스템</h2>
         
-        <!-- 1. 로그인 폼 -->
         <div id="loginSection">
             <div class="form-group">
                 <label>관리자 비밀번호</label>
@@ -32,19 +31,17 @@
             <button class="btn" onclick="login()">로그인</button>
         </div>
 
-        <!-- 2. 대시보드 (업로드 폼) -->
         <div id="dashboard">
-            <p style="text-align: center; color: green; font-weight: bold; margin-bottom: 20px;">로그인 완료 (연속 업로드 가능)</p>
+            <p style="text-align: center; color: green; font-weight: bold; margin-bottom: 20px;">인증 완료 (사진 연속 업로드 가능)</p>
             <div class="form-group">
                 <label>설치 현장 (예: 김포 지역 물류센터)</label>
                 <input type="text" id="installTitle" required>
             </div>
             <div class="form-group">
-                <label>리프트 종류</label>
+                <label>리프트 카테고리</label>
                 <select id="liftType">
-                    <option value="산업용 화물 리프트">산업용 화물 리프트</option>
+                    <option value="산업용 리프트">산업용 리프트</option>
                     <option value="테이블 리프트">테이블 리프트</option>
-                    <option value="기타 리프트">기타 리프트</option>
                 </select>
             </div>
             <div class="form-group">
@@ -52,22 +49,21 @@
                 <input type="file" id="imageInput" accept="image/*">
                 <div class="check-group">
                     <input type="checkbox" id="useWatermark" checked>
-                    <label for="useWatermark">자동 워터마크 적용 (중앙 투명)</label>
+                    <label for="useWatermark">자동 워터마크 적용 (정중앙 15% 투명도)</label>
                 </div>
             </div>
             
             <button class="btn" id="uploadBtn" onclick="processAndUpload()">사진 업로드 및 저장</button>
-            
-            <!-- 보이지 않는 Canvas (리사이징 및 워터마크 합성용) -->
             <canvas id="canvas" style="display:none;"></canvas>
         </div>
     </div>
 
     <script>
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbybx4bybBP8kR4dnpA__hzl-az_9lyEOE46hU-hcalloq7XNT9B6vNfduZF0_o-Zna1/exec";
-        const LOGO_URL = "여기에_대표님이_보유하신_투명로고_URL입력"; // 예: 깃허브에 올린 logo.png 주소
+        const GAS_URL = "여기에_배포된_웹앱_URL_붙여넣기";
+        
+        // 2. 워터마크용 투명 로고 URL 입력 (헤더 로고와 다름)
+        const WATERMARK_LOGO_URL = "여기에_워터마크용_투명로고_URL입력"; 
 
-        // 페이지 로드 시 세션 스토리지 체크
         window.onload = () => {
             if (sessionStorage.getItem('geosan_admin_token') === 'auth_ok') {
                 document.getElementById('loginSection').style.display = 'none';
@@ -75,7 +71,6 @@
             }
         };
 
-        // 로그인 처리
         async function login() {
             const pwd = document.getElementById('adminPwd').value;
             const res = await fetch(GAS_URL, {
@@ -93,7 +88,6 @@
             }
         }
 
-        // 이미지 리사이징, 워터마크 합성 후 업로드
         async function processAndUpload() {
             const file = document.getElementById('imageInput').files[0];
             const title = document.getElementById('installTitle').value;
@@ -103,7 +97,7 @@
             if (!file || !title) return alert("현장명과 사진을 모두 입력해주세요.");
             
             const btn = document.getElementById('uploadBtn');
-            btn.innerText = "처리 중... 잠시만 기다려주세요";
+            btn.innerText = "사진 최적화 및 업로드 중...";
             btn.disabled = true;
 
             const reader = new FileReader();
@@ -113,7 +107,6 @@
                     const canvas = document.getElementById('canvas');
                     const ctx = canvas.getContext('2d');
 
-                    // 1. 최대 가로 해상도를 1200px로 제한 (리사이징)
                     const MAX_WIDTH = 1200;
                     let width = img.width;
                     let height = img.height;
@@ -127,27 +120,25 @@
                     canvas.height = height;
                     ctx.drawImage(img, 0, 0, width, height);
 
-                    // 2. 워터마크 합성 로직 (체크되었을 경우)
-                    if (useWatermark && LOGO_URL) {
+                    // 워터마크 중앙 배치 (투명도 15% 적용)
+                    if (useWatermark && WATERMARK_LOGO_URL) {
                         const logoImg = new Image();
-                        logoImg.crossOrigin = "Anonymous"; // CORS 우회용
+                        logoImg.crossOrigin = "Anonymous"; 
                         logoImg.onload = async function() {
-                            // 로고 크기를 이미지 너비의 30%로 설정
-                            const logoWidth = width * 0.3;
+                            const logoWidth = width * 0.35; // 가로폭의 35% 크기
                             const logoHeight = (logoImg.height / logoImg.width) * logoWidth;
                             
-                            // 중앙 배치 좌표
+                            // 정확한 정중앙 좌표 계산
                             const x = (width - logoWidth) / 2;
                             const y = (height - logoHeight) / 2;
                             
-                            // 투명도 40% 설정
-                            ctx.globalAlpha = 0.4;
+                            ctx.globalAlpha = 0.15; // ★ 투명도 15% (사진 본질 훼손 방지)
                             ctx.drawImage(logoImg, x, y, logoWidth, logoHeight);
-                            ctx.globalAlpha = 1.0; // 투명도 원복
+                            ctx.globalAlpha = 1.0; 
 
                             await sendToServer(canvas.toDataURL("image/jpeg", 0.8), file.name, title, liftType, btn);
                         };
-                        logoImg.src = LOGO_URL;
+                        logoImg.src = WATERMARK_LOGO_URL;
                     } else {
                         sendToServer(canvas.toDataURL("image/jpeg", 0.8), file.name, title, liftType, btn);
                     }
@@ -157,7 +148,6 @@
             reader.readAsDataURL(file);
         }
 
-        // GS 서버로 전송
         async function sendToServer(base64Data, fileName, title, liftType, btn) {
             const payload = {
                 action: 'upload',
@@ -176,15 +166,14 @@
                 const result = await response.json();
                 
                 if (result.status === 'success') {
-                    alert('업로드 완료! 구글 드라이브와 시트에 저장되었습니다.');
-                    // 연속 업로드를 위해 파일 입력창만 초기화
+                    alert('업로드 성공! 갤러리 데이터베이스에 반영되었습니다.');
                     document.getElementById('imageInput').value = '';
                     document.getElementById('installTitle').value = '';
                 } else {
                     alert('오류 발생: ' + result.message);
                 }
             } catch (err) {
-                alert('업로드 실패. 네트워크를 확인하세요.');
+                alert('네트워크 오류. 다시 시도해 주세요.');
             } finally {
                 btn.innerText = "사진 업로드 및 저장";
                 btn.disabled = false;
