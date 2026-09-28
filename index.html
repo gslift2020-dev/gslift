@@ -4,27 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>거산리프트 - 산업용 리프트 전문 기업</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="[https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap](https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap)" rel="stylesheet">
     <style>
-        :root {
-            --primary-blue: #1E3A8A; 
-            --secondary-blue: #3B82F6;
-            --text-dark: #333333;
-            --bg-light: #F9FAFB;
-        }
-        
+        :root { --primary-blue: #1E3A8A; --secondary-blue: #3B82F6; --text-dark: #333333; --bg-light: #F9FAFB; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans KR', sans-serif; }
         body { background-color: var(--bg-light); color: var(--text-dark); line-height: 1.6; }
         
         header { background-color: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
         .header-container { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; }
-        
-        /* 텍스트 대신 로고 이미지 사용을 위한 스타일 */
-        .logo-img { height: 40px; cursor: pointer; object-fit: contain; }
+        .logo-img { height: 45px; cursor: pointer; object-fit: contain; }
         
         nav.tabs { display: flex; gap: 20px; }
         .tab-btn { background: none; border: none; font-size: 16px; font-weight: 500; color: #666; cursor: pointer; padding: 10px 5px; transition: color 0.3s; }
-        .tab-btn:hover { color: var(--primary-blue); }
         .tab-btn.active { color: var(--primary-blue); border-bottom: 3px solid var(--primary-blue); font-weight: 700; }
         
         @media (max-width: 600px) {
@@ -35,37 +26,29 @@
         .tab-content { display: none; max-width: 1200px; margin: 40px auto; padding: 0 20px; animation: fadeIn 0.4s ease; }
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
         .section-title { font-size: 28px; font-weight: 700; color: var(--primary-blue); border-bottom: 2px solid var(--primary-blue); padding-bottom: 10px; margin-bottom: 30px; }
 
-        /* 갤러리 필터 버튼 */
+        /* 갤러리 영역 */
         .gallery-filters { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .filter-btn { padding: 8px 16px; border: 1px solid var(--primary-blue); background: white; color: var(--primary-blue); border-radius: 20px; cursor: pointer; font-weight: 500; transition: all 0.2s; }
-        .filter-btn.active, .filter-btn:hover { background: var(--primary-blue); color: white; }
-
+        .filter-btn { padding: 8px 16px; border: 1px solid var(--primary-blue); background: white; color: var(--primary-blue); border-radius: 20px; cursor: pointer; font-weight: 500; }
+        .filter-btn.active { background: var(--primary-blue); color: white; }
         .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
         .gallery-item { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .gallery-item img { width: 100%; height: 250px; object-fit: cover; display: block; }
         .gallery-info { padding: 15px; }
         .gallery-title { font-weight: 700; font-size: 16px; margin-bottom: 5px; }
-        .gallery-type { font-size: 14px; color: #666; }
         
-        /* 문의 폼 및 OCR 영역 */
+        /* 폼 & 드래그 앤 드롭 영역 */
         .inquiry-form { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .ocr-section { background: #eef2ff; border: 1px dashed var(--secondary-blue); padding: 20px; border-radius: 8px; margin-bottom: 25px; text-align: center; }
-        .ocr-section p { font-size: 14px; color: #555; margin-bottom: 10px; }
+        .drop-zone { border: 2px dashed var(--secondary-blue); border-radius: 8px; padding: 40px 20px; text-align: center; background: #eef2ff; cursor: pointer; margin-bottom: 25px; transition: background 0.3s; }
+        .drop-zone.dragover { background: #dbeafe; border-color: var(--primary-blue); }
+        .drop-zone p { margin: 10px 0; color: #555; }
+        .drop-zone img { max-width: 100px; max-height: 70px; border-radius: 4px; display: none; margin: 10px auto; }
         
         .form-group { margin-bottom: 20px; }
         .form-group label { display: block; margin-bottom: 8px; font-weight: 500; }
-        .form-group input, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 15px; transition: border-color 0.3s; }
-        .form-group input:focus, .form-group textarea:focus { border-color: var(--secondary-blue); outline: none; }
-        
-        .btn { padding: 12px 24px; font-size: 15px; font-weight: 700; border-radius: 4px; cursor: pointer; border: none; transition: background 0.3s; }
-        .btn-ocr { background-color: white; color: var(--primary-blue); border: 2px solid var(--primary-blue); }
-        .btn-ocr:hover { background-color: #f8fafc; }
-        .btn-submit { background-color: var(--primary-blue); color: white; width: 100%; margin-top: 10px; padding: 15px; font-size: 16px; }
-        .btn-submit:hover { background-color: var(--secondary-blue); }
-
+        .form-group input, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 15px; }
+        .btn-submit { background-color: var(--primary-blue); color: white; border: none; width: 100%; padding: 15px; font-size: 16px; font-weight: 700; border-radius: 4px; cursor: pointer; }
         footer { background-color: #333; color: white; text-align: center; padding: 30px 20px; margin-top: 60px; font-size: 14px; line-height: 1.8; }
     </style>
 </head>
@@ -73,8 +56,8 @@
 
     <header>
         <div class="header-container">
-            <!-- 1. 헤더용 로고 URL 입력란 -->
-            <img src="여기에_헤더용_로고_URL입력" alt="거산리프트 로고" class="logo-img" onclick="switchTab('overview')">
+            <!-- 깃허브 로고 원본 주소 적용 -->
+            <img src="[https://raw.githubusercontent.com/gslift2020-dev/gslift/main/%EA%B1%B0%EC%82%B0%20%EB%A1%9C%EA%B3%A0%20%EB%82%A8%EC%83%89%20%EB%88%84%EB%81%BC.png](https://raw.githubusercontent.com/gslift2020-dev/gslift/main/%EA%B1%B0%EC%82%B0%20%EB%A1%9C%EA%B3%A0%20%EB%82%A8%EC%83%89%20%EB%88%84%EB%81%BC.png)" alt="거산리프트" class="logo-img" onclick="switchTab('overview')">
             <nav class="tabs">
                 <button class="tab-btn active" onclick="switchTab('overview')" id="btn-overview">개요</button>
                 <button class="tab-btn" onclick="switchTab('gallery')" id="btn-gallery">설치사례</button>
@@ -101,8 +84,6 @@
 
     <main id="gallery" class="tab-content">
         <h2 class="section-title">설치 사례</h2>
-        
-        <!-- 갤러리 카테고리 필터 버튼 -->
         <div class="gallery-filters">
             <button class="filter-btn active" onclick="filterGallery('all')">전체 보기</button>
             <button class="filter-btn" onclick="filterGallery('산업용 리프트')">산업용 리프트</button>
@@ -110,19 +91,12 @@
         </div>
         
         <div class="gallery-grid" id="gallery-container">
-            <!-- 샘플 데이터 (향후 GS 연동 시 동적 생성) -->
+            <!-- 임시 샘플 이미지 -->
             <div class="gallery-item" data-type="산업용 리프트">
-                <img src="https://via.placeholder.com/600x400?text=Geosan+Lift" alt="설치사례">
+                <img src="[https://via.placeholder.com/600x400?text=Geosan+Lift](https://via.placeholder.com/600x400?text=Geosan+Lift)" alt="설치사례">
                 <div class="gallery-info">
-                    <div class="gallery-title">김포 지역 물류센터 (예시)</div>
-                    <div class="gallery-type">산업용 리프트</div>
-                </div>
-            </div>
-            <div class="gallery-item" data-type="테이블 리프트">
-                <img src="https://via.placeholder.com/600x400?text=Table+Lift" alt="설치사례">
-                <div class="gallery-info">
-                    <div class="gallery-title">화성 자동차 부품 공장 (예시)</div>
-                    <div class="gallery-type">테이블 리프트</div>
+                    <div class="gallery-title">김포 지역 물류센터</div>
+                    <div style="color: #666; font-size: 14px;">산업용 리프트</div>
                 </div>
             </div>
         </div>
@@ -133,52 +107,35 @@
         
         <form class="inquiry-form" id="inquiryForm" onsubmit="submitInquiry(event)">
             
-            <!-- 명함 스캔 영역 (하이브리드) -->
-            <div class="ocr-section">
-                <p>명함을 업로드하시면 아래 정보가 자동으로 입력됩니다. (직접 입력도 가능합니다)</p>
-                <input type="file" id="cardInput" accept="image/*" style="display:none;" onchange="handleCardUpload()">
-                <button type="button" class="btn btn-ocr" id="ocrBtn" onclick="document.getElementById('cardInput').click()">📸 명함 사진 업로드</button>
+            <!-- 드래그 앤 드롭 영역 -->
+            <div class="drop-zone" id="dropZone" onclick="document.getElementById('cardInput').click()">
+                <div id="dropText">
+                    <h3 style="color: var(--primary-blue);">📸 명함 자동 스캔 (AI)</h3>
+                    <p>명함 이미지를 이 영역에 <strong>끌어다 놓거나 클릭</strong>하여 업로드하세요.<br>빈칸이 자동으로 채워집니다.</p>
+                </div>
+                <img id="cardPreview" src="" alt="명함 미리보기">
+                <input type="file" id="cardInput" accept="image/*" style="display:none;" onchange="handleFileSelect(this.files[0])">
             </div>
 
-            <div class="form-group">
-                <label>고객사명 (상호)</label>
-                <input type="text" id="company" required placeholder="예: 거산물류">
-            </div>
-            <div class="form-group">
-                <label>담당자 이름</label>
-                <input type="text" id="name" required placeholder="예: 홍길동 과장">
-            </div>
-            <div class="form-group">
-                <label>연락처</label>
-                <input type="tel" id="phone" required placeholder="예: 010-1234-5678">
-            </div>
-            <div class="form-group">
-                <label>이메일</label>
-                <input type="email" id="email" required placeholder="예: ceo@geosan.com">
-            </div>
-            <div class="form-group">
-                <label>설치 지역</label>
-                <input type="text" id="region" required placeholder="예: 경기도 김포시">
-            </div>
-            <div class="form-group">
-                <label>문의 내용</label>
-                <textarea id="message" rows="5" required placeholder="리프트 용도, 설치 층수, 하중 등 필요한 정보를 자유롭게 적어주세요."></textarea>
-            </div>
-            <button type="submit" class="btn btn-submit" id="submitBtn">문의 접수하기</button>
+            <div class="form-group"><label>고객사명 (상호)</label><input type="text" id="company" required></div>
+            <div class="form-group"><label>담당자 이름</label><input type="text" id="name" required></div>
+            <div class="form-group"><label>연락처</label><input type="tel" id="phone" required></div>
+            <div class="form-group"><label>이메일</label><input type="email" id="email" required></div>
+            <div class="form-group"><label>설치 지역 (주소)</label><input type="text" id="region" required></div>
+            <div class="form-group"><label>문의 내용</label><textarea id="message" rows="5" required placeholder="리프트 용도, 설치 층수 등"></textarea></div>
+            
+            <button type="submit" class="btn-submit" id="submitBtn">문의 접수하기</button>
         </form>
     </main>
 
     <footer>
-        거산리프트 | 대표: 이재영 | 사업자등록번호: (입력필요)<br>
-        본사 및 공장: 경기도 김포시 양촌읍 삼도로48번길 37-26 (우: 10049)<br>
-        Copyright © 2026 Geosan Lift. All Rights Reserved.
+        거산리프트 | 대표: 이재영<br>본사 및 공장: 경기도 김포시 양촌읍 삼도로48번길 37-26<br>Copyright © 2026 Geosan Lift. All Rights Reserved.
     </footer>
 
     <script>
-        const GAS_URL = "여기에_배포된_웹앱_URL_붙여넣기";
-        let uploadedCardBase64 = null; // 명함 이미지 임시 저장용
+        const GAS_URL = "여기에_배포된_웹앱_URL_새로_붙여넣기";
+        let uploadedCardBase64 = null;
 
-        // 탭 전환 로직
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -187,65 +144,62 @@
             window.scrollTo(0, 0);
         }
 
-        // 갤러리 필터 로직
         function filterGallery(type) {
             document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
-
-            const items = document.querySelectorAll('.gallery-item');
-            items.forEach(item => {
-                if (type === 'all' || item.getAttribute('data-type') === type) {
-                    item.style.display = 'block';
-                } else {
-                    item.style.display = 'none';
-                }
+            document.querySelectorAll('.gallery-item').forEach(item => {
+                item.style.display = (type === 'all' || item.getAttribute('data-type') === type) ? 'block' : 'none';
             });
         }
 
-        // 명함 이미지 업로드 및 OCR 추출 로직
-        async function handleCardUpload() {
-            const file = document.getElementById('cardInput').files[0];
-            if(!file) return;
+        // 드래그 앤 드롭 이벤트 세팅
+        const dropZone = document.getElementById('dropZone');
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) handleFileSelect(e.dataTransfer.files[0]);
+        });
 
-            const btn = document.getElementById('ocrBtn');
-            btn.innerText = "명함 분석 중... 잠시만 기다려주세요";
-            btn.disabled = true;
-
+        async function handleFileSelect(file) {
+            if (!file || !file.type.startsWith('image/')) return;
+            
             const reader = new FileReader();
-            reader.onload = async function(e) {
-                uploadedCardBase64 = e.target.result; // 이미지 데이터 보관 (제출 시 첨부)
+            reader.onload = async (e) => {
+                uploadedCardBase64 = e.target.result;
+                document.getElementById('cardPreview').src = uploadedCardBase64;
+                document.getElementById('cardPreview').style.display = 'block';
+                document.getElementById('dropText').innerHTML = "<p style='color:green;'>분석 중입니다. 잠시만 기다려주세요...</p>";
                 
                 try {
-                    const response = await fetch(GAS_URL, {
+                    const res = await fetch(GAS_URL, {
                         method: 'POST',
                         body: JSON.stringify({ action: 'ocr', cardBase64: uploadedCardBase64 })
                     });
-                    const result = await response.json();
+                    const result = await res.json();
                     
-                    if(result.status === 'success' && result.text) {
-                        alert("명함 스캔이 완료되었습니다. 추출된 텍스트를 바탕으로 빈칸을 채워주세요.\n(정확도를 위해 꼭 내용을 확인해 주세요!)");
-                        // 편의상 추출된 모든 텍스트를 문의 내용 칸에 우선 뿌려주어 고객이 복붙할 수 있게 유도
-                        // (복잡한 정규식보다 실무적으로 가장 안전하고 이탈률이 적은 방식입니다)
-                        const msgBox = document.getElementById('message');
-                        msgBox.value = "[명함 인식 텍스트]\n" + result.text + "\n\n[문의 내용]\n" + msgBox.value;
+                    if (result.status === 'success' && result.data) {
+                        document.getElementById('company').value = result.data.companyName || '';
+                        document.getElementById('name').value = result.data.managerName || '';
+                        document.getElementById('phone').value = result.data.phone || '';
+                        document.getElementById('email').value = result.data.email || '';
+                        document.getElementById('region').value = result.data.address || '';
+                        document.getElementById('dropText').innerHTML = "<p style='color:blue; font-weight:bold;'>✅ 스캔 성공! 정보가 폼에 자동 입력되었습니다.</p>";
                     } else {
-                        alert('텍스트를 인식하지 못했습니다. 직접 입력해 주세요.');
+                        document.getElementById('dropText').innerHTML = "<p style='color:red;'>⚠️ 인식 실패. 텍스트를 직접 입력해주세요.</p>";
                     }
                 } catch (err) {
-                    alert('스캔 중 오류가 발생했습니다. 직접 입력해 주세요.');
-                } finally {
-                    btn.innerText = "✅ 명함 사진 적용 완료 (클릭 시 재업로드)";
-                    btn.disabled = false;
+                    document.getElementById('dropText').innerHTML = "<p style='color:red;'>서버 통신 에러가 발생했습니다.</p>";
                 }
             };
             reader.readAsDataURL(file);
         }
 
-        // 폼 제출 로직 (명함 데이터 포함)
         async function submitInquiry(event) {
             event.preventDefault();
             const btn = document.getElementById('submitBtn');
-            btn.innerText = "전송 중...";
+            btn.innerText = "데이터 전송 중...";
             btn.disabled = true;
 
             const payload = {
@@ -256,26 +210,21 @@
                 email: document.getElementById('email').value,
                 region: document.getElementById('region').value,
                 message: document.getElementById('message').value,
-                cardBase64: uploadedCardBase64 // 저장된 명함 이미지가 있으면 함께 전송
+                cardBase64: uploadedCardBase64 
             };
 
             try {
-                const response = await fetch(GAS_URL, {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                });
+                const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
                 const result = await response.json();
                 
-                if(result.status === 'success') {
-                    alert('성공적으로 문의가 접수되었습니다. 명함 및 내역이 안전하게 보관되었습니다.');
-                    document.getElementById('inquiryForm').reset();
-                    uploadedCardBase64 = null;
-                    document.getElementById('ocrBtn').innerText = "📸 명함 사진 업로드";
+                if (result.status === 'success') {
+                    alert('문의 접수 완료! 명함 및 내용이 안전하게 전송되었습니다.');
+                    location.reload(); 
                 } else {
-                    alert('전송 오류: ' + result.message);
+                    alert('오류: ' + result.message);
                 }
             } catch (error) {
-                alert('통신 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+                alert('통신 오류. 네트워크를 확인하세요.');
             } finally {
                 btn.innerText = "문의 접수하기";
                 btn.disabled = false;
