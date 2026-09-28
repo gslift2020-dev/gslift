@@ -3,40 +3,204 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>거산리프트 - 화물용 승강기 및 산업용 리프트 전문</title>
+    <title>거산리프트 - 산업용 리프트 전문 기업</title>
+    <!-- 신뢰감을 주는 Noto Sans KR 폰트 적용 -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Malgun Gothic', sans-serif; margin: 0; padding: 0; line-height: 1.6; color: #333; }
-        header { background: #1a1a1a; color: #fff; padding: 20px; text-align: center; }
-        section { padding: 40px 20px; max-width: 1000px; margin: 0 auto; }
-        .hero { background: #f4f4f4; text-align: center; padding: 60px 20px; }
-        /* 모바일과 PC에서 사진이 절대 깨지지 않고 비율을 유지하는 핵심 CSS */
-        .responsive-img { width: 100%; max-width: 600px; height: auto; border-radius: 8px; margin-top: 20px; }
-        footer { background: #1a1a1a; color: #aaa; text-align: center; padding: 20px; font-size: 14px; }
+        :root {
+            --primary-blue: #1E3A8A; /* 신뢰감 있는 딥 블루 */
+            --secondary-blue: #3B82F6;
+            --text-dark: #333333;
+            --bg-light: #F9FAFB;
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans KR', sans-serif; }
+        body { background-color: var(--bg-light); color: var(--text-dark); line-height: 1.6; }
+        
+        /* 헤더 및 네비게이션 탭 */
+        header { background-color: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
+        .header-container { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; }
+        .logo { font-size: 24px; font-weight: 700; color: var(--primary-blue); cursor: pointer; }
+        
+        nav.tabs { display: flex; gap: 20px; }
+        .tab-btn { background: none; border: none; font-size: 16px; font-weight: 500; color: #666; cursor: pointer; padding: 10px 5px; transition: color 0.3s; }
+        .tab-btn:hover { color: var(--primary-blue); }
+        .tab-btn.active { color: var(--primary-blue); border-bottom: 3px solid var(--primary-blue); font-weight: 700; }
+        
+        /* 모바일 대응 햄버거 메뉴 생략 (탭 구조상 가로 스크롤 또는 유동적 배치로 심플하게 해결) */
+        @media (max-width: 600px) {
+            .header-container { flex-direction: column; gap: 15px; }
+            nav.tabs { width: 100%; justify-content: space-around; }
+        }
+
+        /* 탭 컨텐츠 영역 */
+        .tab-content { display: none; max-width: 1200px; margin: 40px auto; padding: 0 20px; animation: fadeIn 0.4s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 공통 섹션 타이틀 */
+        .section-title { font-size: 28px; font-weight: 700; color: var(--primary-blue); border-bottom: 2px solid var(--primary-blue); padding-bottom: 10px; margin-bottom: 30px; }
+
+        /* 문의하기 폼 스타일 */
+        .inquiry-form { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; }
+        .form-group input, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 15px; transition: border-color 0.3s; }
+        .form-group input:focus, .form-group textarea:focus { border-color: var(--secondary-blue); outline: none; }
+        .submit-btn { background-color: var(--primary-blue); color: white; border: none; padding: 15px 30px; font-size: 16px; font-weight: 700; border-radius: 4px; cursor: pointer; width: 100%; transition: background 0.3s; }
+        .submit-btn:hover { background-color: var(--secondary-blue); }
+
+        /* 갤러리 그리드 (이미지 찌그러짐 완벽 방지) */
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .gallery-item { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .gallery-item img { width: 100%; height: 250px; object-fit: cover; display: block; }
+        .gallery-info { padding: 15px; }
+        .gallery-title { font-weight: 700; font-size: 16px; margin-bottom: 5px; }
+        .gallery-type { font-size: 14px; color: #666; }
+        
+        footer { background-color: #333; color: white; text-align: center; padding: 30px 20px; margin-top: 60px; font-size: 14px; }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>거산리프트 (GSLIFT)</h1>
-        <p>화물용 승강기 · 테이블 리프트 · 산업용 기계 제작 및 시공</p>
+        <div class="header-container">
+            <div class="logo" onclick="switchTab('overview')">거산리프트</div>
+            <nav class="tabs">
+                <button class="tab-btn active" onclick="switchTab('overview')" id="btn-overview">개요</button>
+                <button class="tab-btn" onclick="switchTab('gallery')" id="btn-gallery">설치사례</button>
+                <button class="tab-btn" onclick="switchTab('contact')" id="btn-contact">문의하기</button>
+            </nav>
+        </div>
     </header>
 
-    <div class="hero">
-        <h2>안전과 기술력을 바탕으로 최고의 리프트를 만듭니다</h2>
-        <p>절곡기, 샤링기, 천장크레인 등 정밀 가공을 통한 완벽한 설비 제작</p>
-    </div>
+    <!-- 1. 개요 탭 -->
+    <main id="overview" class="tab-content active">
+        <h2 class="section-title">회사 개요</h2>
+        <div style="background: white; padding: 40px; border-radius: 8px; line-height: 1.8;">
+            <h3 style="color: var(--primary-blue); margin-bottom: 15px;">안전과 신뢰를 들어 올립니다.</h3>
+            <p style="margin-bottom: 30px;">거산리프트는 다년간의 노하우를 바탕으로 산업용 리프트, 테이블 리프트 등을 전문적으로 제작/설치하는 기업입니다. 현장의 작업 환경을 최우선으로 분석하여 가장 안전하고 효율적인 맞춤형 리프트를 제공합니다.</p>
+            
+            <h4 style="margin-bottom: 10px;">주요 연혁</h4>
+            <ul style="margin-bottom: 30px; padding-left: 20px;">
+                <li>202X년: 거산리프트 설립</li>
+                <li>202X년: 맞춤형 산업용 리프트 자체 설계 및 제작 시스템 구축</li>
+            </ul>
 
-    <section>
-        <h2>주요 시공 사례</h2>
-        <p>현장 시공 사진이나 AutoCAD 제작 도면을 이 곳에 등록하여 모바일과 PC에서 최적화되게 확인하실 수 있습니다.</p>
-        <!-- 샘플 이미지 영역 (나중에 실제 리프트 사진 파일명으로 교체) -->
-        <img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800" alt="거산리프트 시공 예시" class="responsive-img">
-    </section>
+            <h4 style="margin-bottom: 10px;">공장 위치</h4>
+            <p>경기도 김포시 (상세 주소 입력 공간)</p>
+        </div>
+    </main>
+
+    <!-- 2. 설치사례 탭 -->
+    <main id="gallery" class="tab-content">
+        <h2 class="section-title">설치 사례</h2>
+        <p style="margin-bottom: 20px; color: #666;">거산리프트의 다양한 현장 맞춤형 설치 사례를 확인해 보세요.</p>
+        
+        <!-- 동적 갤러리 그리드 -->
+        <div class="gallery-grid" id="gallery-container">
+            <!-- 샘플 데이터 (추후 GS에서 불러오기 연동 예정) -->
+            <div class="gallery-item">
+                <img src="https://via.placeholder.com/600x400?text=Geosan+Lift" alt="설치사례">
+                <div class="gallery-info">
+                    <div class="gallery-title">김포 지역 물류센터 (예시)</div>
+                    <div class="gallery-type">화물용 리프트 (2톤)</div>
+                </div>
+            </div>
+            <!-- 추가 데이터는 이 영역에 렌더링 됩니다 -->
+        </div>
+    </main>
+
+    <!-- 3. 문의하기 탭 -->
+    <main id="contact" class="tab-content">
+        <h2 class="section-title">문의하기</h2>
+        <p style="margin-bottom: 20px; color: #666;">리프트 설치 및 견적에 대해 궁금한 점을 남겨주시면 신속히 답변해 드립니다.</p>
+        
+        <form class="inquiry-form" id="inquiryForm" onsubmit="submitInquiry(event)">
+            <div class="form-group">
+                <label>고객사명 (상호)</label>
+                <input type="text" id="company" required placeholder="예: 거산물류">
+            </div>
+            <div class="form-group">
+                <label>담당자 이름</label>
+                <input type="text" id="name" required placeholder="예: 홍길동 과장">
+            </div>
+            <div class="form-group">
+                <label>연락처</label>
+                <input type="tel" id="phone" required placeholder="예: 010-1234-5678">
+            </div>
+            <div class="form-group">
+                <label>이메일</label>
+                <input type="email" id="email" required placeholder="예: ceo@geosan.com">
+            </div>
+            <div class="form-group">
+                <label>설치 지역</label>
+                <input type="text" id="region" required placeholder="예: 경기도 김포시">
+            </div>
+            <div class="form-group">
+                <label>문의 내용</label>
+                <textarea id="message" rows="5" required placeholder="리프트 용도, 설치 층수, 하중 등 필요한 정보를 자유롭게 적어주세요."></textarea>
+            </div>
+            <button type="submit" class="submit-btn" id="submitBtn">문의 접수하기</button>
+        </form>
+    </main>
 
     <footer>
-        <p>주소: 경기도 김포시 학운리 | 대표전화: 거산리프트</p>
-        <p>&copy; 2026 GSLIFT. All rights reserved.</p>
+        거산리프트 | 대표: 이재영 | 위치: 경기도 김포시<br>
+        Copyright © 2026 Geosan Lift. All Rights Reserved.
     </footer>
 
+    <script>
+        // 백엔드(GS) 웹 앱 URL (반드시 본인의 배포 URL로 교체하세요!)
+        const GAS_URL = "여기에_배포된_웹앱_URL_붙여넣기";
+
+        // 탭 전환 로직 (One-Page Tab Architecture)
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            document.getElementById('btn-' + tabId).classList.add('active');
+            window.scrollTo(0, 0); // 탭 전환 시 최상단으로 스크롤 이동
+        }
+
+        // 문의 폼 제출 로직
+        async function submitInquiry(event) {
+            event.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = "전송 중...";
+            btn.disabled = true;
+
+            const payload = {
+                action: 'inquiry',
+                company: document.getElementById('company').value,
+                name: document.getElementById('name').value,
+                phone: document.getElementById('phone').value,
+                email: document.getElementById('email').value,
+                region: document.getElementById('region').value,
+                message: document.getElementById('message').value
+            };
+
+            try {
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                
+                if(result.status === 'success') {
+                    alert('성공적으로 문의가 접수되었습니다. 대표님께 알림이 전송되었습니다.');
+                    document.getElementById('inquiryForm').reset();
+                } else {
+                    alert('전송 오류: ' + result.message);
+                }
+            } catch (error) {
+                alert('통신 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+            } finally {
+                btn.innerText = "문의 접수하기";
+                btn.disabled = false;
+            }
+        }
+    </script>
 </body>
 </html>
