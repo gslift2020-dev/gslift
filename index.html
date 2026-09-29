@@ -6,58 +6,89 @@
     <title>거산리프트 - 산업용 리프트 전문 기업</title>
     <link href="[https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap](https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap)" rel="stylesheet">
     <style>
-        :root { --primary-blue: #1E3A8A; --secondary-blue: #3B82F6; --text-dark: #333333; --bg-light: #F9FAFB; }
+        :root { --primary-blue: #1E3A8A; --secondary-blue: #3B82F6; --text-dark: #222; --bg-light: #F9FAFB; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans KR', sans-serif; }
-        body { background-color: var(--bg-light); color: var(--text-dark); line-height: 1.6; }
+        body { background-color: var(--bg-light); color: var(--text-dark); line-height: 1.6; overflow-x: hidden; }
         
-        header { background-color: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
-        .header-container { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; }
-        .logo-img { height: 45px; cursor: pointer; object-fit: contain; }
+        /* 헤더 및 네비게이션 */
+        header { background-color: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: fixed; width: 100%; top: 0; z-index: 1000; transition: all 0.3s ease; }
+        .header-container { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 15px 40px; }
+        .logo-img { height: 40px; cursor: pointer; object-fit: contain; }
         
-        nav.tabs { display: flex; gap: 20px; }
-        .tab-btn { background: none; border: none; font-size: 16px; font-weight: 500; color: #666; cursor: pointer; padding: 10px 5px; transition: color 0.3s; }
-        .tab-btn.active { color: var(--primary-blue); border-bottom: 3px solid var(--primary-blue); font-weight: 700; }
+        nav.tabs { display: flex; gap: 15px; }
+        .tab-btn { background: none; border: 1px solid transparent; border-radius: 30px; font-size: 15px; font-weight: 500; color: #555; cursor: pointer; padding: 8px 20px; transition: all 0.3s; }
+        .tab-btn:hover { color: var(--primary-blue); background: #f0f4f8; }
+        .tab-btn.active { color: white; background: var(--primary-blue); font-weight: 700; box-shadow: 0 4px 10px rgba(30, 58, 138, 0.2); }
         
-        @media (max-width: 600px) {
-            .header-container { flex-direction: column; gap: 15px; }
-            nav.tabs { width: 100%; justify-content: space-around; }
-        }
-
-        .tab-content { display: none; max-width: 1200px; margin: 40px auto; padding: 0 20px; animation: fadeIn 0.4s ease; }
+        /* 탭 컨텐츠 영역 */
+        .tab-content { display: none; padding-top: 70px; }
         .tab-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .section-title { font-size: 28px; font-weight: 700; color: var(--primary-blue); border-bottom: 2px solid var(--primary-blue); padding-bottom: 10px; margin-bottom: 30px; }
+        
+        /* 애니메이션 유틸리티 */
+        .fade-in-up { opacity: 0; transform: translateY(40px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
+        .fade-in-up.visible { opacity: 1; transform: translateY(0); }
 
-        /* 갤러리 영역 */
-        .gallery-filters { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .filter-btn { padding: 8px 16px; border: 1px solid var(--primary-blue); background: white; color: var(--primary-blue); border-radius: 20px; cursor: pointer; font-weight: 500; }
-        .filter-btn.active { background: var(--primary-blue); color: white; }
-        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .gallery-item { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .gallery-item img { width: 100%; height: 250px; object-fit: cover; display: block; }
-        .gallery-info { padding: 15px; }
-        .gallery-title { font-weight: 700; font-size: 16px; margin-bottom: 5px; }
+        /* [개요 탭] 히어로 섹션 (풀스크린) */
+        .hero-section { position: relative; height: 90vh; min-height: 600px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .hero-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; }
+        .hero-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to right, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 100%); z-index: -1; }
+        .hero-content { color: white; text-align: center; max-width: 1000px; padding: 0 20px; }
+        .hero-content h1 { font-size: 3.5rem; font-weight: 700; line-height: 1.3; margin-bottom: 20px; letter-spacing: -1px; }
+        .hero-content p { font-size: 1.2rem; font-weight: 300; opacity: 0.9; }
+
+        /* 플로팅 정보 카드 */
+        .floating-cards { display: flex; justify-content: center; gap: 20px; position: absolute; bottom: 40px; width: 100%; padding: 0 40px; flex-wrap: wrap; z-index: 10; }
+        .info-card { background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 25px; width: 220px; text-align: center; color: white; box-shadow: 0 8px 32px rgba(0,0,0,0.1); transition: transform 0.3s; }
+        .info-card:hover { transform: translateY(-5px); background: rgba(255, 255, 255, 0.25); }
+        .info-card h4 { font-size: 14px; opacity: 0.8; margin-bottom: 8px; letter-spacing: 1px; }
+        .info-card p { font-size: 18px; font-weight: 700; }
+
+        /* [개요 탭] 상세 설명 레이아웃 */
+        .about-section { max-width: 1200px; margin: 100px auto; padding: 0 40px; display: flex; gap: 80px; align-items: flex-start; }
+        .about-title { flex: 1; font-size: 2.5rem; font-weight: 700; color: var(--primary-blue); line-height: 1.4; word-break: keep-all; }
+        .about-desc { flex: 1.5; font-size: 1.1rem; color: #555; line-height: 1.8; }
+
+        /* 공통 서브페이지 레이아웃 */
+        .sub-container { max-width: 1200px; margin: 60px auto; padding: 0 40px; }
+        .section-title { font-size: 2.2rem; font-weight: 700; color: var(--primary-blue); margin-bottom: 40px; text-align: center; }
+
+        /* 갤러리 */
+        .gallery-filters { display: flex; justify-content: center; gap: 10px; margin-bottom: 40px; flex-wrap: wrap; }
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 30px; }
+        .gallery-item { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.06); transition: transform 0.3s; }
+        .gallery-item:hover { transform: translateY(-10px); }
+        .gallery-item img { width: 100%; height: 260px; object-fit: cover; display: block; }
+        .gallery-info { padding: 20px; }
         
-        /* 폼 & 드래그 앤 드롭 영역 */
-        .inquiry-form { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .drop-zone { border: 2px dashed var(--secondary-blue); border-radius: 8px; padding: 40px 20px; text-align: center; background: #eef2ff; cursor: pointer; margin-bottom: 25px; transition: background 0.3s; }
-        .drop-zone.dragover { background: #dbeafe; border-color: var(--primary-blue); }
-        .drop-zone p { margin: 10px 0; color: #555; }
-        .drop-zone img { max-width: 100px; max-height: 70px; border-radius: 4px; display: none; margin: 10px auto; }
-        
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; }
-        .form-group input, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 15px; }
-        .btn-submit { background-color: var(--primary-blue); color: white; border: none; width: 100%; padding: 15px; font-size: 16px; font-weight: 700; border-radius: 4px; cursor: pointer; }
-        footer { background-color: #333; color: white; text-align: center; padding: 30px 20px; margin-top: 60px; font-size: 14px; line-height: 1.8; }
+        /* 문의 폼 */
+        .inquiry-form { background: white; padding: 50px; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.05); max-width: 800px; margin: 0 auto; }
+        .drop-zone { border: 2px dashed #cbd5e1; border-radius: 12px; padding: 40px 20px; text-align: center; background: #f8fafc; cursor: pointer; margin-bottom: 30px; transition: all 0.3s; }
+        .drop-zone:hover { border-color: var(--primary-blue); background: #eff6ff; }
+        .drop-zone img { max-width: 150px; border-radius: 8px; display: none; margin: 15px auto; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 25px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 15px; color: #444; }
+        .form-group input, .form-group textarea { width: 100%; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 15px; background: #f8fafc; transition: all 0.3s; }
+        .form-group input:focus, .form-group textarea:focus { border-color: var(--secondary-blue); background: white; outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        .btn-submit { background-color: var(--primary-blue); color: white; border: none; width: 100%; padding: 18px; font-size: 18px; font-weight: 700; border-radius: 8px; cursor: pointer; transition: background 0.3s; }
+        .btn-submit:hover { background-color: var(--secondary-blue); }
+
+        footer { background-color: #1e293b; color: #94a3b8; text-align: center; padding: 40px 20px; margin-top: 100px; font-size: 14px; line-height: 1.8; }
+
+        @media (max-width: 900px) {
+            .about-section { flex-direction: column; gap: 30px; margin: 60px auto; }
+            .hero-content h1 { font-size: 2.2rem; }
+            .floating-cards { position: static; background: var(--primary-blue); padding: 30px 20px; margin-top: -5px; }
+            .info-card { width: calc(50% - 10px); background: rgba(255,255,255,0.1); box-shadow: none; padding: 15px; }
+            .info-card p { font-size: 15px; }
+        }
     </style>
 </head>
 <body>
 
     <header>
         <div class="header-container">
-            <!-- 깃허브 로고 원본 주소 적용 -->
-            <img src="[https://raw.githubusercontent.com/gslift2020-dev/gslift/main/%EA%B1%B0%EC%82%B0%20%EB%A1%9C%EA%B3%A0%20%EB%82%A8%EC%83%89%20%EB%88%84%EB%81%BC.png](https://raw.githubusercontent.com/gslift2020-dev/gslift/main/%EA%B1%B0%EC%82%B0%20%EB%A1%9C%EA%B3%A0%20%EB%82%A8%EC%83%89%20%EB%88%84%EB%81%BC.png)" alt="거산리프트" class="logo-img" onclick="switchTab('overview')">
+            <!-- 새로운 로고 RAW 주소를 아래 src에 입력하세요 -->
+            <img src="여기에_새로운_로고_RAW주소_입력" alt="거산리프트" class="logo-img" onclick="switchTab('overview')">
             <nav class="tabs">
                 <button class="tab-btn active" onclick="switchTab('overview')" id="btn-overview">개요</button>
                 <button class="tab-btn" onclick="switchTab('gallery')" id="btn-gallery">설치사례</button>
@@ -66,99 +97,140 @@
         </div>
     </header>
 
-    <main id="overview" class="tab-content active">
-        <h2 class="section-title">회사 개요</h2>
-        <div style="background: white; padding: 40px; border-radius: 8px; line-height: 1.8;">
-            <h3 style="color: var(--primary-blue); margin-bottom: 20px; font-size: 22px;">안전과 신뢰를 들어 올립니다.</h3>
-            <p style="margin-bottom: 20px;">2002년 창립 이래, 거산리프트는 흔들림 없는 안전 기준과 혁신적인 기술력으로 산업 현장의 무게를 지탱해 왔습니다.</p>
-            <p style="margin-bottom: 40px;">엄격한 품질을 요구하는 국내 주요 산업 시설은 물론, 세계 무대에서도 거산의 기술력이 선택받고 있는 이유는 단 하나, '타협하지 않는 원칙' 때문입니다. 현장의 작업 환경을 최우선으로 분석하여, 귀사의 비즈니스에 가장 완벽하고 안전한 맞춤형 리프트 솔루션을 약속드립니다.</p>
-            
-            <h4 style="margin-bottom: 10px; font-size: 18px; color: var(--primary-blue);">공장 위치</h4>
-            <ul style="list-style: none; color: #555;">
-                <li><strong>지번:</strong> 경기도 김포시 양촌읍 학운리 1807-3</li>
-                <li><strong>도로명:</strong> 경기도 김포시 양촌읍 삼도로48번길 37-26</li>
-                <li><strong>우편번호:</strong> 10049</li>
-            </ul>
-        </div>
+    <!-- 1. 개요 탭 (반응형 초현대적 레이아웃) -->
+    <main id="overview" class="tab-content active" style="padding-top: 0;">
+        <section class="hero-section">
+            <img src="[https://raw.githubusercontent.com/gslift2020-dev/gslift/main/%EA%B1%B0%EC%82%B0%20%ED%99%88%ED%8E%98%EC%9D%B4%EC%A7%80%20%EC%B2%AB%EB%B2%88%EC%A7%B8%20%EC%82%AC%EC%A7%84.png](https://raw.githubusercontent.com/gslift2020-dev/gslift/main/%EA%B1%B0%EC%82%B0%20%ED%99%88%ED%8E%98%EC%9D%B4%EC%A7%80%20%EC%B2%AB%EB%B2%88%EC%A7%B8%20%EC%82%AC%EC%A7%84.png)" alt="거산리프트 현장" class="hero-bg">
+            <div class="hero-overlay"></div>
+            <div class="hero-content fade-in-up">
+                <h1>안전과 신뢰를 들어 올리는<br>거산리프트</h1>
+                <p>산업 현장의 무게를 지탱하는 완벽한 맞춤형 리프트 솔루션</p>
+            </div>
+            <div class="floating-cards fade-in-up">
+                <div class="info-card"><h4>CEO</h4><p>이재영</p></div>
+                <div class="info-card"><h4>설립일</h4><p>2002년</p></div>
+                <div class="info-card"><h4>이메일</h4><p>ceo@geosanlift.com</p></div>
+                <div class="info-card"><h4>공장 위치</h4><p>경기도 김포시 양촌읍</p></div>
+            </div>
+        </section>
+
+        <section class="about-section">
+            <h2 class="about-title fade-in-up">거산리프트는<br>고객의 가치를 높여<br>더불어 성장합니다.</h2>
+            <div class="about-desc fade-in-up">
+                <p style="margin-bottom: 20px;">2002년 창립 이래, 거산리프트는 흔들림 없는 안전 기준과 혁신적인 기술력으로 산업 현장의 무게를 지탱해 왔습니다. 엄격한 품질을 요구하는 주요 산업 시설에서 거산의 기술력이 선택받고 있는 이유는 단 하나, <strong>'타협하지 않는 원칙'</strong> 때문입니다.</p>
+                <p>현장의 작업 환경을 최우선으로 분석하여, 귀사의 비즈니스에 가장 완벽하고 안전한 맞춤형 리프트 솔루션을 약속드립니다. 앞으로도 안전과 성장에 기여하는 든든한 파트너가 되겠습니다.</p>
+            </div>
+        </section>
     </main>
 
+    <!-- 2. 설치사례 탭 -->
     <main id="gallery" class="tab-content">
-        <h2 class="section-title">설치 사례</h2>
-        <div class="gallery-filters">
-            <button class="filter-btn active" onclick="filterGallery('all')">전체 보기</button>
-            <button class="filter-btn" onclick="filterGallery('산업용 리프트')">산업용 리프트</button>
-            <button class="filter-btn" onclick="filterGallery('테이블 리프트')">테이블 리프트</button>
-        </div>
-        
-        <div class="gallery-grid" id="gallery-container">
-            <!-- 임시 샘플 이미지 -->
-            <div class="gallery-item" data-type="산업용 리프트">
-                <img src="[https://via.placeholder.com/600x400?text=Geosan+Lift](https://via.placeholder.com/600x400?text=Geosan+Lift)" alt="설치사례">
-                <div class="gallery-info">
-                    <div class="gallery-title">김포 지역 물류센터</div>
-                    <div style="color: #666; font-size: 14px;">산업용 리프트</div>
+        <div class="sub-container">
+            <h2 class="section-title fade-in-up">설치 사례</h2>
+            <div class="gallery-filters fade-in-up">
+                <button class="tab-btn active" onclick="filterGallery('all')">전체 보기</button>
+                <button class="tab-btn" onclick="filterGallery('산업용 리프트')">산업용 리프트</button>
+                <button class="tab-btn" onclick="filterGallery('테이블 리프트')">테이블 리프트</button>
+            </div>
+            
+            <div class="gallery-grid" id="gallery-container">
+                <div class="gallery-item fade-in-up" data-type="산업용 리프트">
+                    <img src="[https://via.placeholder.com/600x400/1E3A8A/FFFFFF?text=Geosan+Lift](https://via.placeholder.com/600x400/1E3A8A/FFFFFF?text=Geosan+Lift)" alt="설치사례">
+                    <div class="gallery-info">
+                        <h3 style="font-size: 18px; margin-bottom: 5px;">김포 지역 물류센터</h3>
+                        <p style="color: #666; font-size: 14px;">산업용 리프트</p>
+                    </div>
                 </div>
             </div>
         </div>
     </main>
 
+    <!-- 3. 문의하기 탭 -->
     <main id="contact" class="tab-content">
-        <h2 class="section-title">문의하기</h2>
-        
-        <form class="inquiry-form" id="inquiryForm" onsubmit="submitInquiry(event)">
+        <div class="sub-container">
+            <h2 class="section-title fade-in-up">문의 및 견적</h2>
             
-            <!-- 드래그 앤 드롭 영역 -->
-            <div class="drop-zone" id="dropZone" onclick="document.getElementById('cardInput').click()">
-                <div id="dropText">
-                    <h3 style="color: var(--primary-blue);">📸 명함 자동 스캔 (AI)</h3>
-                    <p>명함 이미지를 이 영역에 <strong>끌어다 놓거나 클릭</strong>하여 업로드하세요.<br>빈칸이 자동으로 채워집니다.</p>
+            <form class="inquiry-form fade-in-up" id="inquiryForm" onsubmit="submitInquiry(event)">
+                <div class="drop-zone" id="dropZone" onclick="document.getElementById('cardInput').click()">
+                    <div id="dropText">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--primary-blue)" stroke-width="2" style="margin-bottom:10px;"><rect x="3" y="4" width="18" height="16" rx="2" ry="2"></rect><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                        <h3 style="color: var(--primary-blue); font-size: 18px; margin-bottom: 5px;">명함 자동 스캔 (AI)</h3>
+                        <p style="font-size: 14px; color: #666;">명함을 이곳에 끌어다 놓거나 클릭하여 업로드하세요.</p>
+                    </div>
+                    <img id="cardPreview" src="" alt="명함 미리보기">
+                    <input type="file" id="cardInput" accept="image/*" style="display:none;" onchange="handleFileSelect(this.files[0])">
                 </div>
-                <img id="cardPreview" src="" alt="명함 미리보기">
-                <input type="file" id="cardInput" accept="image/*" style="display:none;" onchange="handleFileSelect(this.files[0])">
-            </div>
 
-            <div class="form-group"><label>고객사명 (상호)</label><input type="text" id="company" required></div>
-            <div class="form-group"><label>담당자 이름</label><input type="text" id="name" required></div>
-            <div class="form-group"><label>연락처</label><input type="tel" id="phone" required></div>
-            <div class="form-group"><label>이메일</label><input type="email" id="email" required></div>
-            <div class="form-group"><label>설치 지역 (주소)</label><input type="text" id="region" required></div>
-            <div class="form-group"><label>문의 내용</label><textarea id="message" rows="5" required placeholder="리프트 용도, 설치 층수 등"></textarea></div>
-            
-            <button type="submit" class="btn-submit" id="submitBtn">문의 접수하기</button>
-        </form>
+                <div class="form-group"><label>고객사명 (상호)</label><input type="text" id="company" required></div>
+                <div class="form-group"><label>담당자 이름</label><input type="text" id="name" required></div>
+                <div class="form-group"><label>연락처</label><input type="tel" id="phone" required></div>
+                <div class="form-group"><label>이메일</label><input type="email" id="email" required></div>
+                <div class="form-group"><label>설치 지역 (주소)</label><input type="text" id="region" required></div>
+                <div class="form-group"><label>문의 내용</label><textarea id="message" rows="5" required placeholder="리프트 용도, 설치 층수 등 상세한 정보를 적어주세요."></textarea></div>
+                
+                <button type="submit" class="btn-submit" id="submitBtn">문의 접수하기</button>
+            </form>
+        </div>
     </main>
 
     <footer>
-        거산리프트 | 대표: 이재영<br>본사 및 공장: 경기도 김포시 양촌읍 삼도로48번길 37-26<br>Copyright © 2026 Geosan Lift. All Rights Reserved.
+        거산리프트 | 대표: 이재영 | 본사 및 공장: 경기도 김포시 양촌읍 삼도로48번길 37-26<br>
+        Copyright © 2026 Geosan Lift. All Rights Reserved.
     </footer>
 
     <script>
         const GAS_URL = "여기에_배포된_웹앱_URL_새로_붙여넣기";
         let uploadedCardBase64 = null;
 
+        // 스크롤 애니메이션 옵저버 (Fade-in-up)
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if(entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        function initAnimations() {
+            document.querySelectorAll('.fade-in-up').forEach(el => {
+                el.classList.remove('visible'); 
+                observer.observe(el);
+            });
+        }
+
+        // 탭 전환
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
-            document.getElementById('btn-' + tabId).classList.add('active');
+            
+            // 헤더 로고 클릭 시에도 네비게이션 탭 상태 동기화
+            if(tabId === 'overview') document.getElementById('btn-overview').classList.add('active');
+            else document.getElementById('btn-' + tabId).classList.add('active');
+            
             window.scrollTo(0, 0);
+            initAnimations(); // 탭 전환 시 애니메이션 재시작
         }
 
+        // 갤러리 필터
         function filterGallery(type) {
-            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.gallery-filters .tab-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
             document.querySelectorAll('.gallery-item').forEach(item => {
                 item.style.display = (type === 'all' || item.getAttribute('data-type') === type) ? 'block' : 'none';
             });
         }
 
-        // 드래그 앤 드롭 이벤트 세팅
+        // 초기 애니메이션 실행
+        window.addEventListener('DOMContentLoaded', initAnimations);
+
+        // 드래그 앤 드롭 및 명함 스캔 로직
         const dropZone = document.getElementById('dropZone');
-        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
-        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.borderColor = "var(--primary-blue)"; });
+        dropZone.addEventListener('dragleave', () => dropZone.style.borderColor = "#cbd5e1");
         dropZone.addEventListener('drop', (e) => {
             e.preventDefault();
-            dropZone.classList.remove('dragover');
+            dropZone.style.borderColor = "#cbd5e1";
             if (e.dataTransfer.files.length > 0) handleFileSelect(e.dataTransfer.files[0]);
         });
 
@@ -170,7 +242,7 @@
                 uploadedCardBase64 = e.target.result;
                 document.getElementById('cardPreview').src = uploadedCardBase64;
                 document.getElementById('cardPreview').style.display = 'block';
-                document.getElementById('dropText').innerHTML = "<p style='color:green;'>분석 중입니다. 잠시만 기다려주세요...</p>";
+                document.getElementById('dropText').innerHTML = "<p style='color:var(--primary-blue); font-weight:bold; margin-top:10px;'>명함 정보 분석 중...</p>";
                 
                 try {
                     const res = await fetch(GAS_URL, {
@@ -185,12 +257,12 @@
                         document.getElementById('phone').value = result.data.phone || '';
                         document.getElementById('email').value = result.data.email || '';
                         document.getElementById('region').value = result.data.address || '';
-                        document.getElementById('dropText').innerHTML = "<p style='color:blue; font-weight:bold;'>✅ 스캔 성공! 정보가 폼에 자동 입력되었습니다.</p>";
+                        document.getElementById('dropText').innerHTML = "<p style='color:green; font-weight:bold; margin-top:10px;'>✅ 스캔 완료 (아래 폼 확인)</p>";
                     } else {
-                        document.getElementById('dropText').innerHTML = "<p style='color:red;'>⚠️ 인식 실패. 텍스트를 직접 입력해주세요.</p>";
+                        document.getElementById('dropText').innerHTML = `<p style='color:red; margin-top:10px;'>⚠️ ${result.message}</p>`;
                     }
                 } catch (err) {
-                    document.getElementById('dropText').innerHTML = "<p style='color:red;'>서버 통신 에러가 발생했습니다.</p>";
+                    document.getElementById('dropText').innerHTML = "<p style='color:red; margin-top:10px;'>서버 통신 오류가 발생했습니다.</p>";
                 }
             };
             reader.readAsDataURL(file);
@@ -199,8 +271,7 @@
         async function submitInquiry(event) {
             event.preventDefault();
             const btn = document.getElementById('submitBtn');
-            btn.innerText = "데이터 전송 중...";
-            btn.disabled = true;
+            btn.innerText = "데이터 전송 중..."; btn.disabled = true;
 
             const payload = {
                 action: 'inquiry',
@@ -218,16 +289,15 @@
                 const result = await response.json();
                 
                 if (result.status === 'success') {
-                    alert('문의 접수 완료! 명함 및 내용이 안전하게 전송되었습니다.');
+                    alert('성공적으로 문의가 접수되었습니다.');
                     location.reload(); 
                 } else {
-                    alert('오류: ' + result.message);
+                    alert('전송 오류: ' + result.message);
                 }
             } catch (error) {
-                alert('통신 오류. 네트워크를 확인하세요.');
+                alert('통신 오류가 발생했습니다.');
             } finally {
-                btn.innerText = "문의 접수하기";
-                btn.disabled = false;
+                btn.innerText = "문의 접수하기"; btn.disabled = false;
             }
         }
     </script>
