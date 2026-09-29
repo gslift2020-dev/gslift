@@ -12,8 +12,10 @@
         
         /* 헤더 및 네비게이션 */
         header { background-color: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: fixed; width: 100%; top: 0; z-index: 1000; transition: all 0.3s ease; }
-        .header-container { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 15px 40px; }
-        .logo-img { height: 40px; cursor: pointer; object-fit: contain; }
+        .header-container { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 10px 40px; }
+        
+        /* 로고 사이즈 1.5배 확대 적용 (기존 40px -> 60px) */
+        .logo-img { height: 60px; cursor: pointer; object-fit: contain; transition: height 0.3s; }
         
         nav.tabs { display: flex; gap: 15px; }
         .tab-btn { background: none; border: 1px solid transparent; border-radius: 30px; font-size: 15px; font-weight: 500; color: #555; cursor: pointer; padding: 8px 20px; transition: all 0.3s; }
@@ -21,7 +23,7 @@
         .tab-btn.active { color: white; background: var(--primary-blue); font-weight: 700; box-shadow: 0 4px 10px rgba(30, 58, 138, 0.2); }
         
         /* 탭 컨텐츠 영역 */
-        .tab-content { display: none; padding-top: 70px; }
+        .tab-content { display: none; padding-top: 80px; }
         .tab-content.active { display: block; }
         
         /* 애니메이션 유틸리티 */
@@ -48,6 +50,18 @@
         .about-title { flex: 1; font-size: 2.5rem; font-weight: 700; color: var(--primary-blue); line-height: 1.4; word-break: keep-all; }
         .about-desc { flex: 1.5; font-size: 1.1rem; color: #555; line-height: 1.8; }
 
+        /* [개요 탭] 제작 과정 3단계 솔루션 섹션 */
+        .process-section { max-width: 1200px; margin: 0 auto 120px auto; padding: 0 40px; }
+        .process-header { text-align: center; margin-bottom: 50px; }
+        .process-header h2 { font-size: 2.2rem; font-weight: 700; color: var(--primary-blue); margin-bottom: 15px; }
+        .process-header p { font-size: 1.1rem; color: #666; }
+        .process-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; }
+        .process-card { text-align: left; }
+        .process-card img { width: 100%; height: 350px; object-fit: cover; border-radius: 16px; margin-bottom: 25px; box-shadow: 0 10px 20px rgba(0,0,0,0.08); transition: transform 0.3s; }
+        .process-card:hover img { transform: translateY(-10px); }
+        .process-card h3 { font-size: 1.6rem; color: #222; margin-bottom: 12px; font-weight: 700; }
+        .process-card p { font-size: 1.05rem; color: #555; line-height: 1.6; word-break: keep-all; }
+
         /* 공통 서브페이지 레이아웃 */
         .sub-container { max-width: 1200px; margin: 60px auto; padding: 0 40px; }
         .section-title { font-size: 2.2rem; font-weight: 700; color: var(--primary-blue); margin-bottom: 40px; text-align: center; }
@@ -72,9 +86,11 @@
         .btn-submit { background-color: var(--primary-blue); color: white; border: none; width: 100%; padding: 18px; font-size: 18px; font-weight: 700; border-radius: 8px; cursor: pointer; transition: background 0.3s; }
         .btn-submit:hover { background-color: var(--secondary-blue); }
 
-        footer { background-color: #1e293b; color: #94a3b8; text-align: center; padding: 40px 20px; margin-top: 100px; font-size: 14px; line-height: 1.8; }
+        footer { background-color: #1e293b; color: #94a3b8; text-align: center; padding: 40px 20px; margin-top: 60px; font-size: 14px; line-height: 1.8; }
 
+        /* 모바일 반응형 조정 */
         @media (max-width: 900px) {
+            .logo-img { height: 45px; } /* 모바일에서는 로고 크기를 살짝 줄여 여백 확보 */
             .about-section { flex-direction: column; gap: 30px; margin: 60px auto; }
             .hero-content h1 { font-size: 2.2rem; }
             .floating-cards { position: static; background: var(--primary-blue); padding: 30px 20px; margin-top: -5px; }
@@ -87,8 +103,7 @@
 
     <header>
         <div class="header-container">
-            <!-- 새로운 로고 RAW 주소 삽입 완료 -->
-            <img src="https://github.com/gslift2020-dev/gslift/blob/main/Gemini_Generated_Image_udij4mudij4mudij.png?raw=true" alt="거산리프트" class="logo-img" onclick="switchTab('overview')">
+            <img src="https://github.com/gslift2020-dev/gslift/blob/main/Gemini_Generated_Image_udij4mudij4mudij.png?raw=true" alt="거산리프트 로고" class="logo-img" onclick="switchTab('overview')">
             <nav class="tabs">
                 <button class="tab-btn active" onclick="switchTab('overview')" id="btn-overview">개요</button>
                 <button class="tab-btn" onclick="switchTab('gallery')" id="btn-gallery">설치사례</button>
@@ -97,29 +112,60 @@
         </div>
     </header>
 
-    <!-- 1. 개요 탭 (반응형 초현대적 레이아웃) -->
+    <!-- 1. 개요 탭 -->
     <main id="overview" class="tab-content active" style="padding-top: 0;">
         <section class="hero-section">
-            <!-- 메인 배경화면 RAW 주소 삽입 완료 -->
-            <img src="https://github.com/gslift2020-dev/gslift/blob/main/%EA%B1%B0%EC%82%B0%20%ED%99%88%ED%8E%98%EC%9D%B4%EC%A7%80%20%EC%B2%AB%EB%B2%88%EC%A7%B8%20%EC%82%AC%EC%A7%84.png?raw=true" alt="거산리프트 현장" class="hero-bg">
+            <!-- 새로운 배경화면 적용 완료 -->
+            <img src="https://github.com/gslift2020-dev/gslift/blob/main/%EA%B1%B0%EC%82%B0%20%ED%99%88%ED%8E%98%EC%9D%B4%EC%A7%80%20%EC%B2%AB%20%EB%B2%88%EC%A7%B8%20%EC%82%AC%EC%A7%84%20%EC%88%98%EC%A0%95%EC%95%88.png?raw=true" alt="거산리프트 현장" class="hero-bg">
             <div class="hero-overlay"></div>
             <div class="hero-content fade-in-up">
                 <h1>안전과 신뢰를 들어 올리는<br>거산리프트</h1>
                 <p>산업 현장의 무게를 지탱하는 완벽한 맞춤형 리프트 솔루션</p>
             </div>
             <div class="floating-cards fade-in-up">
-                <div class="info-card"><h4>CEO</h4><p>이재영</p></div>
+                <!-- CEO 및 이메일 텍스트 수정 완료 -->
+                <div class="info-card"><h4>CEO</h4><p>이재현</p></div>
                 <div class="info-card"><h4>설립일</h4><p>2002년</p></div>
-                <div class="info-card"><h4>이메일</h4><p>ceo@geosanlift.com</p></div>
+                <div class="info-card"><h4>이메일</h4><p>gslift2020@naver.com</p></div>
                 <div class="info-card"><h4>공장 위치</h4><p>경기도 김포시 양촌읍</p></div>
             </div>
         </section>
 
+        <!-- 회사 소개 -->
         <section class="about-section">
             <h2 class="about-title fade-in-up">거산리프트는<br>고객의 가치를 높여<br>더불어 성장합니다.</h2>
             <div class="about-desc fade-in-up">
                 <p style="margin-bottom: 20px;">2002년 창립 이래, 거산리프트는 흔들림 없는 안전 기준과 혁신적인 기술력으로 산업 현장의 무게를 지탱해 왔습니다. 엄격한 품질을 요구하는 주요 산업 시설에서 거산의 기술력이 선택받고 있는 이유는 단 하나, <strong>'타협하지 않는 원칙'</strong> 때문입니다.</p>
                 <p>현장의 작업 환경을 최우선으로 분석하여, 귀사의 비즈니스에 가장 완벽하고 안전한 맞춤형 리프트 솔루션을 약속드립니다. 앞으로도 안전과 성장에 기여하는 든든한 파트너가 되겠습니다.</p>
+            </div>
+        </section>
+
+        <!-- 3단계 제작 솔루션 섹션 (신규 추가) -->
+        <section class="process-section fade-in-up">
+            <div class="process-header">
+                <h2>거산리프트 프로세스</h2>
+                <p>현장 분석부터 시운전까지, 완벽을 기하는 3단계 맞춤 솔루션을 제공합니다.</p>
+            </div>
+            <div class="process-grid">
+                <!-- Step 1 -->
+                <div class="process-card">
+                    <!-- AI 이미지 생성 후 아래 src의 임시 주소를 교체하시면 됩니다 -->
+                    <img src="https://via.placeholder.com/800x1000/1E3A8A/FFFFFF?text=현장+실측+이미지" alt="현장 실측">
+                    <h3>01. 정밀 현장 실측</h3>
+                    <p>전문 실무자가 직접 현장에 방문하여 설치 공간과 작업 환경을 오차 없이 정밀하게 실측하고 최적의 설계를 기획합니다.</p>
+                </div>
+                <!-- Step 2 -->
+                <div class="process-card">
+                    <img src="https://via.placeholder.com/800x1000/3B82F6/FFFFFF?text=공장+제작+이미지" alt="공장 자체 제작">
+                    <h3>02. 자체 공장 맞춤 제작</h3>
+                    <p>수년간 축적된 노하우와 기술력을 바탕으로 거산리프트 자체 공장에서 견고하고 내구성 높은 리프트를 직접 맞춤 제작합니다.</p>
+                </div>
+                <!-- Step 3 -->
+                <div class="process-card">
+                    <img src="https://via.placeholder.com/800x1000/1e293b/FFFFFF?text=시운전+및+검수+이미지" alt="안전 시운전 및 관리자 검수">
+                    <h3>03. 안전 시운전 및 검수</h3>
+                    <p>설치 후 철저한 부하 테스트와 관리자의 엄격한 최종 검수를 거쳐 가장 완벽하고 안전한 상태로 현장에 인도합니다.</p>
+                </div>
             </div>
         </section>
     </main>
@@ -175,11 +221,13 @@
     </main>
 
     <footer>
-        거산리프트 | 대표: 이재영 | 본사 및 공장: 경기도 김포시 양촌읍 삼도로48번길 37-26<br>
+        거산리프트 | 대표: 이재현 | 본사 및 공장: 경기도 김포시 양촌읍 삼도로48번길 37-26<br>
+        이메일: gslift2020@naver.com<br>
         Copyright © 2026 Geosan Lift. All Rights Reserved.
     </footer>
 
     <script>
+        // 백엔드 연결용 구글 앱스크립트 웹앱 URL (이전에 발급받은 URL을 그대로 쓰시면 됩니다)
         const GAS_URL = "여기에_배포된_웹앱_URL_새로_붙여넣기";
         let uploadedCardBase64 = null;
 
@@ -205,12 +253,11 @@
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
             
-            // 헤더 로고 클릭 시에도 네비게이션 탭 상태 동기화
             if(tabId === 'overview') document.getElementById('btn-overview').classList.add('active');
             else document.getElementById('btn-' + tabId).classList.add('active');
             
             window.scrollTo(0, 0);
-            initAnimations(); // 탭 전환 시 애니메이션 재시작
+            initAnimations(); 
         }
 
         // 갤러리 필터
@@ -222,7 +269,6 @@
             });
         }
 
-        // 초기 애니메이션 실행
         window.addEventListener('DOMContentLoaded', initAnimations);
 
         // 드래그 앤 드롭 및 명함 스캔 로직
