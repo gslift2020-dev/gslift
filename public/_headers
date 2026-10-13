@@ -1,5 +1,18 @@
-/assets/*
+# 사진·로고: 1주일 보관 (파일이 바뀌면 이름을 바꿈)
+/assets/img/*
   Cache-Control: public, max-age=604800
+
+# 디자인·동작 파일: 주소 끝 ?v= 번호로 새 버전을 구분
+/assets/*.css
+  Cache-Control: public, max-age=86400
+/assets/*.js
+  Cache-Control: public, max-age=86400
+
+# 페이지: 항상 최신 확인
+/*.html
+  Cache-Control: no-cache
+/
+  Cache-Control: no-cache
 
 /*
   X-Content-Type-Options: nosniff
