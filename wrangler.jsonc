@@ -1,0 +1,9 @@
+{
+  // 거산리프트 홈페이지 — Cloudflare 정적 사이트 설정
+  "name": "shiny-snowflake-f1df",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "directory": "./public",
+    "not_found_handling": "404-page"
+  }
+}
