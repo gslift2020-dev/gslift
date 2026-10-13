@@ -1,352 +1,388 @@
-<!DOCTYPE html>
-<html lang="ko">
+<!doctype html>
+<html lang="ko" class="no-js">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>거산리프트 - 산업용 리프트 전문 기업</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <style>
-        :root { --primary-blue: #1E3A8A; --secondary-blue: #3B82F6; --text-dark: #222; --bg-light: #F9FAFB; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans KR', sans-serif; }
-        body { background-color: var(--bg-light); color: var(--text-dark); line-height: 1.6; overflow-x: hidden; }
-        
-        /* 헤더 및 네비게이션 */
-        header { background-color: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: fixed; width: 100%; top: 0; z-index: 1000; transition: all 0.3s ease; }
-        .header-container { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 10px 40px; }
-        
-        /* 로고 사이즈 1.5배 확대 적용 (기존 40px -> 60px) */
-        .logo-img { height: 60px; cursor: pointer; object-fit: contain; transition: height 0.3s; }
-        
-        nav.tabs { display: flex; gap: 15px; }
-        .tab-btn { background: none; border: 1px solid transparent; border-radius: 30px; font-size: 15px; font-weight: 500; color: #555; cursor: pointer; padding: 8px 20px; transition: all 0.3s; }
-        .tab-btn:hover { color: var(--primary-blue); background: #f0f4f8; }
-        .tab-btn.active { color: white; background: var(--primary-blue); font-weight: 700; box-shadow: 0 4px 10px rgba(30, 58, 138, 0.2); }
-        
-        /* 탭 컨텐츠 영역 */
-        .tab-content { display: none; padding-top: 80px; }
-        .tab-content.active { display: block; }
-        
-        /* 애니메이션 유틸리티 */
-        .fade-in-up { opacity: 0; transform: translateY(40px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
-        .fade-in-up.visible { opacity: 1; transform: translateY(0); }
-
-        /* [개요 탭] 히어로 섹션 (풀스크린) */
-        .hero-section { position: relative; height: 90vh; min-height: 600px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        .hero-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; }
-        .hero-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to right, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 100%); z-index: -1; }
-        .hero-content { color: white; text-align: center; max-width: 1000px; padding: 0 20px; }
-        .hero-content h1 { font-size: 3.5rem; font-weight: 700; line-height: 1.3; margin-bottom: 20px; letter-spacing: -1px; }
-        .hero-content p { font-size: 1.2rem; font-weight: 300; opacity: 0.9; }
-
-        /* 플로팅 정보 카드 */
-        .floating-cards { display: flex; justify-content: center; gap: 20px; position: absolute; bottom: 40px; width: 100%; padding: 0 40px; flex-wrap: wrap; z-index: 10; }
-        .info-card { background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 25px; width: 220px; text-align: center; color: white; box-shadow: 0 8px 32px rgba(0,0,0,0.1); transition: transform 0.3s; }
-        .info-card:hover { transform: translateY(-5px); background: rgba(255, 255, 255, 0.25); }
-        .info-card h4 { font-size: 14px; opacity: 0.8; margin-bottom: 8px; letter-spacing: 1px; }
-        .info-card p { font-size: 18px; font-weight: 700; }
-
-        /* [개요 탭] 상세 설명 레이아웃 */
-        .about-section { max-width: 1200px; margin: 100px auto; padding: 0 40px; display: flex; gap: 80px; align-items: flex-start; }
-        .about-title { flex: 1; font-size: 2.5rem; font-weight: 700; color: var(--primary-blue); line-height: 1.4; word-break: keep-all; }
-        .about-desc { flex: 1.5; font-size: 1.1rem; color: #555; line-height: 1.8; }
-
-        /* [개요 탭] 제작 과정 3단계 솔루션 섹션 */
-        .process-section { max-width: 1200px; margin: 0 auto 120px auto; padding: 0 40px; }
-        .process-header { text-align: center; margin-bottom: 50px; }
-        .process-header h2 { font-size: 2.2rem; font-weight: 700; color: var(--primary-blue); margin-bottom: 15px; }
-        .process-header p { font-size: 1.1rem; color: #666; }
-        .process-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; }
-        .process-card { text-align: left; }
-        .process-card img { width: 100%; height: 350px; object-fit: cover; border-radius: 16px; margin-bottom: 25px; box-shadow: 0 10px 20px rgba(0,0,0,0.08); transition: transform 0.3s; }
-        .process-card:hover img { transform: translateY(-10px); }
-        .process-card h3 { font-size: 1.6rem; color: #222; margin-bottom: 12px; font-weight: 700; }
-        .process-card p { font-size: 1.05rem; color: #555; line-height: 1.6; word-break: keep-all; }
-
-        /* 공통 서브페이지 레이아웃 */
-        .sub-container { max-width: 1200px; margin: 60px auto; padding: 0 40px; }
-        .section-title { font-size: 2.2rem; font-weight: 700; color: var(--primary-blue); margin-bottom: 40px; text-align: center; }
-
-        /* 갤러리 */
-        .gallery-filters { display: flex; justify-content: center; gap: 10px; margin-bottom: 40px; flex-wrap: wrap; }
-        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 30px; }
-        .gallery-item { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.06); transition: transform 0.3s; }
-        .gallery-item:hover { transform: translateY(-10px); }
-        .gallery-item img { width: 100%; height: 260px; object-fit: cover; display: block; }
-        .gallery-info { padding: 20px; }
-        
-        /* 문의 폼 */
-        .inquiry-form { background: white; padding: 50px; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.05); max-width: 800px; margin: 0 auto; }
-        .drop-zone { border: 2px dashed #cbd5e1; border-radius: 12px; padding: 40px 20px; text-align: center; background: #f8fafc; cursor: pointer; margin-bottom: 30px; transition: all 0.3s; }
-        .drop-zone:hover { border-color: var(--primary-blue); background: #eff6ff; }
-        .drop-zone img { max-width: 150px; border-radius: 8px; display: none; margin: 15px auto; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .form-group { margin-bottom: 25px; }
-        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 15px; color: #444; }
-        .form-group input, .form-group textarea { width: 100%; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 15px; background: #f8fafc; transition: all 0.3s; }
-        .form-group input:focus, .form-group textarea:focus { border-color: var(--secondary-blue); background: white; outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
-        .btn-submit { background-color: var(--primary-blue); color: white; border: none; width: 100%; padding: 18px; font-size: 18px; font-weight: 700; border-radius: 8px; cursor: pointer; transition: background 0.3s; }
-        .btn-submit:hover { background-color: var(--secondary-blue); }
-
-        footer { background-color: #1e293b; color: #94a3b8; text-align: center; padding: 40px 20px; margin-top: 60px; font-size: 14px; line-height: 1.8; }
-
-        /* 모바일 반응형 조정 */
-        @media (max-width: 900px) {
-            .logo-img { height: 45px; } /* 모바일에서는 로고 크기를 살짝 줄여 여백 확보 */
-            .about-section { flex-direction: column; gap: 30px; margin: 60px auto; }
-            .hero-content h1 { font-size: 2.2rem; }
-            .floating-cards { position: static; background: var(--primary-blue); padding: 30px 20px; margin-top: -5px; }
-            .info-card { width: calc(50% - 10px); background: rgba(255,255,255,0.1); box-shadow: none; padding: 15px; }
-            .info-card p { font-size: 15px; }
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>거산리프트 | 화물용 리프트·테이블리프트 설계 제작 전문</title>
+<meta name="description" content="거산리프트는 화물용 리프트(F/L), 테이블리프트, 스태커, 운반기계를 직접 설계·제작·설치·A/S 하는 산업용 리프트 전문기업입니다. 김포 본사·부산 영남사업본부.">
+<meta name="keywords" content="화물용리프트, 화물리프트, 산업용리프트, 테이블리프트, 리프트제작, 리프트설치, 김포 리프트, 거산리프트">
+<meta property="og:type" content="website">
+<meta property="og:title" content="거산리프트 | 산업용 리프트 설계·제작 전문">
+<meta property="og:description" content="화물용 리프트부터 테이블리프트까지, 설계·제작·설치·A/S를 직접 책임집니다.">
+<meta property="og:image" content="assets/img/og.jpg">
+<link rel="icon" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preload" as="image" href="assets/img/s1.webp">
+<link rel="stylesheet" href="assets/style.css">
+<script>document.documentElement.classList.remove('no-js')</script>
 </head>
 <body>
 
-    <header>
-        <div class="header-container">
-            <img src="https://github.com/gslift2020-dev/gslift/blob/main/Gemini_Generated_Image_udij4mudij4mudij.png?raw=true" alt="거산리프트 로고" class="logo-img" onclick="switchTab('overview')">
-            <nav class="tabs">
-                <button class="tab-btn active" onclick="switchTab('overview')" id="btn-overview">개요</button>
-                <button class="tab-btn" onclick="switchTab('gallery')" id="btn-gallery">설치사례</button>
-                <button class="tab-btn" onclick="switchTab('contact')" id="btn-contact">문의하기</button>
-            </nav>
-        </div>
-    </header>
+<header class="header">
+<div class="wrap">
+<a href="#top" class="logo" aria-label="거산리프트 홈"><img src="assets/img/logo.webp" alt="GSLIFT 거산리프트" width="600" height="256"></a>
+<nav class="nav" id="nav" aria-label="주 메뉴">
+<a href="#about">회사소개</a><a href="#products">제품소개</a><a href="#process">제작·검사</a><a href="#cases">설치사례</a><a href="#video">동영상</a><a href="#contact">고객센터</a>
+</nav>
+<a href="#contact" class="btn btn-blue cta" style="padding:12px 22px">견적 문의</a>
+<button type="button" class="icon-btn menu-btn" id="menuBtn" aria-label="메뉴 열기" aria-expanded="false" aria-controls="nav"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</div>
+</header>
 
-    <!-- 1. 개요 탭 -->
-    <main id="overview" class="tab-content active" style="padding-top: 0;">
-        <section class="hero-section">
-            <!-- 새로운 배경화면 적용 완료 -->
-            <img src="https://github.com/gslift2020-dev/gslift/blob/main/%EA%B1%B0%EC%82%B0%20%ED%99%88%ED%8E%98%EC%9D%B4%EC%A7%80%20%EC%B2%AB%20%EB%B2%88%EC%A7%B8%20%EC%82%AC%EC%A7%84%20%EC%88%98%EC%A0%95%EC%95%88.png?raw=true" alt="거산리프트 현장" class="hero-bg">
-            <div class="hero-overlay"></div>
-            <div class="hero-content fade-in-up">
-                <h1>안전과 신뢰를 들어 올리는<br>거산리프트</h1>
-                <p>산업 현장의 무게를 지탱하는 완벽한 맞춤형 리프트 솔루션</p>
-            </div>
-            <div class="floating-cards fade-in-up">
-                <!-- CEO 및 이메일 텍스트 수정 완료 -->
-                <div class="info-card"><h4>CEO</h4><p>이재현</p></div>
-                <div class="info-card"><h4>설립일</h4><p>2002년</p></div>
-                <div class="info-card"><h4>이메일</h4><p>gslift2020@naver.com</p></div>
-                <div class="info-card"><h4>공장 위치</h4><p>경기도 김포시 양촌읍</p></div>
-            </div>
-        </section>
+<main id="top">
+<section class="hero">
+<img class="bg-emblem" src="assets/img/emblem-white.webp" alt="" aria-hidden="true" style="left:-160px;bottom:-200px;width:560px">
+<div class="wrap">
+<div class="hero-text">
+<span class="eyebrow hin" style="color:var(--sky);letter-spacing:.18em"><img src="assets/img/emblem-white.webp" alt="" aria-hidden="true" style="width:28px">INDUSTRIAL LIFT SPECIALIST</span>
+<h1 class="hin d1">현장에 꼭 맞춘 설계,<br>오래 믿고 쓰는<br>산업용 리프트</h1>
+<p class="hin d2">화물용 리프트(F/L)부터 테이블리프트까지. 설계·제작·설치·A/S를 거산리프트가 직접 책임집니다.</p>
+<div class="btns hin d3"><a href="#contact" class="btn btn-white">무료 견적 받기</a><a href="#cases" class="btn btn-ghost">설치사례 보기</a></div>
+<div class="facts hin d4"><span><strong>직접 제작</strong>자체 공장·설비</span><span><strong>맞춤 설계</strong>현장 실측 기반</span><span><strong>전국 A/S</strong>김포 · 부산</span></div>
+</div>
+<div class="slider hin d2" id="slider">
+<div class="slides">
+<img src="assets/img/s1.webp" alt="공장 내부 주황색 화물용 리프트" class="on" width="1200" height="1500">
+<img src="assets/img/s2.webp" alt="메자닌과 연결된 화물용 리프트" loading="lazy" width="1200" height="1500">
+<img src="assets/img/s3.webp" alt="실내 도크에 설치된 테이블 리프트" loading="lazy" width="1200" height="1500">
+<img src="assets/img/s4.webp" alt="건물 외벽에 설치된 투명 패널 리프트" loading="lazy" width="1200" height="1500">
+<img src="assets/img/s5.webp" alt="물류창고 노란색 화물용 리프트" loading="lazy" width="1200" height="1500">
+<div class="shade"></div>
+<div class="cap">
+<div><span class="tag" id="slTag">화물용 리프트</span><div class="ttl" id="slTitle">공장 내부 · 다층 운반</div></div>
+<div class="ctrl"><button type="button" class="prev" aria-label="이전 사진"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button><button type="button" class="next" aria-label="다음 사진"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></button></div>
+</div>
+</div>
+<div class="bars">
+<button type="button" aria-label="1번째 사진 보기" class="on"><span></span></button>
+<button type="button" aria-label="2번째 사진 보기"><span></span></button>
+<button type="button" aria-label="3번째 사진 보기"><span></span></button>
+<button type="button" aria-label="4번째 사진 보기"><span></span></button>
+<button type="button" aria-label="5번째 사진 보기"><span></span></button>
+</div>
+</div>
+</div>
+</section>
 
-        <!-- 회사 소개 -->
-        <section class="about-section">
-            <h2 class="about-title fade-in-up">거산리프트는<br>고객의 가치를 높여<br>더불어 성장합니다.</h2>
-            <div class="about-desc fade-in-up">
-                <p style="margin-bottom: 20px;">2002년 창립 이래, 거산리프트는 흔들림 없는 안전 기준과 혁신적인 기술력으로 산업 현장의 무게를 지탱해 왔습니다. 엄격한 품질을 요구하는 주요 산업 시설에서 거산의 기술력이 선택받고 있는 이유는 단 하나, <strong>'타협하지 않는 원칙'</strong> 때문입니다.</p>
-                <p>현장의 작업 환경을 최우선으로 분석하여, 귀사의 비즈니스에 가장 완벽하고 안전한 맞춤형 리프트 솔루션을 약속드립니다. 앞으로도 안전과 성장에 기여하는 든든한 파트너가 되겠습니다.</p>
-            </div>
-        </section>
+<section class="stats" aria-label="회사 지표">
+<div class="wrap" id="stats">
+<div class="stat"><b><span data-count="26">26</span><small>대</small></b><span>자체 제작 설비 보유</span></div>
+<div class="stat"><b><span data-count="14">14</span><small>종</small></b><span>절곡·가공·용접 설비</span></div>
+<div class="stat"><b><span data-count="2">2</span><small>곳</small></b><span>김포 본사 · 부산 영남사업본부</span></div>
+<div class="stat" style="border-left-color:#C6D1E4"><b>[누적 설치 수]</b><span>누적 설치 현장</span></div>
+</div>
+</section>
 
-        <!-- 3단계 제작 솔루션 섹션 (신규 추가) -->
-        <section class="process-section fade-in-up">
-            <div class="process-header">
-                <h2>거산리프트 프로세스</h2>
-                <p>현장 분석부터 시운전까지, 완벽을 기하는 3단계 맞춤 솔루션을 제공합니다.</p>
-            </div>
-            <div class="process-grid">
-                <!-- Step 1 -->
-                <div class="process-card">
-                    <!-- AI 이미지 생성 후 아래 src의 임시 주소를 교체하시면 됩니다 -->
-                    <img src="https://via.placeholder.com/800x1000/1E3A8A/FFFFFF?text=현장+실측+이미지" alt="현장 실측">
-                    <h3>01. 정밀 현장 실측</h3>
-                    <p>전문 실무자가 직접 현장에 방문하여 설치 공간과 작업 환경을 오차 없이 정밀하게 실측하고 최적의 설계를 기획합니다.</p>
-                </div>
-                <!-- Step 2 -->
-                <div class="process-card">
-                    <img src="https://via.placeholder.com/800x1000/3B82F6/FFFFFF?text=공장+제작+이미지" alt="공장 자체 제작">
-                    <h3>02. 자체 공장 맞춤 제작</h3>
-                    <p>수년간 축적된 노하우와 기술력을 바탕으로 거산리프트 자체 공장에서 견고하고 내구성 높은 리프트를 직접 맞춤 제작합니다.</p>
-                </div>
-                <!-- Step 3 -->
-                <div class="process-card">
-                    <img src="https://via.placeholder.com/800x1000/1e293b/FFFFFF?text=시운전+및+검수+이미지" alt="안전 시운전 및 관리자 검수">
-                    <h3>03. 안전 시운전 및 검수</h3>
-                    <p>설치 후 철저한 부하 테스트와 관리자의 엄격한 최종 검수를 거쳐 가장 완벽하고 안전한 상태로 현장에 인도합니다.</p>
-                </div>
-            </div>
-        </section>
-    </main>
+<section id="about" class="sec">
+<div class="wrap greet">
+<div class="logo-box rv"><img src="assets/img/logo-stack.webp" alt="GSLIFT 거산리프트 로고" loading="lazy" width="500" height="552"></div>
+<div class="txt rv">
+<span class="eyebrow">GREETING</span>
+<h2>안녕하십니까. <span>거산리프트</span> 홈페이지의<br>방문을 진심으로 환영합니다.</h2>
+<p>열정, 성실, 책임감이라는 경영이념 하에 일류제품 생산을 통한 고객만족 실현을 추구하며, 각종 산업 현장의 다양한 요구에 부응하는 최적의 제품을 설계, 제작함으로써 매년 꾸준한 성장을 지속하고 있습니다.</p>
+<p>거산 임직원 모두는 그동안의 성과에 만족하지 않고 늘 열정적인 도전정신과 창의적인 사고로 물류 시스템 구축 전문기업으로서의 면모를 부단히 강화해 나갈 것입니다.</p>
+<p>앞으로도 최고의 제품을 생산할 것임을 약속드리며 항상 최선을 다하는 기업이 되고자 노력하겠습니다.</p>
+<p style="margin-top:8px;font-weight:600">거산리프트 대표 이재현</p>
+</div>
+</div>
+</section>
 
-    <!-- 2. 설치사례 탭 -->
-    <main id="gallery" class="tab-content">
-        <div class="sub-container">
-            <h2 class="section-title fade-in-up">설치 사례</h2>
-            <div class="gallery-filters fade-in-up">
-                <button class="tab-btn active" onclick="filterGallery('all')">전체 보기</button>
-                <button class="tab-btn" onclick="filterGallery('산업용 리프트')">산업용 리프트</button>
-                <button class="tab-btn" onclick="filterGallery('테이블 리프트')">테이블 리프트</button>
-            </div>
-            
-            <div class="gallery-grid" id="gallery-container">
-                <div class="gallery-item fade-in-up" data-type="산업용 리프트">
-                    <img src="https://via.placeholder.com/600x400/1E3A8A/FFFFFF?text=Geosan+Lift" alt="설치사례">
-                    <div class="gallery-info">
-                        <h3 style="font-size: 18px; margin-bottom: 5px;">김포 지역 물류센터</h3>
-                        <p style="color: #666; font-size: 14px;">산업용 리프트</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
+<section class="sec dark">
+<img class="bg-emblem" src="assets/img/emblem-white.webp" alt="" aria-hidden="true" style="right:-120px;bottom:-120px;width:420px">
+<div class="wrap split">
+<img class="photo rv" src="assets/img/about.webp" alt="공장 내부에 설치된 주황색 화물용 리프트" loading="lazy" width="1600" height="1200">
+<div class="rv">
+<span class="eyebrow"><img src="assets/img/emblem-white.webp" alt="" aria-hidden="true">WHY GEOSAN</span>
+<h2 class="h2">설계부터 A/S까지<br>한 회사가 끝까지 책임집니다</h2>
+<div class="why-grid">
+<div><h3>맞춤 설계</h3><p>현장 실측 후 하중·높이·공간에 맞춰 제작</p></div>
+<div><h3>자체 생산 설비</h3><p>절곡·가공·용접 설비로 직접 제작</p></div>
+<div><h3>안전 우선</h3><p>안전검사 기준에 맞춘 설계와 시공</p></div>
+<div><h3>수도권·영남 A/S</h3><p>김포 본사와 부산 영남사업본부에서 대응</p></div>
+</div>
+</div>
+</div>
+</section>
 
-    <!-- 3. 문의하기 탭 -->
-    <main id="contact" class="tab-content">
-        <div class="sub-container">
-            <h2 class="section-title fade-in-up">문의 및 견적</h2>
-            
-            <form class="inquiry-form fade-in-up" id="inquiryForm" onsubmit="submitInquiry(event)">
-                <div class="drop-zone" id="dropZone" onclick="document.getElementById('cardInput').click()">
-                    <div id="dropText">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--primary-blue)" stroke-width="2" style="margin-bottom:10px;"><rect x="3" y="4" width="18" height="16" rx="2" ry="2"></rect><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                        <h3 style="color: var(--primary-blue); font-size: 18px; margin-bottom: 5px;">명함 자동 스캔 (AI)</h3>
-                        <p style="font-size: 14px; color: #666;">명함을 이곳에 끌어다 놓거나 클릭하여 업로드하세요.</p>
-                    </div>
-                    <img id="cardPreview" src="" alt="명함 미리보기">
-                    <input type="file" id="cardInput" accept="image/*" style="display:none;" onchange="handleFileSelect(this.files[0])">
-                </div>
+<section id="products" class="sec">
+<div class="wrap">
+<div class="sec-head rv"><div><span class="eyebrow">PRODUCTS</span><h2 class="h2">제품소개</h2></div><a href="#contact" style="font-weight:600">제품 상담하기 →</a></div>
+<div class="grid-cards">
+<a href="#contact" class="card rv lift">
+<div class="ph zoom"><img src="assets/img/prod_fl.webp" alt="화물용 리프트 (F/L)" loading="lazy" width="800" height="600"></div>
+<div class="body"><h3>화물용 리프트 (F/L)</h3><p>거산리프트 대표 제품. 공장·물류창고 층간 대용량 화물 운반</p></div>
+</a>
+<a href="#contact" class="card rv lift">
+<div class="ph zoom"><img src="assets/img/prod_tl.webp" alt="테이블 리프트" loading="lazy" width="800" height="600"></div>
+<div class="body"><h3>테이블 리프트</h3><p>시저 구조로 작업 높이 조절, 도크 상하차·작업대 겸용</p></div>
+</a>
+<a href="#contact" class="card rv lift">
+<div class="ph zoom"><img src="assets/img/prod_st.webp" alt="수동·자동 스태커" loading="lazy" width="800" height="600"></div>
+<div class="body"><h3>수동·자동 스태커</h3><p>창고·공장 내 팔레트 적재와 이동</p></div>
+</a>
+<a href="#contact" class="card rv lift">
+<div class="ph zoom"><img src="assets/img/prod_tr.webp" alt="운반기계" loading="lazy" width="800" height="600"></div>
+<div class="body"><h3>운반기계</h3><p>전동 대차·드럼 운반기 등 현장 맞춤 운반 장비</p></div>
+</a>
+</div>
+<div class="mini rv">
+<div class="head"><h3>맞춤 제작 운반장비</h3><span class="lead" style="font-size:15px">현장 요구에 맞춰 설계·제작한 장비들입니다.</span></div>
+<div class="grid">
+<figure><div class="zoom" style="border-radius:10px"><img src="assets/img/g1.webp" alt="전동 스태커" loading="lazy" width="480" height="480"></div><figcaption>전동 스태커</figcaption></figure>
+<figure><div class="zoom" style="border-radius:10px"><img src="assets/img/g2.webp" alt="드럼 운반기" loading="lazy" width="480" height="480"></div><figcaption>드럼 운반기</figcaption></figure>
+<figure><div class="zoom" style="border-radius:10px"><img src="assets/img/g3.webp" alt="스테인리스 리프터" loading="lazy" width="480" height="480"></div><figcaption>스테인리스 리프터</figcaption></figure>
+<figure><div class="zoom" style="border-radius:10px"><img src="assets/img/g4.webp" alt="고양정 리프터" loading="lazy" width="480" height="480"></div><figcaption>고양정 리프터</figcaption></figure>
+<figure><div class="zoom" style="border-radius:10px"><img src="assets/img/g5.webp" alt="경사 적재 운반차" loading="lazy" width="480" height="480"></div><figcaption>경사 적재 운반차</figcaption></figure>
+<figure><div class="zoom" style="border-radius:10px"><img src="assets/img/g6.webp" alt="전동 운반대차" loading="lazy" width="480" height="480"></div><figcaption>전동 운반대차</figcaption></figure>
+<figure><div class="zoom" style="border-radius:10px"><img src="assets/img/g7.webp" alt="전동 운반대차" loading="lazy" width="480" height="480"></div><figcaption>전동 운반대차</figcaption></figure>
+<figure><div class="zoom" style="border-radius:10px"><img src="assets/img/g8.webp" alt="포크형 리프터" loading="lazy" width="480" height="480"></div><figcaption>포크형 리프터</figcaption></figure>
+</div>
+</div>
+</div>
+</section>
 
-                <div class="form-group"><label>고객사명 (상호)</label><input type="text" id="company" required></div>
-                <div class="form-group"><label>담당자 이름</label><input type="text" id="name" required></div>
-                <div class="form-group"><label>연락처</label><input type="tel" id="phone" required></div>
-                <div class="form-group"><label>이메일</label><input type="email" id="email" required></div>
-                <div class="form-group"><label>설치 지역 (주소)</label><input type="text" id="region" required></div>
-                <div class="form-group"><label>문의 내용</label><textarea id="message" rows="5" required placeholder="리프트 용도, 설치 층수 등 상세한 정보를 적어주세요."></textarea></div>
-                
-                <button type="submit" class="btn-submit" id="submitBtn">문의 접수하기</button>
-            </form>
-        </div>
-    </main>
+<section id="process" class="sec soft">
+<div class="wrap">
+<div class="sec-head rv"><div><span class="eyebrow">PROCESS</span><h2 class="h2">공장에서 현장까지,<br>모든 과정을 직접 합니다</h2></div><p class="lead">외주 없이 거산리프트의 손으로 제작하고 설치합니다. 그래서 문제가 생겨도 책임 소재가 분명합니다.</p></div>
+<div class="grid-cards">
+<div class="card rv lift">
+<div class="ph zoom"><img src="assets/img/p1.webp" alt="공장에서 리프트 케이지 프레임을 제작하는 모습" loading="lazy" width="1200" height="900"><span class="step">STEP 01</span></div>
+<div class="body"><h3>설계·프레임 제작</h3><p>현장 실측 도면대로 강재를 절단·절곡해 프레임을 짭니다.</p></div>
+</div>
+<div class="card rv lift">
+<div class="ph zoom"><img src="assets/img/p2.webp" alt="리프트 프레임을 용접하는 작업자" loading="lazy" width="1200" height="900"><span class="step">STEP 02</span></div>
+<div class="body"><h3>정밀 용접</h3><p>숙련 인력이 하중을 받는 접합부를 직접 용접합니다.</p></div>
+</div>
+<div class="card rv lift">
+<div class="ph zoom"><img src="assets/img/p3.webp" alt="설치 현장에서 바닥판을 용접하는 모습" loading="lazy" width="1200" height="900"><span class="step">STEP 03</span></div>
+<div class="body"><h3>현장 설치</h3><p>현장에 맞춰 조립하고 바닥판·도어를 마감합니다.</p></div>
+</div>
+<div class="card rv lift">
+<div class="ph zoom"><img src="assets/img/p4.webp" alt="설치된 리프트를 점검하는 모습" loading="lazy" width="1200" height="900"><span class="step">STEP 04</span></div>
+<div class="body"><h3>검사·시운전 후 인도</h3><p>안전검사 12개 항목을 점검하고 시운전한 뒤 사용법과 함께 인도합니다.</p></div>
+</div>
+</div>
+</div>
+</section>
 
-    <footer>
-        거산리프트 | 대표: 이재현 | 본사 및 공장: 경기도 김포시 양촌읍 삼도로48번길 37-26<br>
-        이메일: gslift2020@naver.com<br>
-        Copyright © 2026 Geosan Lift. All Rights Reserved.
-    </footer>
+<section id="safety" class="sec dark">
+<img class="bg-emblem" src="assets/img/emblem-white.webp" alt="" aria-hidden="true" style="left:-140px;top:-140px">
+<div class="wrap" style="position:relative">
+<div class="sec-head rv"><div><span class="eyebrow"><img src="assets/img/emblem-white.webp" alt="" aria-hidden="true">SAFETY STANDARD</span><h2 class="h2">안전검사 12개 항목,<br>설계 단계부터 맞춥니다</h2></div><p class="lead">거산리프트는 산업용 리프트 안전검사의 주요 검사항목에 맞춰 설계·제작·설치합니다. 번호를 누르면 각 장치가 어디에 있고 어떤 역할을 하는지 볼 수 있습니다.</p></div>
+<div class="safety-body">
+<div class="diagram-col rv">
+<div class="diagram" role="group" aria-label="산업용 리프트 구조와 12개 검사항목 위치">
+<div class="d" style="left:8%;right:8%;bottom:0;height:9%;background:#0B3470;border-radius:6px"></div>
+<div class="d" style="left:22%;right:22%;top:3%;bottom:9%;border:3px solid #6F93D6;border-bottom:0"></div>
+<div class="d" style="left:22%;right:22%;top:3%;height:7%;background:#6F93D6"></div>
+<div class="d" style="left:22%;right:22%;top:31%;height:2px;background:#3E66AE"></div>
+<div class="d" style="left:22%;right:22%;top:55%;height:2px;background:#3E66AE"></div>
+<div class="d" style="left:22%;right:22%;top:70%;height:2px;background:#3E66AE"></div>
+<div class="d" style="left:49.5%;width:1%;top:10%;height:25%;background:#9DBAF0"></div>
+<div class="d" style="left:25%;right:25%;top:35%;height:20%;background:rgba(157,186,240,.28);border:2px solid #9DBAF0;border-radius:4px"></div>
+<div class="d" style="left:30%;right:30%;bottom:9%;height:19%;background:rgba(255,255,255,.12);border:2px solid #C5D3EE;border-bottom:0;display:flex"><div style="flex:1;border-right:2px solid #C5D3EE"></div><div style="flex:1"></div></div>
+<button type="button" class="dot on" data-i="0" style="left:27%;top:82%" aria-label="1번 화물반입구 및 방호울">1</button>
+<button type="button" class="dot" data-i="1" style="left:84%;top:88%" aria-label="2번 운반구와 승강로의 간격">2</button>
+<button type="button" class="dot" data-i="2" style="left:84%;top:76%" aria-label="3번 표시내용 부착">3</button>
+<button type="button" class="dot" data-i="3" style="left:16%;top:70%" aria-label="4번 경보장치">4</button>
+<button type="button" class="dot" data-i="4" style="left:84%;top:64%" aria-label="5번 전기장치 및 비상정지장치">5</button>
+<button type="button" class="dot" data-i="5" style="left:50%;top:66%" aria-label="6번 출입문 인터록">6</button>
+<button type="button" class="dot" data-i="6" style="left:84%;top:7%" aria-label="7번 권과방지장치">7</button>
+<button type="button" class="dot" data-i="7" style="left:16%;top:7%" aria-label="8번 과부하방지장치">8</button>
+<button type="button" class="dot" data-i="8" style="left:84%;top:45%" aria-label="9번 낙하방지장치">9</button>
+<button type="button" class="dot" data-i="9" style="left:16%;top:24%" aria-label="10번 로프(체인) 이완 감지 장치">10</button>
+<button type="button" class="dot" data-i="10" style="left:36%;top:95.5%" aria-label="11번 충격완화장치">11</button>
+<button type="button" class="dot" data-i="11" style="left:64%;top:95.5%" aria-label="12번 안전블록">12</button>
+</div>
+</div>
+<div class="std-col rv">
+<div class="std-detail" aria-live="polite">
+<span class="num" id="stdNo">1</span>
+<div><div class="t"><strong id="stdT">화물반입구 및 방호울</strong><span class="spec" id="stdS">높이 1.8m 이상</span></div><p id="stdD">승강로 둘레를 1.8m 이상의 방호울로 막아 사람이 승강로에 접근하거나 화물이 떨어지는 것을 막습니다.</p></div>
+</div>
+<div class="std-list" id="stdList">
+<button type="button" data-i="0" class="on" aria-pressed="true"><i>1</i><span>화물반입구 및 방호울</span></button>
+<button type="button" data-i="1" aria-pressed="false"><i>2</i><span>운반구와 승강로의 간격</span></button>
+<button type="button" data-i="2" aria-pressed="false"><i>3</i><span>표시내용 부착</span></button>
+<button type="button" data-i="3" aria-pressed="false"><i>4</i><span>경보장치</span></button>
+<button type="button" data-i="4" aria-pressed="false"><i>5</i><span>전기장치 및 비상정지장치</span></button>
+<button type="button" data-i="5" aria-pressed="false"><i>6</i><span>출입문 인터록</span></button>
+<button type="button" data-i="6" aria-pressed="false"><i>7</i><span>권과방지장치</span></button>
+<button type="button" data-i="7" aria-pressed="false"><i>8</i><span>과부하방지장치</span></button>
+<button type="button" data-i="8" aria-pressed="false"><i>9</i><span>낙하방지장치</span></button>
+<button type="button" data-i="9" aria-pressed="false"><i>10</i><span>로프(체인) 이완 감지 장치</span></button>
+<button type="button" data-i="10" aria-pressed="false"><i>11</i><span>충격완화장치</span></button>
+<button type="button" data-i="11" aria-pressed="false"><i>12</i><span>안전블록</span></button>
+</div>
+</div>
+</div>
+<div class="safety-photos rv">
+<div class="zoom" style="border-radius:16px"><img src="assets/img/insp1.webp" alt="유압 유닛 앞에서 점검표를 확인하는 모습" loading="lazy" width="1200" height="900"></div>
+<div class="zoom" style="border-radius:16px"><img src="assets/img/p4.webp" alt="적재용량 1,000kg 표지가 부착된 리프트를 점검하는 모습" loading="lazy" width="1200" height="900"></div>
+<div class="note-card"><strong>설치 후 시운전과<br>안전 점검을 마치고 인도</strong><p>적재용량·사람탑승금지·안전수칙 표지를 현장마다 부착하고, 사용법을 안내해 드립니다.</p></div>
+</div>
+</div>
+</section>
 
-    <script>
-        // 백엔드 연결용 구글 앱스크립트 웹앱 URL (이전에 발급받은 URL을 그대로 쓰시면 됩니다)
-        const GAS_URL = "여기에_배포된_웹앱_URL_새로_붙여넣기";
-        let uploadedCardBase64 = null;
+<section id="equipment" class="sec soft">
+<div class="wrap equip">
+<div class="l rv">
+<span class="eyebrow">FACILITIES</span>
+<h2 class="h2">보유설비현황</h2>
+<p class="lead">절곡부터 가공, 용접, 운반까지 리프트 제작에 필요한 설비를 직접 갖추고 있어 품질과 납기를 직접 관리합니다.</p>
+<div class="zoom" style="border-radius:14px;margin-top:8px"><img src="assets/img/equip.webp" alt="공장에서 리프트 프레임을 용접하는 모습" loading="lazy" width="1200" height="900"></div>
+</div>
+<div class="r rv">
+<table><thead><tr><th scope="col">기기명</th><th scope="col">규격</th><th scope="col">보유수</th></tr></thead>
+<tbody>
+<tr><td>유압샤링기</td><td>10자 (6T)</td><td>1대</td></tr>
+<tr><td>유압절곡기</td><td>8자</td><td>1대</td></tr>
+<tr><td>파워프레스</td><td>10 Ton</td><td>1대</td></tr>
+<tr><td>선반</td><td>6자</td><td>1대</td></tr>
+<tr><td>밀링</td><td>2호기</td><td>1대</td></tr>
+<tr><td>레디얼</td><td>-</td><td>1대</td></tr>
+<tr><td>알곤용접기</td><td>350A-500A</td><td>2대</td></tr>
+<tr><td>CO2 용접기</td><td>350A-500A</td><td>8대</td></tr>
+<tr><td>O2 용접기</td><td>-</td><td>1대</td></tr>
+<tr><td>아크용접기</td><td>15KA</td><td>3대</td></tr>
+<tr><td>호이스</td><td>3 Ton<br>1 Ton</td><td>1대<br>1대</td></tr>
+<tr><td>콤프레샤</td><td>15 HP</td><td>1대</td></tr>
+<tr><td>자동톱</td><td>-</td><td>2대</td></tr>
+<tr><td>지게차</td><td>2.5 Ton</td><td>1대</td></tr>
+</tbody></table>
+</div>
+</div>
+</section>
 
-        // 스크롤 애니메이션 옵저버 (Fade-in-up)
-        const observer = new IntersectionObserver(entries => {
-            entries.forEach(entry => {
-                if(entry.isIntersecting) {
-                    entry.target.classList.add('visible');
-                }
-            });
-        }, { threshold: 0.1 });
+<section id="cases" class="sec">
+<div class="wrap">
+<div class="sec-head rv" style="margin-bottom:32px">
+<div><span class="eyebrow">REFERENCES</span><h2 class="h2">설치사례</h2><p class="lead" style="margin-top:6px;font-size:15px">옆으로 넘겨 보고, 사진을 누르면 크게 볼 수 있습니다.</p></div>
+<div style="display:flex;gap:8px"><button type="button" class="icon-btn" id="casePrev" aria-label="이전 설치사례"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button><button type="button" class="icon-btn fill" id="caseNext" aria-label="다음 설치사례"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></button></div>
+</div>
+<div class="track" id="track">
+<button type="button" class="case" data-i="0" aria-label="주황·노랑 화물용 리프트 크게 보기">
+<div class="zoom"><img src="assets/img/case1.webp" alt="주황·노랑 화물용 리프트" loading="lazy" width="900" height="1200"><span class="exp"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></span></div>
+<b>[현장명]</b><small>화물용 리프트 · 실내</small>
+</button>
+<button type="button" class="case" data-i="1" aria-label="노란색 4층 화물용 리프트 크게 보기">
+<div class="zoom"><img src="assets/img/case2.webp" alt="노란색 4층 화물용 리프트" loading="lazy" width="900" height="1200"><span class="exp"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></span></div>
+<b>[현장명]</b><small>화물용 리프트 · 물류센터</small>
+</button>
+<button type="button" class="case" data-i="2" aria-label="회색 고층 화물용 리프트 크게 보기">
+<div class="zoom"><img src="assets/img/case3.webp" alt="회색 고층 화물용 리프트" loading="lazy" width="900" height="1200"><span class="exp"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></span></div>
+<b>[현장명]</b><small>화물용 리프트 · 랙 창고</small>
+</button>
+<button type="button" class="case" data-i="3" aria-label="메자닌 연결 화물용 리프트 크게 보기">
+<div class="zoom"><img src="assets/img/case4.webp" alt="메자닌 연결 화물용 리프트" loading="lazy" width="900" height="1200"><span class="exp"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></span></div>
+<b>[현장명]</b><small>화물용 리프트 · 메자닌</small>
+</button>
+<button type="button" class="case" data-i="4" aria-label="실내 도크용 테이블 리프트 크게 보기">
+<div class="zoom"><img src="assets/img/case8.webp" alt="실내 도크용 테이블 리프트" loading="lazy" width="900" height="1200"><span class="exp"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></span></div>
+<b>[현장명]</b><small>테이블 리프트 · 실내 도크</small>
+</button>
+<button type="button" class="case" data-i="5" aria-label="건물 외부 투명 화물용 리프트 크게 보기">
+<div class="zoom"><img src="assets/img/case5.webp" alt="건물 외부 투명 화물용 리프트" loading="lazy" width="900" height="1200"><span class="exp"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></span></div>
+<b>[현장명]</b><small>화물용 리프트 · 외부형</small>
+</button>
+<button type="button" class="case" data-i="6" aria-label="적재용량 3,000kg 테이블 리프트 크게 보기">
+<div class="zoom"><img src="assets/img/case9.webp" alt="적재용량 3,000kg 테이블 리프트" loading="lazy" width="900" height="1200"><span class="exp"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></span></div>
+<b>[현장명]</b><small>테이블 리프트 · 3,000kg</small>
+</button>
+<button type="button" class="case" data-i="7" aria-label="건물 외벽 투명 패널 리프트 크게 보기">
+<div class="zoom"><img src="assets/img/case6.webp" alt="건물 외벽 투명 패널 리프트" loading="lazy" width="900" height="1200"><span class="exp"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></span></div>
+<b>[현장명]</b><small>화물용 리프트 · 외부형</small>
+</button>
+</div>
+</div>
+</section>
 
-        function initAnimations() {
-            document.querySelectorAll('.fade-in-up').forEach(el => {
-                el.classList.remove('visible'); 
-                observer.observe(el);
-            });
-        }
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="설치사례 크게 보기">
+<button type="button" class="bg" data-close aria-label="닫기"></button>
+<div class="inner">
+<img id="lbImg" src="" alt="">
+<div class="bar">
+<button type="button" class="icon-btn" id="lbPrev" aria-label="이전 사진"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>
+<div><strong id="lbTitle"></strong><span id="lbSub"></span></div>
+<button type="button" class="icon-btn fill" id="lbNext" aria-label="다음 사진"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></button>
+</div>
+</div>
+<button type="button" class="icon-btn close" data-close aria-label="닫기"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+</div>
 
-        // 탭 전환
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            
-            if(tabId === 'overview') document.getElementById('btn-overview').classList.add('active');
-            else document.getElementById('btn-' + tabId).classList.add('active');
-            
-            window.scrollTo(0, 0);
-            initAnimations(); 
-        }
+<section id="video" class="sec soft">
+<div class="wrap video">
+<div class="l rv"><span class="eyebrow">VIDEO</span><h2 class="h2">작동 영상으로<br>직접 확인하세요</h2><p class="lead">거산리프트 유튜브 채널의 최신 영상이 자동으로 표시됩니다.</p><a href="https://www.youtube.com/channel/UCjr0YowIGJADGAZrOuA_-cQ" target="_blank" rel="noopener" style="font-weight:600">유튜브 채널 바로가기 →</a></div>
+<div class="r rv">
+<div class="yt" id="yt"><button type="button" aria-label="유튜브 영상 재생"><svg width="72" height="72" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="31" fill="none" stroke="#fff" stroke-width="2"/><path d="M26 21 L45 32 L26 43 Z" fill="#fff"/></svg>최신 영상 재생</button></div>
+</div>
+</div>
+</section>
 
-        // 갤러리 필터
-        function filterGallery(type) {
-            document.querySelectorAll('.gallery-filters .tab-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            document.querySelectorAll('.gallery-item').forEach(item => {
-                item.style.display = (type === 'all' || item.getAttribute('data-type') === type) ? 'block' : 'none';
-            });
-        }
+<section id="contact" class="sec">
+<div class="wrap contact">
+<div class="l rv">
+<div><span class="eyebrow">CONTACT</span><h2 class="h2">견적·상담 문의</h2><p class="lead" style="margin-top:8px">설치 장소와 필요한 하중·높이를 알려주시면 현장에 맞는 견적을 드립니다.</p></div>
+<div class="tel-card"><img src="assets/img/emblem.webp" alt="" aria-hidden="true"><small>본사 대표전화</small><a class="big" href="tel:031-986-5345">031-986-5345</a><small>팩스 0505-300-6253</small><a href="mailto:gslift2020@naver.com" style="font-size:14px">gslift2020@naver.com</a></div>
+<div class="tel-card2"><small>영남사업본부</small><a class="big" href="tel:010-3871-2559">010-3871-2559</a><small>팩스 051-319-2645</small></div>
+</div>
+<form class="form rv" id="form" novalidate>
+<p class="form-note">온라인 문의 접수 기능은 준비 중입니다. 그동안은 위 전화번호나 이메일로 연락 부탁드립니다.</p>
+<label>회사명<input type="text" name="company" placeholder="(주)회사명" autocomplete="organization"></label>
+<label>담당자명<input type="text" name="name" autocomplete="name"></label>
+<label>연락처<input type="tel" name="phone" placeholder="010-0000-0000" autocomplete="tel"></label>
+<label>관심 제품<select name="product"><option>화물용 리프트</option><option>테이블 리프트</option><option>수동·자동 스태커</option><option>운반기계</option><option>기타</option></select></label>
+<label class="full">문의 내용<textarea name="message" rows="5" placeholder="설치 장소, 적재 하중, 필요한 높이 등을 적어주시면 정확한 견적이 가능합니다."></textarea></label>
+<label class="full agree"><input type="checkbox" name="agree">개인정보 수집·이용에 동의합니다</label>
+<button type="submit" class="full">문의 보내기</button>
+</form>
+</div>
+</section>
 
-        window.addEventListener('DOMContentLoaded', initAnimations);
+<section id="location" class="sec soft">
+<div class="wrap">
+<div class="sec-head rv" style="margin-bottom:32px"><div><span class="eyebrow">LOCATION</span><h2 class="h2">오시는 길</h2></div></div>
+<div class="loc">
+<div class="map rv"><iframe title="거산리프트 본사 위치 지도" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=%EA%B2%BD%EA%B8%B0%EB%8F%84%20%EA%B9%80%ED%8F%AC%EC%8B%9C%20%EC%96%91%EC%B4%8C%EC%9D%8D%20%ED%95%99%EC%9A%B4%EB%A6%AC%201807-3&output=embed"></iframe></div>
+<div class="r rv">
+<div class="addr">
+<h3>본사 · 공장</h3>
+<p><strong style="font-weight:600">도로명</strong> 경기도 김포시 양촌읍 삼도로48번길 37-30</p>
+<p class="sub"><strong style="font-weight:600">지번</strong> 경기도 김포시 양촌읍 학운리 1807-3</p>
+<p class="sub">TEL 031-986-5345 · FAX 0505-300-6253</p>
+<div class="btns">
+<a class="btn-blue" style="color:#fff" href="https://map.naver.com/p/search/%EA%B2%BD%EA%B8%B0%EB%8F%84%20%EA%B9%80%ED%8F%AC%EC%8B%9C%20%EC%96%91%EC%B4%8C%EC%9D%8D%20%ED%95%99%EC%9A%B4%EB%A6%AC%201807-3" target="_blank" rel="noopener">네이버 지도</a>
+<a style="border:1px solid #C6D1E4;color:var(--navy)" href="https://map.kakao.com/?q=%EA%B2%BD%EA%B8%B0%EB%8F%84%20%EA%B9%80%ED%8F%AC%EC%8B%9C%20%EC%96%91%EC%B4%8C%EC%9D%8D%20%ED%95%99%EC%9A%B4%EB%A6%AC%201807-3" target="_blank" rel="noopener">카카오맵</a>
+</div>
+</div>
+<div class="addr">
+<h3>영남사업본부</h3>
+<p>부산광역시 사상구 괘법동 578번지</p>
+<p class="sub">TEL 010-3871-2559 · FAX 051-319-2645</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
 
-        // 드래그 앤 드롭 및 명함 스캔 로직
-        const dropZone = document.getElementById('dropZone');
-        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.borderColor = "var(--primary-blue)"; });
-        dropZone.addEventListener('dragleave', () => dropZone.style.borderColor = "#cbd5e1");
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.style.borderColor = "#cbd5e1";
-            if (e.dataTransfer.files.length > 0) handleFileSelect(e.dataTransfer.files[0]);
-        });
+<footer class="footer">
+<div class="wrap">
+<div style="flex:0 1 260px"><img src="assets/img/logo-white.webp" alt="GSLIFT 거산리프트" loading="lazy" width="600" height="256"></div>
+<div class="info">
+<div class="links"><a href="privacy.html" style="font-weight:600">개인정보처리방침</a><a href="https://www.youtube.com/channel/UCjr0YowIGJADGAZrOuA_-cQ" target="_blank" rel="noopener">YouTube</a></div>
+<span><strong>거산리프트</strong> · 대표자 이재현 · 사업자등록번호 699-18-01916</span>
+<span><strong>본사</strong> 경기도 김포시 양촌읍 삼도로48번길 37-30 · TEL 031-986-5345 · FAX 0505-300-6253</span>
+<span><strong>영남사업본부</strong> 부산광역시 사상구 괘법동 578번지 · TEL 010-3871-2559 · FAX 051-319-2645</span>
+<span>E-mail gslift2020@naver.com</span>
+<span class="copy">COPYRIGHT © 거산리프트 ALL RIGHTS RESERVED</span>
+</div>
+</div>
+</footer>
 
-        async function handleFileSelect(file) {
-            if (!file || !file.type.startsWith('image/')) return;
-            
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                uploadedCardBase64 = e.target.result;
-                document.getElementById('cardPreview').src = uploadedCardBase64;
-                document.getElementById('cardPreview').style.display = 'block';
-                document.getElementById('dropText').innerHTML = "<p style='color:var(--primary-blue); font-weight:bold; margin-top:10px;'>명함 정보 분석 중...</p>";
-                
-                try {
-                    const res = await fetch(GAS_URL, {
-                        method: 'POST',
-                        body: JSON.stringify({ action: 'ocr', cardBase64: uploadedCardBase64 })
-                    });
-                    const result = await res.json();
-                    
-                    if (result.status === 'success' && result.data) {
-                        document.getElementById('company').value = result.data.companyName || '';
-                        document.getElementById('name').value = result.data.managerName || '';
-                        document.getElementById('phone').value = result.data.phone || '';
-                        document.getElementById('email').value = result.data.email || '';
-                        document.getElementById('region').value = result.data.address || '';
-                        document.getElementById('dropText').innerHTML = "<p style='color:green; font-weight:bold; margin-top:10px;'>✅ 스캔 완료 (아래 폼 확인)</p>";
-                    } else {
-                        document.getElementById('dropText').innerHTML = `<p style='color:red; margin-top:10px;'>⚠️ ${result.message}</p>`;
-                    }
-                } catch (err) {
-                    document.getElementById('dropText').innerHTML = "<p style='color:red; margin-top:10px;'>서버 통신 오류가 발생했습니다.</p>";
-                }
-            };
-            reader.readAsDataURL(file);
-        }
-
-        async function submitInquiry(event) {
-            event.preventDefault();
-            const btn = document.getElementById('submitBtn');
-            btn.innerText = "데이터 전송 중..."; btn.disabled = true;
-
-            const payload = {
-                action: 'inquiry',
-                company: document.getElementById('company').value,
-                name: document.getElementById('name').value,
-                phone: document.getElementById('phone').value,
-                email: document.getElementById('email').value,
-                region: document.getElementById('region').value,
-                message: document.getElementById('message').value,
-                cardBase64: uploadedCardBase64 
-            };
-
-            try {
-                const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
-                const result = await response.json();
-                
-                if (result.status === 'success') {
-                    alert('성공적으로 문의가 접수되었습니다.');
-                    location.reload(); 
-                } else {
-                    alert('전송 오류: ' + result.message);
-                }
-            } catch (error) {
-                alert('통신 오류가 발생했습니다.');
-            } finally {
-                btn.innerText = "문의 접수하기"; btn.disabled = false;
-            }
-        }
-    </script>
+<script>window.GS={"slides": [{"tag": "화물용 리프트", "title": "공장 내부 · 다층 운반"}, {"tag": "화물용 리프트", "title": "물류창고 · 메자닌 연결"}, {"tag": "테이블 리프트", "title": "실내 도크 · 상하차"}, {"tag": "화물용 리프트", "title": "건물 외부형 · 투명 패널"}, {"tag": "화물용 리프트", "title": "물류창고 · 고층 운반"}], "items": [{"no": 1, "t": "화물반입구 및 방호울", "spec": "높이 1.8m 이상", "d": "승강로 둘레를 1.8m 이상의 방호울로 막아 사람이 승강로에 접근하거나 화물이 떨어지는 것을 막습니다."}, {"no": 2, "t": "운반구와 승강로의 간격", "spec": "35mm 이하", "d": "운반구와 승강로 사이 틈을 35mm 이하로 맞춰 손발이나 화물이 끼이지 않게 합니다."}, {"no": 3, "t": "표시내용 부착", "spec": "적재하중·제조연월 등", "d": "적재하중, 제조연월, 사람탑승금지 등 사용자가 알아야 할 내용을 잘 보이는 곳에 부착합니다."}, {"no": 4, "t": "경보장치", "spec": "", "d": "운행 중 경광등과 경보음으로 주변 작업자에게 리프트가 움직이고 있음을 알립니다."}, {"no": 5, "t": "전기장치 및 비상정지장치", "spec": "", "d": "비상 시 버튼 하나로 즉시 멈출 수 있는 비상정지장치와 안전한 전기 배선을 갖춥니다."}, {"no": 6, "t": "출입문 인터록", "spec": "", "d": "출입문이 열려 있으면 리프트가 움직이지 않고, 운반구가 없는 층의 문은 열리지 않도록 연동합니다."}, {"no": 7, "t": "권과방지장치", "spec": "", "d": "운반구가 최상층 정지 위치를 넘어 올라가지 않도록 자동으로 정지시킵니다."}, {"no": 8, "t": "과부하방지장치", "spec": "", "d": "정격하중을 넘는 화물을 실으면 경보를 울리고 운행을 막습니다."}, {"no": 9, "t": "낙하방지장치", "spec": "", "d": "로프나 체인이 끊어져도 운반구가 떨어지지 않도록 가이드 레일에 붙잡아 멈춥니다."}, {"no": 10, "t": "로프(체인) 이완 감지 장치", "spec": "", "d": "로프나 체인이 느슨해지면 이를 감지해 운행을 멈추고 이상을 알립니다."}, {"no": 11, "t": "충격완화장치", "spec": "", "d": "최하층 바닥에 완충장치를 두어 운반구가 내려올 때의 충격을 흡수합니다."}, {"no": 12, "t": "안전블록", "spec": "", "d": "점검·정비할 때 운반구를 받쳐 고정해 작업자의 안전을 지킵니다."}], "cases": [{"img": "assets/img/case1.webp", "alt": "주황·노랑 화물용 리프트", "title": "[현장명]", "sub": "화물용 리프트 · 실내"}, {"img": "assets/img/case2.webp", "alt": "노란색 4층 화물용 리프트", "title": "[현장명]", "sub": "화물용 리프트 · 물류센터"}, {"img": "assets/img/case3.webp", "alt": "회색 고층 화물용 리프트", "title": "[현장명]", "sub": "화물용 리프트 · 랙 창고"}, {"img": "assets/img/case4.webp", "alt": "메자닌 연결 화물용 리프트", "title": "[현장명]", "sub": "화물용 리프트 · 메자닌"}, {"img": "assets/img/case8.webp", "alt": "실내 도크용 테이블 리프트", "title": "[현장명]", "sub": "테이블 리프트 · 실내 도크"}, {"img": "assets/img/case5.webp", "alt": "건물 외부 투명 화물용 리프트", "title": "[현장명]", "sub": "화물용 리프트 · 외부형"}, {"img": "assets/img/case9.webp", "alt": "적재용량 3,000kg 테이블 리프트", "title": "[현장명]", "sub": "테이블 리프트 · 3,000kg"}, {"img": "assets/img/case6.webp", "alt": "건물 외벽 투명 패널 리프트", "title": "[현장명]", "sub": "화물용 리프트 · 외부형"}], "uploads": "UUjr0YowIGJADGAZrOuA_-cQ"};</script>
+<script src="assets/main.js" defer></script>
 </body>
 </html>
