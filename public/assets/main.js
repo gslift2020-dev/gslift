@@ -106,12 +106,15 @@
     var c = cases[cur];
     $('#lbImg').src = c.img; $('#lbImg').alt = c.alt;
     $('#lbTitle').textContent = c.title;
-    $('#lbSub').textContent = c.sub + ' · ' + (cur + 1) + ' / ' + cases.length;
+    $('#lbSub').textContent = (c.sub ? c.sub + ' · ' : '') + (cur + 1) + ' / ' + cases.length;
   }
   function lbOpen(n) { lastFocus = document.activeElement; lbShow(n); lb.classList.add('open'); document.body.style.overflow = 'hidden'; $('.close', lb).focus(); }
   function lbClose() { lb.classList.remove('open'); document.body.style.overflow = ''; if (lastFocus) lastFocus.focus(); }
   if (lb) {
-    $$('.case').forEach(function (b) { b.addEventListener('click', function () { lbOpen(+b.dataset.i); }); });
+    if (track) track.addEventListener('click', function (e) {
+      var b = e.target.closest('.case');
+      if (b) lbOpen(+b.dataset.i);
+    });
     $$('[data-close]', lb).forEach(function (b) { b.addEventListener('click', lbClose); });
     $('#lbPrev').addEventListener('click', function () { lbShow(cur - 1); });
     $('#lbNext').addEventListener('click', function () { lbShow(cur + 1); });
@@ -120,6 +123,31 @@
       if (e.key === 'ArrowLeft') lbShow(cur - 1);
       if (e.key === 'ArrowRight') lbShow(cur + 1);
     });
+  }
+
+  /* 관리자 페이지에서 올린 설치사례를 맨 앞에 추가 */
+  if (track && window.fetch) {
+    fetch('/api/cases').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+      if (!d || !d.ok || !d.items.length) return;
+      var expand = $('.case .exp', track);
+      var frag = document.createDocumentFragment();
+      d.items.forEach(function (c) {
+        var alt = c.title + (c.sub ? ' · ' + c.sub : '');
+        var b = document.createElement('button');
+        b.type = 'button'; b.className = 'case'; b.setAttribute('aria-label', alt + ' 크게 보기');
+        var z = document.createElement('div'); z.className = 'zoom';
+        var im = document.createElement('img'); im.src = c.img; im.alt = alt; im.loading = 'lazy'; im.width = 900; im.height = 1200;
+        z.appendChild(im);
+        if (expand) z.appendChild(expand.cloneNode(true));
+        var t = document.createElement('b'); t.textContent = c.title;
+        var s = document.createElement('small'); s.textContent = c.sub;
+        b.appendChild(z); b.appendChild(t); b.appendChild(s);
+        frag.appendChild(b);
+      });
+      track.insertBefore(frag, track.firstChild);
+      cases = d.items.map(function (c) { return { img: c.img, alt: c.title, title: c.title, sub: c.sub }; }).concat(cases);
+      $$('.case', track).forEach(function (b, i) { b.dataset.i = i; });
+    }).catch(function () {});
   }
 
   /* 유튜브: 누를 때만 불러오기 (채널 최신 업로드 목록) */

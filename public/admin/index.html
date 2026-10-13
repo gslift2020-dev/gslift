@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>관리자 | 거산리프트</title>
+<link rel="icon" href="/favicon.png">
+<link rel="stylesheet" href="/admin/admin.css?v=2">
+</head>
+<body>
+
+<header class="top">
+<div class="wrap">
+<a href="/" class="brand"><img src="/assets/img/logo.webp" alt="거산리프트" width="600" height="256"><span>관리자</span></a>
+<button type="button" class="link" id="logoutBtn" hidden>로그아웃</button>
+</div>
+</header>
+
+<!-- 로그인 -->
+<main id="loginView" class="wrap narrow" hidden>
+<form id="loginForm" class="panel">
+<h1>관리자 로그인</h1>
+<label>비밀번호<input type="password" name="password" autocomplete="current-password" required autofocus></label>
+<button type="submit" class="btn">로그인</button>
+<p class="msg" id="loginMsg" role="status" aria-live="polite"></p>
+</form>
+</main>
+
+<!-- 관리 화면 -->
+<main id="appView" class="wrap" hidden>
+<nav class="tabs" role="tablist">
+<button type="button" role="tab" class="on" data-tab="inq" aria-selected="true">문의 <b id="newCount" class="badge" hidden></b></button>
+<button type="button" role="tab" data-tab="cases" aria-selected="false">설치사례 올리기</button>
+</nav>
+
+<!-- 문의 목록 -->
+<section id="tab-inq">
+<div class="bar">
+<div class="filters" id="filters">
+<button type="button" class="on" data-f="all">전체</button>
+<button type="button" data-f="new">신규</button>
+<button type="button" data-f="progress">처리중</button>
+<button type="button" data-f="done">완료</button>
+</div>
+<button type="button" class="link" id="reloadInq">새로고침</button>
+</div>
+<div id="inqList" class="list"><p class="empty">불러오는 중…</p></div>
+</section>
+
+<!-- 설치사례 -->
+<section id="tab-cases" hidden>
+<form id="caseForm" class="panel">
+<h2>새 설치사례</h2>
+<p class="hint">휴대폰 원본 사진을 그대로 고르세요. 크기 조절, 압축, 중앙 워터마크는 자동으로 처리됩니다.</p>
+<div class="upload">
+<label class="pick" id="pickLabel">
+<input type="file" name="file" id="fileInput" accept="image/*">
+<span id="pickText">사진 선택 (눌러서 고르기)</span>
+</label>
+<div class="preview" id="previewBox" hidden>
+<canvas id="preview" width="600" height="800" aria-label="처리된 사진 미리보기"></canvas>
+<label class="slider">사진 위치 조정 (위 ↔ 아래)<input type="range" id="focusY" min="0" max="100" value="50"></label>
+</div>
+</div>
+<label>현장명 <span class="req">*</span><input type="text" name="title" maxlength="60" placeholder="예) 김포 ○○물류센터" required></label>
+<label>설명<input type="text" name="sub" maxlength="80" placeholder="예) 화물용 리프트 · 1톤 · 3층"></label>
+<button type="submit" class="btn" id="caseBtn">홈페이지에 올리기</button>
+<p class="msg" id="caseMsg" role="status" aria-live="polite"></p>
+</form>
+
+<h2 class="h2">올린 설치사례</h2>
+<p class="hint">여기서 올린 사진은 홈페이지 설치사례 맨 앞에 나옵니다. "숨기기"를 누르면 삭제하지 않고 홈페이지에서만 내립니다.</p>
+<div id="caseList" class="grid"><p class="empty">불러오는 중…</p></div>
+</section>
+</main>
+
+<script src="/admin/admin.js?v=2" defer></script>
+</body>
+</html>

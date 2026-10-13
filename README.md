@@ -10,3 +10,9 @@
 
 Cloudflare에 연결되어 있어 `main` 브랜치에 올라간 내용이 자동으로 사이트에 반영됩니다.
 - `wrangler.jsonc` Cloudflare 배포 설정
+- `src/` 서버 코드 (문의 접수 `contact.js`, 관리자 기능 `admin.js`)
+- `public/admin/` 관리자 화면 (주소 끝에 /admin)
+
+### Cloudflare에 넣어야 하는 비밀값 (Settings → Variables and secrets, Type: Secret)
+- `RESEND_API_KEY` 문의 알림 메일 발송용
+- `ADMIN_PASSWORD` 관리자 화면 비밀번호

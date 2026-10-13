@@ -8,6 +8,10 @@
 /assets/*.js
   Cache-Control: public, max-age=86400
 
+# 관리자 화면: 항상 최신
+/admin/*
+  Cache-Control: no-cache
+
 # 페이지: 항상 최신 확인
 /*.html
   Cache-Control: no-cache

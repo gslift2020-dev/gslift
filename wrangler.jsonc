@@ -8,7 +8,7 @@
     "binding": "ASSETS",
     "not_found_handling": "404-page",
     // /api/ 주소만 서버 코드가 처리하고, 나머지는 정적 파일을 바로 보여줌
-    "run_worker_first": ["/api/*"]
+    "run_worker_first": ["/api/*", "/photos/*"]
   },
   "vars": {
     "NOTIFY_EMAIL": "gslift2020@naver.com"
@@ -18,6 +18,12 @@
       "binding": "DB",
       "database_name": "gslift-db",
       "database_id": "94697a8c-fbf0-4309-a1a6-f1cbd3bca4cf"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "PHOTOS",
+      "bucket_name": "gslift-photos"
     }
   ],
   "observability": { "enabled": true }
