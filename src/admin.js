@@ -11,7 +11,7 @@ const MAX_SLIDES = 10;
 const STATUSES = ['new', 'progress', 'done'];
 
 export const DEFAULT_CHIPS = [
-  { name: '제품', items: ['화물용 리프트', '테이블 리프트', '운반기계'] },
+  { name: '제품', items: ['화물용 리프트(F/L)', '테이블 리프트(T/L)', '운반기계'] },
   { name: '적재하중', items: ['1톤', '2톤', '3톤', '4톤', '5톤', '6톤', '7톤'] },
   { name: '정지층', items: ['1STOP', '2STOP', '3STOP', '4STOP', '5STOP', '6STOP', '7STOP', '8STOP'] },
   { name: '출입방향', items: ['일방향', '양방향'] },
