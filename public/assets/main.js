@@ -136,12 +136,45 @@
     });
   }
 
-  /* 문의 폼: 서버 연결 전 임시 안내 */
+  /* 문의 폼: 서버로 전송 → 저장 + 메일 알림 */
   var form = $('#form');
   if (form) {
+    var btn = $('#formBtn'), msg = $('#formMsg');
+    function say(text, kind) { msg.textContent = text; msg.className = 'form-msg full ' + (kind || ''); }
+    function mark(name) {
+      $$('.invalid', form).forEach(function (el) { el.classList.remove('invalid'); });
+      var el = name && form.elements[name];
+      if (el) { el.classList.add('invalid'); el.focus(); }
+    }
     form.addEventListener('submit', function (e) {
       e.preventDefault();
-      alert('온라인 문의 접수는 준비 중입니다.\n전화 031-986-5345 또는 이메일 gslift2020@naver.com 으로 연락 부탁드립니다.');
+      var f = form.elements;
+      if (!f.name.value.trim()) { mark('name'); return say('담당자명을 입력해 주세요.', 'err'); }
+      if (!/^[0-9+\-() ]{8,20}$/.test(f.phone.value.trim())) { mark('phone'); return say('연락처를 정확히 입력해 주세요. 예) 010-1234-5678', 'err'); }
+      if (!f.agree.checked) { mark('agree'); return say('개인정보 수집·이용에 동의해 주세요.', 'err'); }
+      mark(null);
+      btn.disabled = true; btn.textContent = '보내는 중…'; say('');
+      fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          company: f.company.value, name: f.name.value, phone: f.phone.value,
+          product: f.product.value, message: f.message.value,
+          agree: f.agree.checked, website: f.website.value
+        })
+      })
+        .then(function (r) { return r.json().catch(function () { return { ok: false }; }); })
+        .then(function (d) {
+          if (d.ok) {
+            form.reset();
+            say('문의가 접수되었습니다. 담당자가 확인 후 연락드리겠습니다. 급하신 경우 031-986-5345로 전화 주세요.', 'ok');
+          } else {
+            if (d.field) mark(d.field);
+            say(d.error || '전송에 실패했습니다. 전화(031-986-5345)로 연락 부탁드립니다.', 'err');
+          }
+        })
+        .catch(function () { say('인터넷 연결을 확인해 주세요. 계속 안 되면 전화(031-986-5345)로 연락 부탁드립니다.', 'err'); })
+        .then(function () { btn.disabled = false; btn.textContent = '문의 보내기'; });
     });
   }
 })();

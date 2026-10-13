@@ -1,9 +1,24 @@
 {
-  // 거산리프트 홈페이지 — Cloudflare 정적 사이트 설정
+  // 거산리프트 홈페이지 — Cloudflare 설정
   "name": "shiny-snowflake-f1df",
+  "main": "src/worker.js",
   "compatibility_date": "2026-09-01",
   "assets": {
     "directory": "./public",
-    "not_found_handling": "404-page"
-  }
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    // /api/ 주소만 서버 코드가 처리하고, 나머지는 정적 파일을 바로 보여줌
+    "run_worker_first": ["/api/*"]
+  },
+  "vars": {
+    "NOTIFY_EMAIL": "gslift2020@naver.com"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "gslift-db",
+      "database_id": "D1_DATABASE_ID_HERE"
+    }
+  ],
+  "observability": { "enabled": true }
 }

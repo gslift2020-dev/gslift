@@ -249,3 +249,13 @@ th:last-child,td:last-child{text-align:right}
   .form{padding:22px}
   .std-detail{padding:20px}
 }
+
+/* 문의 폼 상태 */
+.form .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.form .req{color:#C2410C}
+.form button:disabled{opacity:.6;cursor:wait}
+.form-msg{margin:0;font-size:15px;min-height:1px}
+.form-msg.ok{background:#EAF6EE;border:1px solid #9FD3AE;color:#1E5A32;border-radius:10px;padding:14px 16px}
+.form-msg.err{background:#FDEEEE;border:1px solid #F0B4B4;color:#8A1F1F;border-radius:10px;padding:14px 16px}
+.form .invalid{border-color:#D14343!important;box-shadow:0 0 0 3px rgba(209,67,67,.15)}
+.form{position:relative}
