@@ -17,23 +17,42 @@
     });
   }
 
-  /* 메인 슬라이드 */
-  var slider = $('#slider');
+  /* 메인 슬라이드 (관리자가 올린 사진이 있으면 그걸로 교체) */
+  var slider = $('#slider'), slideImgs = [], slideBars = [], slideIdx = 0, slideTimer;
+  function slideShow(n) {
+    if (!slideImgs.length) return;
+    slideIdx = (n + slideImgs.length) % slideImgs.length;
+    slideImgs.forEach(function (im, k) { im.classList.toggle('on', k === slideIdx); });
+    slideBars.forEach(function (b, k) { b.classList.toggle('on', k === slideIdx); });
+    var s = GS.slides && GS.slides[slideIdx];
+    if (s) { $('#slTag').textContent = s.tag; $('#slTag').hidden = !s.tag; $('#slTitle').textContent = s.title; }
+  }
+  function slideStart() { clearInterval(slideTimer); if (!reduce && slideImgs.length > 1) slideTimer = setInterval(function () { slideShow(slideIdx + 1); }, 5000); }
+  function slideBind() {
+    slideImgs = $$('.slides img', slider); slideBars = $$('.bars button', slider);
+    slideBars.forEach(function (b, k) { b.addEventListener('click', function () { slideShow(k); slideStart(); }); });
+    slideShow(0); slideStart();
+  }
+  function slideReplace(list) {
+    var box = $('.slides', slider), bars = $('.bars', slider);
+    $$('img', box).forEach(function (im) { im.remove(); });
+    bars.innerHTML = '';
+    list.forEach(function (sl, k) {
+      var im = document.createElement('img');
+      im.src = sl.img; im.alt = (sl.tag ? sl.tag + ' · ' : '') + sl.title; im.width = 1200; im.height = 1500;
+      if (k) im.loading = 'lazy';
+      box.insertBefore(im, $('.shade', box));
+      var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-label', (k + 1) + '번째 사진 보기');
+      b.appendChild(document.createElement('span')); bars.appendChild(b);
+    });
+    bars.hidden = list.length < 2; $('.ctrl', slider).hidden = list.length < 2;
+    GS.slides = list.map(function (x) { return { tag: x.tag, title: x.title }; });
+    slideBind();
+  }
   if (slider) {
-    var imgs = $$('.slides img', slider), bars = $$('.bars button', slider);
-    var tag = $('#slTag'), title = $('#slTitle'), i = 0, timer;
-    function show(n) {
-      i = (n + imgs.length) % imgs.length;
-      imgs.forEach(function (im, k) { im.classList.toggle('on', k === i); });
-      bars.forEach(function (b, k) { b.classList.toggle('on', k === i); });
-      var s = GS.slides && GS.slides[i];
-      if (s) { tag.textContent = s.tag; title.textContent = s.title; }
-    }
-    function start() { clearInterval(timer); if (!reduce) timer = setInterval(function () { show(i + 1); }, 5000); }
-    $('.prev', slider).addEventListener('click', function () { show(i - 1); start(); });
-    $('.next', slider).addEventListener('click', function () { show(i + 1); start(); });
-    bars.forEach(function (b, k) { b.addEventListener('click', function () { show(k); start(); }); });
-    start();
+    $('.prev', slider).addEventListener('click', function () { slideShow(slideIdx - 1); slideStart(); });
+    $('.next', slider).addEventListener('click', function () { slideShow(slideIdx + 1); slideStart(); });
+    slideBind();
   }
 
   /* 스크롤 등장 효과 + 숫자 카운터 */
@@ -99,29 +118,44 @@
   if ($('#casePrev')) $('#casePrev').addEventListener('click', function () { scrollCases(-1); });
   if ($('#caseNext')) $('#caseNext').addEventListener('click', function () { scrollCases(1); });
 
-  /* 설치사례 크게 보기 */
-  var lb = $('#lightbox'), cases = GS.cases || [], cur = 0, lastFocus;
-  function lbShow(n) {
-    cur = (n + cases.length) % cases.length;
-    var c = cases[cur];
-    $('#lbImg').src = c.img; $('#lbImg').alt = c.alt;
-    $('#lbTitle').textContent = c.title;
-    $('#lbSub').textContent = (c.sub ? c.sub + ' · ' : '') + (cur + 1) + ' / ' + cases.length;
+  /* 설치사례 크게 보기: 글마다 사진 여러 장 + 내용 */
+  var lb = $('#lightbox'), lastFocus;
+  var posts = (GS.cases || []).map(function (c) { return { title: c.title, site: c.sub, body: '', photos: [c.img] }; });
+  var cur = { p: 0, ph: 0 };
+  function lbShow(p, ph) {
+    p = (p + posts.length) % posts.length;
+    var post = posts[p]; ph = Math.max(0, Math.min(ph, post.photos.length - 1));
+    cur = { p: p, ph: ph };
+    $('#lbImg').src = post.photos[ph]; $('#lbImg').alt = post.title + (post.photos.length > 1 ? ' (' + (ph + 1) + '/' + post.photos.length + ')' : '');
+    $('#lbTitle').textContent = post.title;
+    $('#lbSub').textContent = (post.site ? post.site + ' · ' : '') + (p + 1) + ' / ' + posts.length;
+    var th = $('#lbThumbs'); th.innerHTML = '';
+    if (post.photos.length > 1) post.photos.forEach(function (src, k) {
+      var b = document.createElement('button'); b.type = 'button'; b.className = k === ph ? 'on' : '';
+      b.setAttribute('aria-label', (k + 1) + '번째 사진');
+      var im = document.createElement('img'); im.src = src; im.alt = ''; b.appendChild(im);
+      b.addEventListener('click', function () { lbShow(cur.p, k); });
+      th.appendChild(b);
+    });
+    var body = $('#lbBody'); body.textContent = post.body || ''; body.hidden = !post.body;
   }
-  function lbOpen(n) { lastFocus = document.activeElement; lbShow(n); lb.classList.add('open'); document.body.style.overflow = 'hidden'; $('.close', lb).focus(); }
+  function lbStep(d) {
+    var post = posts[cur.p], ph = cur.ph + d;
+    if (ph >= 0 && ph < post.photos.length) return lbShow(cur.p, ph);
+    var np = (cur.p + d + posts.length) % posts.length;
+    lbShow(np, d > 0 ? 0 : posts[np].photos.length - 1);
+  }
+  function lbOpen(n) { lastFocus = document.activeElement; lbShow(n, 0); lb.classList.add('open'); document.body.style.overflow = 'hidden'; $('.close', lb).focus(); }
   function lbClose() { lb.classList.remove('open'); document.body.style.overflow = ''; if (lastFocus) lastFocus.focus(); }
   if (lb) {
-    if (track) track.addEventListener('click', function (e) {
-      var b = e.target.closest('.case');
-      if (b) lbOpen(+b.dataset.i);
-    });
+    if (track) track.addEventListener('click', function (e) { var b = e.target.closest('.case'); if (b) lbOpen(+b.dataset.i); });
     $$('[data-close]', lb).forEach(function (b) { b.addEventListener('click', lbClose); });
-    $('#lbPrev').addEventListener('click', function () { lbShow(cur - 1); });
-    $('#lbNext').addEventListener('click', function () { lbShow(cur + 1); });
+    $('#lbPrev').addEventListener('click', function () { lbStep(-1); });
+    $('#lbNext').addEventListener('click', function () { lbStep(1); });
     lb.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') lbClose();
-      if (e.key === 'ArrowLeft') lbShow(cur - 1);
-      if (e.key === 'ArrowRight') lbShow(cur + 1);
+      if (e.key === 'ArrowLeft') lbStep(-1);
+      if (e.key === 'ArrowRight') lbStep(1);
     });
   }
 
@@ -129,39 +163,74 @@
   if (track && window.fetch) {
     fetch('/api/cases').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
       if (!d || !d.ok || !d.items.length) return;
-      var expand = $('.case .exp', track);
-      var frag = document.createDocumentFragment();
+      var expand = $('.case .exp', track), frag = document.createDocumentFragment();
       d.items.forEach(function (c) {
-        var alt = c.title + (c.sub ? ' · ' + c.sub : '');
         var b = document.createElement('button');
-        b.type = 'button'; b.className = 'case'; b.setAttribute('aria-label', alt + ' 크게 보기');
+        b.type = 'button'; b.className = 'case'; b.setAttribute('aria-label', c.title + ' 크게 보기');
         var z = document.createElement('div'); z.className = 'zoom';
-        var im = document.createElement('img'); im.src = c.img; im.alt = alt; im.loading = 'lazy'; im.width = 900; im.height = 1200;
+        var im = document.createElement('img'); im.src = c.photos[0]; im.alt = c.title; im.loading = 'lazy'; im.width = 900; im.height = 1200;
         z.appendChild(im);
+        if (c.photos.length > 1) { var n = document.createElement('span'); n.className = 'cnt'; n.textContent = '사진 ' + c.photos.length + '장'; z.appendChild(n); }
         if (expand) z.appendChild(expand.cloneNode(true));
         var t = document.createElement('b'); t.textContent = c.title;
-        var s = document.createElement('small'); s.textContent = c.sub;
+        var s = document.createElement('small'); s.textContent = c.site;
         b.appendChild(z); b.appendChild(t); b.appendChild(s);
         frag.appendChild(b);
       });
       track.insertBefore(frag, track.firstChild);
-      cases = d.items.map(function (c) { return { img: c.img, alt: c.title, title: c.title, sub: c.sub }; }).concat(cases);
+      posts = d.items.map(function (c) { return { title: c.title, site: c.site, body: c.body, photos: c.photos }; }).concat(posts);
       $$('.case', track).forEach(function (b, i) { b.dataset.i = i; });
     }).catch(function () {});
   }
 
-  /* 유튜브: 누를 때만 불러오기 (채널 최신 업로드 목록) */
+  /* 유튜브: 누를 때만 불러오기. 관리자가 정한 영상이 있으면 그 영상들, 없으면 채널 최신 영상 */
   var yt = $('#yt');
+  function ytPlay(src) {
+    var f = document.createElement('iframe');
+    f.src = src; f.title = '거산리프트 유튜브 영상';
+    f.allow = 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen';
+    f.allowFullscreen = true;
+    yt.innerHTML = ''; yt.appendChild(f);
+  }
+  function ytPoster(v) {
+    yt.innerHTML = '';
+    var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-label', (v.title || '유튜브 영상') + ' 재생');
+    var im = document.createElement('img'); im.className = 'poster'; im.alt = ''; im.src = 'https://i.ytimg.com/vi/' + v.id + '/hqdefault.jpg';
+    b.appendChild(im);
+    b.insertAdjacentHTML('beforeend', '<svg width="72" height="72" viewBox="0 0 64 64" aria-hidden="true" style="position:relative"><circle cx="32" cy="32" r="31" fill="rgba(6,38,86,.6)" stroke="#fff" stroke-width="2"/><path d="M26 21 L45 32 L26 43 Z" fill="#fff"/></svg>');
+    var l = document.createElement('span'); l.className = 'lbl'; l.textContent = v.title || '영상 재생'; b.appendChild(l);
+    b.addEventListener('click', function () { ytPlay('https://www.youtube-nocookie.com/embed/' + v.id + '?autoplay=1&rel=0'); });
+    yt.appendChild(b);
+  }
+  function ytList(videos) {
+    ytPoster(videos[0]);
+    var more = $('#ytMore'); more.innerHTML = ''; more.hidden = videos.length < 2;
+    if (videos.length < 2) return;
+    videos.forEach(function (v, k) {
+      var b = document.createElement('button'); b.type = 'button'; if (!k) b.className = 'on';
+      var im = document.createElement('img'); im.src = 'https://i.ytimg.com/vi/' + v.id + '/mqdefault.jpg'; im.alt = ''; im.loading = 'lazy';
+      var t = document.createElement('span'); t.textContent = v.title || (k + 1) + '번째 영상';
+      b.appendChild(im); b.appendChild(t);
+      b.addEventListener('click', function () {
+        $$('button', more).forEach(function (x) { x.classList.toggle('on', x === b); });
+        ytPlay('https://www.youtube-nocookie.com/embed/' + v.id + '?autoplay=1&rel=0');
+      });
+      more.appendChild(b);
+    });
+  }
   if (yt && GS.uploads) {
     $('button', yt).addEventListener('click', function () {
-      var f = document.createElement('iframe');
-      f.src = 'https://www.youtube-nocookie.com/embed/videoseries?list=' + GS.uploads + '&autoplay=1';
-      f.title = '거산리프트 유튜브 영상';
-      f.allow = 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture';
-      f.allowFullscreen = true;
-      yt.innerHTML = '';
-      yt.appendChild(f);
+      ytPlay('https://www.youtube-nocookie.com/embed/videoseries?list=' + GS.uploads + '&autoplay=1');
     });
+  }
+
+  /* 관리자 설정 불러오기: 메인 사진, 유튜브 영상 */
+  if (window.fetch) {
+    fetch('/api/site').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+      if (!d || !d.ok) return;
+      if (slider && d.slides && d.slides.length) slideReplace(d.slides);
+      if (yt && d.videos && d.videos.length) ytList(d.videos);
+    }).catch(function () {});
   }
 
   /* 문의 폼: 서버로 전송 → 저장 + 메일 알림 */

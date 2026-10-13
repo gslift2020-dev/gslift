@@ -31,6 +31,7 @@ const SCHEMA = [
     email_sent INTEGER NOT NULL DEFAULT 0,
     email_error TEXT
   )`,
+  // 설치사례 글 (사진은 case_photos)
   `CREATE TABLE IF NOT EXISTS cases (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     created_at TEXT NOT NULL,
@@ -39,15 +40,46 @@ const SCHEMA = [
     photo_key TEXT NOT NULL,
     visible INTEGER NOT NULL DEFAULT 1
   )`,
+  `CREATE TABLE IF NOT EXISTS case_photos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    case_id INTEGER NOT NULL,
+    photo_key TEXT NOT NULL,
+    sort INTEGER NOT NULL DEFAULT 0
+  )`,
+  // 메인 화면 슬라이드
+  `CREATE TABLE IF NOT EXISTS slides (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    photo_key TEXT NOT NULL,
+    tag TEXT, title TEXT,
+    sort INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE TABLE IF NOT EXISTS settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+  )`,
   `CREATE TABLE IF NOT EXISTS login_attempts (
     ip TEXT NOT NULL,
     at TEXT NOT NULL
   )`,
 ];
 
+// 예전 표에 새 칸 추가 (이미 있으면 무시)
+const MIGRATIONS = [
+  'ALTER TABLE cases ADD COLUMN site TEXT',
+  'ALTER TABLE cases ADD COLUMN body TEXT',
+  'ALTER TABLE cases ADD COLUMN updated_at TEXT',
+];
+
 let schemaReady = false;
 export async function ensureSchema(env) {
   if (schemaReady) return;
   await env.DB.batch(SCHEMA.map((s) => env.DB.prepare(s)));
+  for (const m of MIGRATIONS) {
+    try { await env.DB.prepare(m).run(); } catch (e) { /* duplicate column */ }
+  }
+  // 예전 방식(사진 1장)으로 올린 글의 사진을 case_photos로 옮김
+  await env.DB.prepare(
+    'INSERT INTO case_photos (case_id, photo_key, sort) SELECT c.id, c.photo_key, 0 FROM cases c WHERE c.photo_key != \'\' AND NOT EXISTS (SELECT 1 FROM case_photos p WHERE p.case_id = c.id)'
+  ).run();
   schemaReady = true;
 }

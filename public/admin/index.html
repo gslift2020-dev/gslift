@@ -6,13 +6,13 @@
 <meta name="robots" content="noindex, nofollow">
 <title>관리자 | 거산리프트</title>
 <link rel="icon" href="/favicon.png">
-<link rel="stylesheet" href="/admin/admin.css?v=2">
+<link rel="stylesheet" href="/admin/admin.css?v=3">
 </head>
 <body>
 
 <header class="top">
 <div class="wrap">
-<a href="/" class="brand"><img src="/assets/img/logo.webp" alt="거산리프트" width="600" height="256"><span>관리자</span></a>
+<a href="/" class="brand" target="_blank" rel="noopener"><img src="/assets/img/logo.webp" alt="거산리프트 홈페이지 열기" width="600" height="256"><span>관리자</span></a>
 <button type="button" class="link" id="logoutBtn" hidden>로그아웃</button>
 </div>
 </header>
@@ -21,7 +21,7 @@
 <main id="loginView" class="wrap narrow" hidden>
 <form id="loginForm" class="panel">
 <h1>관리자 로그인</h1>
-<label>비밀번호<input type="password" name="password" autocomplete="current-password" required autofocus></label>
+<label>비밀번호<input type="password" name="password" autocomplete="current-password" required></label>
 <button type="submit" class="btn">로그인</button>
 <p class="msg" id="loginMsg" role="status" aria-live="polite"></p>
 </form>
@@ -29,13 +29,15 @@
 
 <!-- 관리 화면 -->
 <main id="appView" class="wrap" hidden>
-<nav class="tabs" role="tablist">
+<nav class="tabs" role="tablist" aria-label="관리 메뉴">
 <button type="button" role="tab" class="on" data-tab="inq" aria-selected="true">문의 <b id="newCount" class="badge" hidden></b></button>
-<button type="button" role="tab" data-tab="cases" aria-selected="false">설치사례 올리기</button>
+<button type="button" role="tab" data-tab="cases" aria-selected="false">설치사례</button>
+<button type="button" role="tab" data-tab="hero" aria-selected="false">메인 화면 사진</button>
+<button type="button" role="tab" data-tab="yt" aria-selected="false">유튜브 영상</button>
 </nav>
 
-<!-- 문의 목록 -->
-<section id="tab-inq">
+<!-- ===== 문의 ===== -->
+<section id="tab-inq" role="tabpanel">
 <div class="bar">
 <div class="filters" id="filters">
 <button type="button" class="on" data-f="all">전체</button>
@@ -48,33 +50,94 @@
 <div id="inqList" class="list"><p class="empty">불러오는 중…</p></div>
 </section>
 
-<!-- 설치사례 -->
-<section id="tab-cases" hidden>
-<form id="caseForm" class="panel">
-<h2>새 설치사례</h2>
-<p class="hint">휴대폰 원본 사진을 그대로 고르세요. 크기 조절, 압축, 중앙 워터마크는 자동으로 처리됩니다.</p>
-<div class="upload">
-<label class="pick" id="pickLabel">
-<input type="file" name="file" id="fileInput" accept="image/*">
-<span id="pickText">사진 선택 (눌러서 고르기)</span>
-</label>
-<div class="preview" id="previewBox" hidden>
-<canvas id="preview" width="600" height="800" aria-label="처리된 사진 미리보기"></canvas>
-<label class="slider">사진 위치 조정 (위 ↔ 아래)<input type="range" id="focusY" min="0" max="100" value="50"></label>
+<!-- ===== 설치사례 ===== -->
+<section id="tab-cases" role="tabpanel" hidden>
+<div class="bar"><h2>설치사례 글</h2><button type="button" class="btn small" id="newCaseBtn">+ 새 글 쓰기</button></div>
+
+<form id="caseForm" class="panel editor" hidden novalidate>
+<div class="ed-head"><h2 id="caseFormTitle">새 설치사례</h2><button type="button" class="link" id="caseCancel">닫기</button></div>
+
+<div class="field">
+<span class="lbl">사진 <small>(여러 장 가능 · 첫 번째 사진이 대표 사진 · 끌어서 순서 변경)</small></span>
+<div class="dropzone" id="caseDrop" tabindex="0" role="button" aria-label="사진 추가: 눌러서 고르거나 끌어다 놓기">
+<input type="file" accept="image/*" multiple hidden>
+<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+<b>사진을 여기로 끌어다 놓으세요</b><span>또는 눌러서 고르기 · 휴대폰은 눌러서 사진 선택</span>
+</div>
+<div class="thumbs" id="caseThumbs"></div>
+</div>
+
+<div class="adjust" id="caseAdjust" hidden>
+<div class="adj-canvas"><canvas width="600" height="800" aria-label="선택한 사진 미리보기. 사진을 끌면 보이는 부분이, 로고를 끌면 워터마크 위치가 바뀝니다."></canvas></div>
+<div class="adj-ctrl">
+<p class="hint"><b>사진</b>을 끌면 보이는 부분이 바뀌고, 가운데 <b>로고</b>를 끌면 워터마크가 움직입니다.</p>
+<div class="grp"><span>워터마크 가로</span><div class="seg" data-wm="x"><button type="button" data-v="0.22">왼쪽</button><button type="button" data-v="0.5">가운데</button><button type="button" data-v="0.78">오른쪽</button></div></div>
+<div class="grp"><span>워터마크 세로</span><div class="seg" data-wm="y"><button type="button" data-v="0.2">위</button><button type="button" data-v="0.5">가운데</button><button type="button" data-v="0.8">아래</button></div></div>
+<label class="check"><input type="checkbox" data-wm="on" checked> 워터마크 넣기</label>
+<button type="button" class="link" data-act="applyAll">이 워터마크 위치를 모든 새 사진에 적용</button>
 </div>
 </div>
-<label>현장명 <span class="req">*</span><input type="text" name="title" maxlength="60" placeholder="예) 김포 ○○물류센터" required></label>
-<label>설명<input type="text" name="sub" maxlength="80" placeholder="예) 화물용 리프트 · 1톤 · 3층"></label>
-<button type="submit" class="btn" id="caseBtn">홈페이지에 올리기</button>
+
+<div class="field">
+<div class="lbl-row"><span class="lbl">사양 버튼 <small>(눌러서 고르면 제목이 자동으로 만들어집니다)</small></span><button type="button" class="link" id="chipEditBtn">버튼 편집</button></div>
+<div id="chipBox" class="chips"></div>
+</div>
+
+<label class="field"><span class="lbl">제목 <span class="req">*</span></span><input type="text" name="title" maxlength="120" placeholder="예) 화물용 리프트 · 1톤 · 2STOP · 양방향"></label>
+<label class="field"><span class="lbl">현장명</span><input type="text" name="site" maxlength="80" placeholder="예) 김포 ○○물류센터"></label>
+<label class="field"><span class="lbl">내용</span><textarea name="body" rows="5" maxlength="5000" placeholder="현장 특징, 설치 기간, 고객 요청사항 등 자유롭게 적어주세요."></textarea></label>
+
+<button type="submit" class="btn" id="caseSave">홈페이지에 올리기</button>
 <p class="msg" id="caseMsg" role="status" aria-live="polite"></p>
 </form>
 
-<h2 class="h2">올린 설치사례</h2>
-<p class="hint">여기서 올린 사진은 홈페이지 설치사례 맨 앞에 나옵니다. "숨기기"를 누르면 삭제하지 않고 홈페이지에서만 내립니다.</p>
-<div id="caseList" class="grid"><p class="empty">불러오는 중…</p></div>
+<div id="caseList" class="posts"><p class="empty">불러오는 중…</p></div>
+</section>
+
+<!-- ===== 메인 화면 사진 ===== -->
+<section id="tab-hero" role="tabpanel" hidden>
+<div class="panel">
+<h2>메인 화면 사진 (첫 화면 슬라이드)</h2>
+<p class="hint">홈페이지에 들어오면 처음 보이는 사진입니다. 세로 4:5로 잘리며 최대 10장, 5초마다 넘어갑니다. 한 장도 없으면 기본 사진이 나옵니다.</p>
+<div class="dropzone" id="heroDrop" tabindex="0" role="button" aria-label="메인 사진 추가">
+<input type="file" accept="image/*" multiple hidden>
+<b>사진을 여기로 끌어다 놓으세요</b><span>또는 눌러서 고르기</span>
+</div>
+<div class="slides-ed" id="heroList"></div>
+<div class="adjust" id="heroAdjust" hidden>
+<div class="adj-canvas"><canvas width="600" height="750" aria-label="선택한 메인 사진 미리보기"></canvas></div>
+<div class="adj-ctrl">
+<p class="hint"><b>사진</b>을 끌어서 보이는 부분을 맞추세요.</p>
+<label class="check"><input type="checkbox" data-wm="on"> 워터마크 넣기</label>
+<div class="grp"><span>워터마크 가로</span><div class="seg" data-wm="x"><button type="button" data-v="0.22">왼쪽</button><button type="button" data-v="0.5">가운데</button><button type="button" data-v="0.78">오른쪽</button></div></div>
+<div class="grp"><span>워터마크 세로</span><div class="seg" data-wm="y"><button type="button" data-v="0.2">위</button><button type="button" data-v="0.5">가운데</button><button type="button" data-v="0.8">아래</button></div></div>
+</div>
+</div>
+<button type="button" class="btn" id="heroSave">메인 화면에 저장</button>
+<p class="msg" id="heroMsg" role="status" aria-live="polite"></p>
+</div>
+</section>
+
+<!-- ===== 유튜브 ===== -->
+<section id="tab-yt" role="tabpanel" hidden>
+<div class="panel">
+<h2>홈페이지에 보여줄 유튜브 영상</h2>
+<p class="hint">유튜브 영상 주소를 붙여넣으세요 (예: https://youtu.be/… 또는 https://www.youtube.com/watch?v=…). 첫 번째 영상이 크게 나오고, 나머지는 아래 목록으로 나옵니다. 비워두면 채널의 최신 영상 목록이 나옵니다.</p>
+<div id="ytList" class="yt-list"></div>
+<button type="button" class="link" id="ytAdd">+ 영상 추가</button>
+<button type="button" class="btn" id="ytSave">저장</button>
+<p class="msg" id="ytMsg" role="status" aria-live="polite"></p>
+<details class="help"><summary>영상이 홈페이지에서 재생되지 않을 때</summary>
+<ol>
+<li>YouTube 스튜디오(studio.youtube.com) → 왼쪽 <b>콘텐츠</b> → 해당 영상의 <b>세부정보(연필)</b></li>
+<li>공개 상태가 <b>공개</b> 또는 <b>일부 공개</b>인지 확인 (비공개는 재생 불가)</li>
+<li>아래쪽 <b>자세히 보기</b> → <b>퍼가기 허용</b>에 체크 → 저장</li>
+<li>시청자층이 <b>아동용</b>으로 설정된 영상은 일부 기능이 제한될 수 있습니다</li>
+</ol></details>
+</div>
 </section>
 </main>
 
-<script src="/admin/admin.js?v=2" defer></script>
+<script src="/admin/admin.js?v=3" defer></script>
 </body>
 </html>
