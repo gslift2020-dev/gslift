@@ -1,6 +1,10 @@
 // 관리자 기능: 로그인, 문의, 설치사례(여러 사진·글), 메인 슬라이드, 설정
-import { json, clean, kst, ensureSchema } from './util.js';
+import { json, clean, kst, ensureSchema, CATS, inferCat } from './util.js';
 import { specRows } from './contact.js';
+import { cleanCompany, cleanFaq, dropSiteCache, DEFAULT_COMPANY, DEFAULT_FAQ } from './site.js';
+import { statsAdmin } from './stats.js';
+
+export { CATS, inferCat };
 
 const COOKIE = 'gs_admin';
 const SESSION_SECONDS = 12 * 3600;
@@ -10,19 +14,9 @@ const MAX_PHOTO_BYTES = 4 * 1024 * 1024;
 const MAX_PHOTOS_PER_CASE = 20;
 const MAX_SLIDES = 10;
 
-// 설치사례 분류 (제품소개 4종과 같음)
-export const CATS = { fl: '화물용 리프트(F/L)', tl: '테이블 리프트(T/L)', st: '수동·자동 스태커', tr: '운반기계' };
-export function inferCat(title) {
-  const t = String(title || '');
-  if (/테이블|T\/L/i.test(t)) return 'tl';
-  if (/스태커/.test(t)) return 'st';
-  if (/운반|대차/.test(t)) return 'tr';
-  return 'fl';
-}
 const STATUSES = ['new', 'progress', 'done'];
 
 export const DEFAULT_CHIPS = [
-  { name: '제품', items: ['화물용 리프트(F/L)', '테이블 리프트(T/L)', '운반기계'] },
   { name: '적재하중', items: ['1톤', '2톤', '3톤', '4톤', '5톤', '6톤', '7톤'] },
   { name: '정지층', items: ['1STOP', '2STOP', '3STOP', '4STOP', '5STOP', '6STOP', '7STOP', '8STOP'] },
   { name: '출입방향', items: ['일방향', '양방향'] },
@@ -197,17 +191,59 @@ async function casePhotos(env, ids) {
   return map;
 }
 
-async function listCasesAdmin(env) {
-  const { results } = await env.DB.prepare('SELECT id, created_at, updated_at, title, sub, site, body, category, visible FROM cases ORDER BY id DESC').all();
+// 정렬: 고정한 글 → 설치(촬영) 날짜 최신순 → 올린 순서
+const CASE_ORDER = "ORDER BY pinned DESC, COALESCE(taken_at, substr(created_at, 1, 10)) DESC, id DESC";
+
+// 분류·검색 조건 (관리자/홈페이지 공용)
+function caseWhere(url, onlyVisible) {
+  const where = [], args = [];
+  if (onlyVisible) where.push('visible = 1');
+  const cat = url.searchParams.get('cat');
+  if (CATS[cat]) { where.push('category = ?'); args.push(cat); }
+  const q = clean(url.searchParams.get('q'), 40);
+  if (q) { where.push('(title LIKE ? OR site LIKE ? OR body LIKE ?)'); const like = '%' + q.replace(/[%_]/g, '') + '%'; args.push(like, like, like); }
+  return { sql: where.length ? 'WHERE ' + where.join(' AND ') : '', args };
+}
+function pageArgs(url, def, max) {
+  const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit'), 10) || def, 1), max);
+  const offset = Math.max(parseInt(url.searchParams.get('offset'), 10) || 0, 0);
+  return { limit, offset };
+}
+async function catCounts(env, onlyVisible) {
+  const { results } = await env.DB.prepare(`SELECT category, COUNT(*) AS n FROM cases ${onlyVisible ? 'WHERE visible = 1' : ''} GROUP BY category`).all();
+  const counts = { all: 0, fl: 0, tl: 0, st: 0, tr: 0 };
+  for (const r of results) { const c = CATS[r.category] ? r.category : 'fl'; counts[c] += r.n; counts.all += r.n; }
+  return counts;
+}
+
+async function listCasesAdmin(request, env) {
+  const url = new URL(request.url);
+  const w = caseWhere(url, false), { limit, offset } = pageArgs(url, 60, 200);
+  const [{ results }, total, counts] = await Promise.all([
+    env.DB.prepare(`SELECT id, created_at, updated_at, taken_at, title, sub, site, body, category, visible, pinned FROM cases ${w.sql} ${CASE_ORDER} LIMIT ? OFFSET ?`).bind(...w.args, limit, offset).all(),
+    env.DB.prepare(`SELECT COUNT(*) AS n FROM cases ${w.sql}`).bind(...w.args).first(),
+    catCounts(env, false),
+  ]);
   const photos = await casePhotos(env, results.map((r) => r.id));
-  return json({ ok: true, items: results.map((r) => ({ ...r, cat: CATS[r.category] ? r.category : inferCat(r.title), site: r.site ?? r.sub ?? '', photos: photos[r.id] || [] })) });
+  return json({
+    ok: true, total: total.n, counts,
+    items: results.map((r) => ({ ...r, pinned: r.pinned ? 1 : 0, cat: CATS[r.category] ? r.category : inferCat(r.title), site: r.site ?? r.sub ?? '', photos: photos[r.id] || [] })),
+  });
 }
 
 function caseFields(form) {
   const title = clean(form.get('title'), 120);
   if (!title) throw new UserError('제목을 입력하거나 사양 버튼을 골라주세요.');
   const c = String(form.get('category') || '');
-  return { title, cat: CATS[c] ? c : inferCat(title), site: clean(form.get('site'), 80), body: clean(form.get('body'), 5000) };
+  // 설치 날짜: 2023-05 또는 2023-05-17 (비우면 올린 날짜)
+  const d = clean(form.get('date'), 10);
+  let date = null;
+  if (d) {
+    const m = /^(20\d\d|19\d\d)-(0[1-9]|1[0-2])(?:-(0[1-9]|[12]\d|3[01]))?$/.exec(d);
+    if (!m) throw new UserError('날짜는 2023-05 또는 2023-05-17 처럼 적어주세요.');
+    date = `${m[1]}-${m[2]}-${m[3] || '01'}`;
+  }
+  return { title, cat: CATS[c] ? c : inferCat(title), site: clean(form.get('site'), 80), body: clean(form.get('body'), 5000), date, hidden: form.get('visible') === '0' };
 }
 
 // 새 글 또는 수정: 사진 순서(order)대로 저장
@@ -243,12 +279,12 @@ async function saveCase(request, env, id) {
     const keys = order.map((t) => (t[0] === 'n' ? newKeys[Number(t.slice(2))] : existingById[Number(t.slice(2))].photo_key));
 
     if (!id) {
-      const r = await env.DB.prepare('INSERT INTO cases (created_at, title, sub, site, body, category, photo_key) VALUES (?, ?, ?, ?, ?, ?, ?)')
-        .bind(kst(), f.title, '', f.site, f.body, f.cat, keys[0]).run();
+      const r = await env.DB.prepare('INSERT INTO cases (created_at, title, sub, site, body, category, photo_key, taken_at, visible) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+        .bind(kst(), f.title, '', f.site, f.body, f.cat, keys[0], f.date, f.hidden ? 0 : 1).run();
       id = r.meta.last_row_id;
     } else {
-      await env.DB.prepare('UPDATE cases SET title = ?, site = ?, body = ?, category = ?, photo_key = ?, updated_at = ? WHERE id = ?')
-        .bind(f.title, f.site, f.body, f.cat, keys[0], kst(), id).run();
+      await env.DB.prepare('UPDATE cases SET title = ?, site = ?, body = ?, category = ?, photo_key = ?, taken_at = ?, updated_at = ? WHERE id = ?')
+        .bind(f.title, f.site, f.body, f.cat, keys[0], f.date, kst(), id).run();
     }
     const stmts = [env.DB.prepare('DELETE FROM case_photos WHERE case_id = ?').bind(id)];
     keys.forEach((k, i) => stmts.push(env.DB.prepare('INSERT INTO case_photos (case_id, photo_key, sort) VALUES (?, ?, ?)').bind(id, k, i)));
@@ -268,6 +304,14 @@ async function setCaseVisible(request, env, id) {
   let body = {};
   try { body = await request.json(); } catch {}
   await env.DB.prepare('UPDATE cases SET visible = ? WHERE id = ?').bind(body.visible ? 1 : 0, id).run();
+  return json({ ok: true });
+}
+
+// 맨 앞에 고정 (나중에 고정한 글이 더 앞)
+async function setCasePinned(request, env, id) {
+  let body = {};
+  try { body = await request.json(); } catch {}
+  await env.DB.prepare('UPDATE cases SET pinned = ? WHERE id = ?').bind(body.pinned ? Math.floor(Date.now() / 1000) : 0, id).run();
   return json({ ok: true });
 }
 
@@ -365,6 +409,8 @@ async function getSettingsAdmin(env) {
     videos: await getSetting(env, 'videos', []),
     hideSamples: !!(await getSetting(env, 'hideSamples', false)),
     slides: await getSlides(env),
+    company: { ...DEFAULT_COMPANY, ...(await getSetting(env, 'company', {})) },
+    faq: await getSetting(env, 'faq', DEFAULT_FAQ),
   });
 }
 
@@ -375,6 +421,13 @@ async function saveSettings(request, env) {
     if ('chips' in body) await putSetting(env, 'chips', cleanChips(body.chips));
     if ('videos' in body) await putSetting(env, 'videos', cleanVideos(body.videos));
     if ('hideSamples' in body) await putSetting(env, 'hideSamples', !!body.hideSamples);
+    if ('company' in body) await putSetting(env, 'company', cleanCompany(body.company));
+    if ('faq' in body) {
+      const faq = cleanFaq(body.faq);
+      if (!faq) throw new UserError('자주 묻는 질문 정보가 잘못되었습니다.');
+      await putSetting(env, 'faq', faq);
+    }
+    dropSiteCache();
     return getSettingsAdmin(env);
   } catch (e) {
     if (e instanceof UserError) return json({ ok: false, error: e.message }, 400);
@@ -382,31 +435,95 @@ async function saveSettings(request, env) {
   }
 }
 
+/* ---------- 공지사항 ---------- */
+
+async function listNotices(env) {
+  const { results } = await env.DB.prepare('SELECT id, created_at, updated_at, title, body, pinned, visible FROM notices ORDER BY pinned DESC, id DESC LIMIT 200').all();
+  return json({ ok: true, items: results });
+}
+async function saveNotice(request, env, id) {
+  let b = {};
+  try { b = await request.json(); } catch {}
+  const title = clean(b.title, 100), body = clean(b.body, 5000);
+  if (!title) return json({ ok: false, error: '제목을 입력해 주세요.' }, 400);
+  const pinned = b.pinned ? 1 : 0, visible = b.visible === false ? 0 : 1;
+  if (id) {
+    const r = await env.DB.prepare('UPDATE notices SET title = ?, body = ?, pinned = ?, visible = ?, updated_at = ? WHERE id = ?').bind(title, body, pinned, visible, kst(), id).run();
+    if (r.meta && r.meta.changes === 0) return json({ ok: false, error: '없는 공지입니다.' }, 404);
+  } else {
+    await env.DB.prepare('INSERT INTO notices (created_at, title, body, pinned, visible) VALUES (?, ?, ?, ?, ?)').bind(kst(), title, body, pinned, visible).run();
+  }
+  dropSiteCache();
+  return listNotices(env);
+}
+async function deleteNotice(env, id) {
+  await env.DB.prepare('DELETE FROM notices WHERE id = ?').bind(id).run();
+  dropSiteCache();
+  return listNotices(env);
+}
+
 /* ---------- 홈페이지용 공개 정보 ---------- */
 
-export async function publicCases(env) {
-  if (!env.DB) return json({ ok: true, items: [] });
+const PUB_COLS = 'id, created_at, taken_at, title, sub, site, body, category';
+
+// 홈페이지 설치사례
+//  - /api/cases?home=1            : 분류마다 최신 12개(사진 전부) + 분류별 개수 → 첫 화면 가로 목록
+//  - /api/cases?cat=fl&offset=0   : 목록 페이지용 (대표 사진 1장 + 사진 수), 24개씩
+export async function publicCases(request, env) {
+  if (!env.DB) return json({ ok: true, items: [], total: 0, counts: { all: 0, fl: 0, tl: 0, st: 0, tr: 0 } });
   await ensureSchema(env);
-  const { results } = await env.DB.prepare('SELECT id, created_at, title, sub, site, body, category FROM cases WHERE visible = 1 ORDER BY id DESC LIMIT 100').all();
+  const url = new URL(request.url);
+  const hdr = { 'cache-control': 'no-cache' };
+  if (url.searchParams.get('home')) {
+    const per = Math.min(Math.max(parseInt(url.searchParams.get('per'), 10) || 12, 1), 30);
+    const { results } = await env.DB.prepare(
+      `SELECT ${PUB_COLS} FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY category ${CASE_ORDER}) AS rn FROM cases WHERE visible = 1) WHERE rn <= ? ${CASE_ORDER}`
+    ).bind(per).all();
+    const photos = await casePhotos(env, results.map((r) => r.id));
+    const items = results.map((r) => publicRow(r, photos[r.id])).filter((r) => r.photos.length);
+    return json({ ok: true, items, counts: await catCounts(env, true) }, 200, hdr);
+  }
+  const w = caseWhere(url, true), { limit, offset } = pageArgs(url, 24, 60);
+  const [{ results }, total] = await Promise.all([
+    env.DB.prepare(`SELECT ${PUB_COLS} FROM cases ${w.sql} ${CASE_ORDER} LIMIT ? OFFSET ?`).bind(...w.args, limit, offset).all(),
+    env.DB.prepare(`SELECT COUNT(*) AS n FROM cases ${w.sql}`).bind(...w.args).first(),
+  ]);
   const photos = await casePhotos(env, results.map((r) => r.id));
-  const items = results.map((r) => publicRow(r, photos[r.id])).filter((r) => r.photos.length);
-  return json({ ok: true, items }, 200, { 'cache-control': 'no-cache' });
+  const items = results.map((r) => {
+    const row = publicRow(r, photos[r.id]);
+    return { id: row.id, title: row.title, site: row.site, cat: row.cat, date: row.date, cover: row.photos[0] || '', count: row.photos.length };
+  }).filter((r) => r.cover);
+  return json({ ok: true, items, total: total.n, counts: await catCounts(env, true) }, 200, hdr);
 }
 
 function publicRow(r, photos) {
   return {
     id: r.id, title: r.title, site: r.site ?? r.sub ?? '', body: r.body || '',
     cat: CATS[r.category] ? r.category : inferCat(r.title),
-    date: String(r.created_at || '').slice(0, 7).replace('-', '.'),
+    date: String(r.taken_at || r.created_at || '').slice(0, 7).replace('-', '.'),
     photos: (photos || []).map((p) => p.img),
   };
+}
+
+// 상세 페이지 미리보기(카카오톡·검색)용: 제목, 대표 사진
+export async function caseMeta(env, id) {
+  const r = await env.DB.prepare(`SELECT ${PUB_COLS} FROM cases WHERE id = ? AND visible = 1`).bind(id).first();
+  if (!r) return null;
+  const photos = await casePhotos(env, [r.id]);
+  return publicRow(r, photos[r.id]);
+}
+
+// 사이트맵용: 보이는 글 번호와 날짜
+export async function caseIdsForSitemap(env) {
+  const { results } = await env.DB.prepare('SELECT id, COALESCE(updated_at, created_at) AS d FROM cases WHERE visible = 1 ORDER BY id DESC LIMIT 5000').all();
+  return results;
 }
 
 // 상세 페이지용 한 건
 export async function publicCase(env, id) {
   if (!env.DB) return json({ ok: false, error: '없는 사례입니다.' }, 404);
   await ensureSchema(env);
-  const r = await env.DB.prepare('SELECT id, created_at, title, sub, site, body, category FROM cases WHERE id = ? AND visible = 1').bind(id).first();
+  const r = await env.DB.prepare(`SELECT ${PUB_COLS} FROM cases WHERE id = ? AND visible = 1`).bind(id).first();
   if (!r) return json({ ok: false, error: '없는 사례입니다.' }, 404);
   const photos = await casePhotos(env, [r.id]);
   return json({ ok: true, item: publicRow(r, photos[r.id]) }, 200, { 'cache-control': 'no-cache' });
@@ -452,15 +569,24 @@ export async function handleAdmin(request, env, path) {
   if (m && method === 'DELETE') return deleteInquiry(env, Number(m[1]));
   if (path.startsWith('/api/admin/inq-photo/') && method === 'GET') return inquiryPhoto(env, decodeURIComponent(path.slice('/api/admin/inq-photo/'.length)));
 
-  if (path === '/api/admin/cases' && method === 'GET') return listCasesAdmin(env);
+  if (path === '/api/admin/cases' && method === 'GET') return listCasesAdmin(request, env);
   if (path === '/api/admin/cases' && method === 'POST') return saveCase(request, env, null);
-  m = /^\/api\/admin\/cases\/(\d+)(\/visible)?$/.exec(path);
-  if (m && m[2] && method === 'POST') return setCaseVisible(request, env, Number(m[1]));
+  m = /^\/api\/admin\/cases\/(\d+)(\/visible|\/pin)?$/.exec(path);
+  if (m && m[2] === '/visible' && method === 'POST') return setCaseVisible(request, env, Number(m[1]));
+  if (m && m[2] === '/pin' && method === 'POST') return setCasePinned(request, env, Number(m[1]));
   if (m && !m[2] && method === 'POST') return saveCase(request, env, Number(m[1]));
   if (m && !m[2] && method === 'DELETE') return deleteCase(env, Number(m[1]));
 
   if (path === '/api/admin/settings' && method === 'GET') return getSettingsAdmin(env);
   if (path === '/api/admin/settings' && method === 'POST') return saveSettings(request, env);
   if (path === '/api/admin/slides' && method === 'POST') return saveSlides(request, env);
+
+  if (path === '/api/admin/notices' && method === 'GET') return listNotices(env);
+  if (path === '/api/admin/notices' && method === 'POST') return saveNotice(request, env, null);
+  m = /^\/api\/admin\/notices\/(\d+)$/.exec(path);
+  if (m && method === 'POST') return saveNotice(request, env, Number(m[1]));
+  if (m && method === 'DELETE') return deleteNotice(env, Number(m[1]));
+
+  if (path === '/api/admin/stats' && method === 'GET') return statsAdmin(env);
   return json({ ok: false, error: 'Not found' }, 404);
 }

@@ -5,6 +5,11 @@
   var CATS = window.GS_CATS || {};
   var params = new URLSearchParams(location.search);
   var id = params.get('id'), sid = params.get('s');
+  var TEL = window.GS_TEL || '031-986-5345';
+  try {
+    var hitData = JSON.stringify({ p: location.pathname + location.search, r: document.referrer });
+    if (navigator.sendBeacon) navigator.sendBeacon('/api/hit', new Blob([hitData], { type: 'text/plain' }));
+  } catch (e) {}
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var ARROW_L = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>';
   var ARROW_R = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>';
@@ -36,7 +41,7 @@
   function render(c) {
     document.title = c.title + ' | 거산리프트 설치사례';
     $('#crumbCat').textContent = CATS[c.cat] || '설치사례';
-    $('#crumbList').href = '/?to=cases&cat=' + c.cat;
+    $('#crumbList').href = '/cases.html?cat=' + c.cat;
     var box = $('#cdBody'); box.innerHTML = '';
 
     /* 사진 */
@@ -76,7 +81,7 @@
     info.appendChild(el('h1', null, c.title));
     var meta = el('div', 'cd-site');
     if (c.site) meta.appendChild(el('span', null, '현장: ' + c.site));
-    if (c.date) meta.appendChild(el('span', null, '등록: ' + c.date));
+    if (c.date) meta.appendChild(el('span', null, '설치: ' + c.date));
     meta.appendChild(el('span', null, '사진 ' + c.photos.length + '장'));
     info.appendChild(meta);
     var spec = specOf(c.title);
@@ -92,7 +97,7 @@
     cta.appendChild(el('p', null, '현장 사진과 필요한 하중·층수를 알려주시면 현장에 맞춰 견적을 드립니다.'));
     var btns = el('div', 'btns');
     var q = el('a', 'btn btn-white', '견적 문의하기'); q.href = '/?to=contact&product=' + c.cat;
-    var tel = el('a', 'btn btn-ghost', '031-986-5345 전화'); tel.href = 'tel:031-986-5345';
+    var tel = el('a', 'btn btn-ghost', TEL + ' 전화'); tel.href = 'tel:' + TEL.replace(/[^0-9+]/g, '');
     btns.appendChild(q); btns.appendChild(tel); cta.appendChild(btns);
     info.appendChild(cta);
 
@@ -110,34 +115,36 @@
     var same = list.filter(function (x) { return x.cat === cur.cat && x.key !== cur.key; }).slice(0, 4);
     if (!same.length) return;
     $('#moreTitle').textContent = (CATS[cur.cat] || '같은 제품') + ' 다른 사례';
-    $('#moreAll').href = '/?to=cases&cat=' + cur.cat;
+    $('#moreAll').href = '/cases.html?cat=' + cur.cat;
     var g = $('#moreGrid');
     same.forEach(function (x) {
       var a = el('a'); a.href = x.href;
-      var im = el('img'); im.src = x.photos[0]; im.alt = x.title; im.loading = 'lazy';
+      var im = el('img'); im.src = x.cover; im.alt = x.title; im.loading = 'lazy';
       a.appendChild(im); a.appendChild(el('b', null, x.title)); a.appendChild(el('small', null, x.site || CATS[x.cat] || ''));
       g.appendChild(a);
     });
     $('#cdMore').hidden = false;
   }
 
-  function sampleToCase(s) { return { key: 's' + s.id, cat: s.cat, title: s.title, site: '', body: '', date: '', photos: [s.img], href: '/case.html?s=' + s.id }; }
+  function sampleToCase(s) { return { key: 's' + s.id, cat: s.cat, title: s.title, site: '', body: '', date: '', photos: [s.img], cover: s.img, href: '/case.html?s=' + s.id }; }
   function notFound() {
-    $('#cdBody').innerHTML = '<p class="case-empty">찾는 설치사례가 없거나 내려간 사례입니다. <a href="/?to=cases">설치사례 목록으로</a></p>';
+    $('#cdBody').innerHTML = '<p class="case-empty">찾는 설치사례가 없거나 내려간 사례입니다. <a href="/cases.html">설치사례 목록으로</a></p>';
   }
 
-  var listP = fetch('/api/cases').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
   var siteP = fetch('/api/site').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
   var oneP = id ? fetch('/api/cases/' + encodeURIComponent(id)).then(function (r) { return r.json(); }).catch(function () { return null; }) : Promise.resolve(null);
 
-  Promise.all([oneP, listP, siteP]).then(function (r) {
+  Promise.all([oneP, siteP]).then(function (r) {
     var cur = null;
     if (id && r[0] && r[0].ok) { var it = r[0].item; cur = { key: 'd' + it.id, cat: it.cat, title: it.title, site: it.site, body: it.body, date: it.date, photos: it.photos }; }
     if (sid) { var s = (window.GS_SAMPLE || []).filter(function (x) { return x.id === sid; })[0]; if (s) cur = sampleToCase(s); }
     if (!cur || !cur.photos.length) return notFound();
     render(cur);
-    var mine = (r[1] && r[1].ok ? r[1].items : []).map(function (c) { return { key: 'd' + c.id, cat: c.cat, title: c.title, site: c.site, photos: c.photos, href: '/case.html?id=' + c.id }; });
-    var samples = (r[2] && r[2].hideSamples) ? [] : (window.GS_SAMPLE || []).map(sampleToCase);
-    renderMore(mine.concat(samples), cur);
+    // 같은 분류 다른 사례 (최신 8개 중에서)
+    fetch('/api/cases?cat=' + cur.cat + '&limit=8').then(function (x) { return x.ok ? x.json() : null; }).catch(function () { return null; }).then(function (l) {
+      var mine = (l && l.ok ? l.items : []).map(function (c) { return { key: 'd' + c.id, cat: c.cat, title: c.title, site: c.site, cover: c.cover, href: '/case.html?id=' + c.id }; });
+      var samples = (r[1] && r[1].hideSamples) ? [] : (window.GS_SAMPLE || []).map(sampleToCase);
+      renderMore(mine.concat(samples), cur);
+    });
   });
 })();

@@ -394,3 +394,114 @@ th:last-child,td:last-child{text-align:right}
 .up-item{position:relative;width:84px;height:84px;border-radius:10px;overflow:hidden;background:#dde3ee}
 .up-item img{width:100%;height:100%;object-fit:cover}
 .up-item button{position:absolute;right:3px;top:3px;width:26px;height:26px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;cursor:pointer;font-size:15px;line-height:26px;padding:0}
+/* 안전검사: 실제 리프트 그림 + 번호 */
+.diagram.photo{aspect-ratio:780/1115;background:#fff;border-radius:18px;box-shadow:0 18px 40px rgba(0,0,0,.25)}
+.diagram.photo>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:18px}
+.diagram.photo .ld{stroke:rgba(6,38,86,.45);stroke-width:2;stroke-dasharray:5 5}
+.diagram.photo .ld.on{stroke:#F5B800;stroke-width:4;stroke-dasharray:none;filter:drop-shadow(0 0 2px rgba(6,38,86,.8))}
+.diagram.photo .tg{fill:rgba(6,38,86,.35);stroke:#fff;stroke-width:2}
+.diagram.photo .tg.on{fill:#F5B800;stroke:#062656;stroke-width:3}
+.diagram.photo .dot{background:var(--navy,#062656);border-color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.diagram.photo .dot:hover{background:var(--blue)}
+.diagram.photo .dot.on{background:#F5B800;color:#062656;border-color:#062656;box-shadow:0 0 0 6px rgba(245,184,0,.35)}
+.diagram-col:has(.diagram.photo){max-width:440px;padding-top:0}
+@media (max-width:520px){.diagram.photo .dot{width:28px;height:28px;font-size:12px}}
+.diagram.photo .tg.on{animation:gsPulse 1.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes gsPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.6)}}
+@media (prefers-reduced-motion:reduce){.diagram.photo .tg.on{animation:none}}
+
+/* 설치사례: 화살표 + 전체 목록 버튼 */
+.case-nav{display:flex;flex-direction:column;align-items:flex-end;gap:12px}
+.all-link{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:15px;color:var(--blue);border:1.5px solid #C6D1E4;border-radius:999px;padding:9px 16px;background:#fff;transition:background .2s,border-color .2s,color .2s}
+.all-link:hover{background:var(--blue);border-color:var(--blue);color:#fff}
+.case-more{cursor:pointer;text-decoration:none}
+.case-more .cm-in{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;aspect-ratio:3/4;border-radius:12px;background:var(--bg-soft);border:1.5px dashed #B7C5DE;color:var(--blue);font-weight:600;font-size:15px;transition:background .2s}
+.case-more .cm-in b{font-size:30px;color:var(--navy)}
+.case-more .arr{font-size:22px}
+.case-more:hover .cm-in{background:#E6EDF8}
+@media (max-width:640px){.case-nav{flex-direction:row-reverse;align-items:center;justify-content:space-between;width:100%}}
+
+/* 보유설비 사진 2장 */
+.equip-ph{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:8px}
+.equip-ph figure{margin:0;display:flex;flex-direction:column;gap:6px}
+.equip-ph .zoom{border-radius:12px}
+.equip-ph img{width:100%;aspect-ratio:4/3;object-fit:cover}
+.equip-ph figcaption{font-size:13px;color:var(--muted);font-weight:600}
+
+/* 설치 옵션: 누를 수 있음 표시 */
+.opt{cursor:zoom-in}
+.opt:focus-visible{outline:3px solid var(--sky);outline-offset:3px}
+.opt-exp{position:absolute;right:14px;top:14px;z-index:2;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.9);color:var(--navy);display:flex;align-items:center;justify-content:center;opacity:.85;transition:opacity .2s,transform .2s}
+.opt:hover .opt-exp{opacity:1;transform:scale(1.08)}
+
+/* 크게 보기 (설치 옵션) */
+.gview{position:fixed;inset:0;z-index:120;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:56px 72px 24px}
+.gview[hidden]{display:none!important}
+.gv-bg{position:absolute;inset:0;border:0;padding:0;background:rgba(3,14,36,.94);opacity:0;transition:opacity .35s;cursor:zoom-out}
+.gview.open .gv-bg{opacity:1}
+.gv-fig{position:relative;margin:0;z-index:1;display:flex;justify-content:center;max-width:100%}
+.gv-fig img{display:block;max-width:min(1100px,100%);max-height:calc(100vh - 230px);width:auto;height:auto;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.45);background:#0F1E3A;will-change:transform}
+.gv-fig img.in-r{animation:gvInR .38s cubic-bezier(.2,.8,.2,1)}
+.gv-fig img.in-l{animation:gvInL .38s cubic-bezier(.2,.8,.2,1)}
+@keyframes gvInR{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
+@keyframes gvInL{from{opacity:0;transform:translateX(-40px)}to{opacity:1;transform:none}}
+.gv-count{position:absolute;right:12px;top:12px;background:rgba(6,38,86,.85);color:#fff;font-size:13px;font-weight:700;padding:4px 10px;border-radius:999px}
+.gv-info{position:relative;z-index:1;max-width:720px;width:100%;color:#fff;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;opacity:0;transform:translateY(10px);transition:opacity .35s .12s,transform .35s .12s}
+.gview.open .gv-info{opacity:1;transform:none}
+.gv-info .tags{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+.gv-info .tags span{font-size:12px;font-weight:700;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);padding:3px 9px;border-radius:999px}
+.gv-info h3{font-size:22px}
+.gv-info p{color:#DCE4F2;font-size:15px;line-height:1.6}
+.gv-dots{display:flex;gap:6px;margin-top:4px}
+.gv-dots button{width:8px;height:8px;border-radius:50%;border:0;padding:0;background:rgba(255,255,255,.35);cursor:pointer;transition:width .25s,background .25s}
+.gv-dots button.on{width:22px;border-radius:4px;background:#fff}
+.gv-nav,.gv-close{position:absolute;z-index:2;width:52px;height:52px;border-radius:50%;border:0;background:rgba(255,255,255,.92);color:var(--navy);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.3);opacity:0;transition:opacity .3s,background .2s}
+.gview.open .gv-nav,.gview.open .gv-close{opacity:1}
+.gv-nav:hover,.gv-close:hover{background:#fff}
+.gv-nav{top:calc(50% - 60px)}
+.gv-nav.prev{left:14px}.gv-nav.next{right:14px}
+.gv-close{top:14px;right:14px;width:46px;height:46px}
+@media (max-width:640px){
+  .gview{padding:64px 12px 20px;gap:12px}
+  .gv-fig img{max-height:calc(100vh - 280px)}
+  .gv-nav{top:auto;bottom:18px;width:46px;height:46px}
+  .gv-info{padding:0 52px}
+  .gv-info h3{font-size:19px}.gv-info p{font-size:14px}
+}
+@media (prefers-reduced-motion:reduce){.gv-fig img.in-r,.gv-fig img.in-l{animation:none}}
+
+/* 공지사항 */
+.notice{padding-top:72px;padding-bottom:40px}
+.notice-list{display:flex;flex-direction:column;border-top:2px solid var(--navy)}
+.notice-item{border-bottom:1px solid var(--line)}
+.notice-item summary{display:flex;align-items:center;gap:12px;padding:18px 6px;cursor:pointer;list-style:none}
+.notice-item summary::-webkit-details-marker{display:none}
+.notice-item summary b{flex:1;font-weight:600;font-size:16px}
+.notice-item time{color:var(--muted);font-size:14px;white-space:nowrap}
+.notice-item .pin{background:#F5B800;color:var(--navy);font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px}
+.notice-item .nb{padding:4px 6px 22px;color:#3A4A68;line-height:1.75;display:flex;flex-direction:column;gap:10px}
+
+/* 자주 묻는 질문 */
+.faq{display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start}
+.faq .l{flex:1 1 280px;min-width:0;display:flex;flex-direction:column;gap:14px;position:sticky;top:100px}
+.faq-list{flex:2 1 560px;min-width:0;display:flex;flex-direction:column;gap:10px}
+.faq-item{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;transition:box-shadow .2s}
+.faq-item[open]{box-shadow:0 10px 28px rgba(6,38,86,.08);border-color:#C6D1E4}
+.faq-item summary{display:flex;align-items:center;gap:12px;padding:18px 20px;cursor:pointer;font-weight:600;font-size:16px;list-style:none;position:relative;padding-right:48px}
+.faq-item summary::-webkit-details-marker{display:none}
+.faq-item summary::after{content:"";position:absolute;right:20px;top:50%;width:10px;height:10px;border-right:2px solid var(--blue);border-bottom:2px solid var(--blue);transform:translateY(-70%) rotate(45deg);transition:transform .25s}
+.faq-item[open] summary::after{transform:translateY(-30%) rotate(-135deg)}
+.faq-item .q{flex-shrink:0;width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;font-size:14px;display:flex;align-items:center;justify-content:center}
+.faq-item .a{padding:0 20px 20px 60px;color:#3A4A68;line-height:1.75;display:flex;flex-direction:column;gap:8px}
+@media (max-width:640px){.faq .l{position:static}.faq-item .a{padding-left:20px}}
+
+/* 휴대폰 하단 고정 연락 바 */
+.mbar{display:none}
+@media (max-width:900px){
+  .mbar{position:fixed;left:0;right:0;bottom:0;z-index:40;display:grid;grid-template-columns:1fr 1fr 1.3fr;background:#fff;border-top:1px solid var(--line);box-shadow:0 -6px 20px rgba(6,38,86,.12);padding-bottom:env(safe-area-inset-bottom)}
+  .mbar a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:60px;font-size:13px;font-weight:700;color:var(--navy)}
+  .mbar a+a{border-left:1px solid var(--line)}
+  .mbar a.go{background:var(--blue);color:#fff;border-left:0}
+  body{padding-bottom:calc(60px + env(safe-area-inset-bottom))}
+  .to-top{bottom:calc(76px + env(safe-area-inset-bottom));right:14px;width:46px;height:46px}
+}

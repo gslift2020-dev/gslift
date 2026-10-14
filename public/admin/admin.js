@@ -33,7 +33,7 @@
   }
   function showApp() {
     $('#loginView').hidden = true; $('#appView').hidden = false; $('#logoutBtn').hidden = false;
-    loadInquiries(); loadSettings();
+    loadInquiries(); loadSettings(); loadDash();
   }
   $('#loginForm').addEventListener('submit', function (e) {
     e.preventDefault();
@@ -46,12 +46,15 @@
   });
   $('#logoutBtn').addEventListener('click', function () { api('/api/admin/logout', { method: 'POST' }).then(showLogin); });
   $$('.tabs button').forEach(function (b) {
-    b.addEventListener('click', function () {
-      $$('.tabs button').forEach(function (x) { var on = x === b; x.classList.toggle('on', on); x.setAttribute('aria-selected', on); });
-      ['inq', 'cases', 'hero', 'yt'].forEach(function (t) { $('#tab-' + t).hidden = b.dataset.tab !== t; });
-      if (b.dataset.tab === 'cases' && !loaded.cases) { loaded.cases = 1; loadCases(); }
-    });
+    b.addEventListener('click', function () { openTab(b.dataset.tab); });
   });
+  function openTab(tab) {
+    $$('.tabs button').forEach(function (x) { var on = x.dataset.tab === tab; x.classList.toggle('on', on); x.setAttribute('aria-selected', on); });
+    ['dash', 'inq', 'cases', 'bulk', 'notice', 'hero', 'yt', 'faq', 'co'].forEach(function (t) { $('#tab-' + t).hidden = tab !== t; });
+    if (tab === 'cases' && !loaded.cases) { loaded.cases = 1; loadCases(true); }
+    if (tab === 'notice' && !loaded.notice) { loaded.notice = 1; loadNotices(); }
+    if (tab === 'dash') loadDash();
+  }
 
   /* ================= 문의 ================= */
   var inquiries = [], filter = 'all';
@@ -60,6 +63,7 @@
     api('/api/admin/inquiries').then(function (d) {
       if (!d.ok) { $('#inqList').innerHTML = '<p class="empty">' + esc(d.error) + '</p>'; return; }
       inquiries = d.items; renderInquiries();
+      $('#dNew').textContent = inquiries.filter(function (x) { return x.status === 'new'; }).length;
     });
   }
   var inqQuery = '';
@@ -268,6 +272,7 @@
       if (!d.ok) return;
       chips = d.chips; videos = d.videos; $('#hideSamples').checked = !!d.hideSamples;
       renderChips(); heroLoad(d.slides); ytRender();
+      faqItems = d.faq || []; faqRender(); coFill(d.company || {});
     });
   }
 
@@ -283,7 +288,7 @@
   });
 
   function openEditor(post) {
-    editing = { id: post ? post.id : null, items: [], sel: -1, chipSel: {}, cat: post ? post.cat : '' };
+    editing = { id: post ? post.id : null, items: [], sel: -1, chipSel: {}, cat: post ? post.cat : (CATS[caseFilter] ? caseFilter : '') };
     var f = $('#caseForm');
     f.hidden = false; f.reset(); say($('#caseMsg'), '');
     $('#caseFormTitle').textContent = post ? '설치사례 수정' : '새 설치사례';
@@ -291,10 +296,12 @@
     if (post) {
       editing.items = post.photos.map(function (p) { return { kind: 'old', id: p.id, img: p.img }; });
       f.title.value = post.title; f.site.value = post.site || ''; f.body.value = post.body || '';
+      f.date.value = post.taken_at ? post.taken_at.slice(0, 7) : '';
       // 제목에 들어있는 사양을 버튼에 표시
       var parts = post.title.split('·').map(function (s) { return s.trim(); });
       chips.forEach(function (g) { g.items.forEach(function (v) { if (parts.indexOf(v) >= 0) editing.chipSel[g.name] = v; }); });
     }
+    if (!post && editing.cat) setTitleCat(editing.cat);
     renderChips(); renderThumbs(); caseAdj.show(null); renderCat();
     f.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
@@ -376,7 +383,7 @@
           if (chipEditing) { g.items.splice(vi, 1); renderChips(); return; }
           if (!editing) return;
           if (sel[g.name] === v) delete sel[g.name]; else sel[g.name] = v;
-          if (sel[g.name] === v && /리프트|스태커|운반/.test(v)) { editing.cat = inferCat(v); renderCat(); }
+          if (sel[g.name] === v && isProduct(v)) { delete sel[g.name]; editing.cat = inferCat(v); renderCat(); }
           buildTitle(); renderChips();
         });
         row.appendChild(b);
@@ -401,10 +408,18 @@
   function renderCat() {
     $$('#catSeg button').forEach(function (b) { var on = editing && b.dataset.cat === editing.cat; b.classList.toggle('on', on); b.setAttribute('aria-checked', on); });
   }
-  $$('#catSeg button').forEach(function (b) { b.addEventListener('click', function () { if (editing) { editing.cat = b.dataset.cat; renderCat(); } }); });
+  $$('#catSeg button').forEach(function (b) { b.addEventListener('click', function () { if (editing) { editing.cat = b.dataset.cat; renderCat(); setTitleCat(b.dataset.cat); } }); });
+  // 제품 이름(분류)은 제목 맨 앞: "화물용 리프트(F/L) · 2톤 · 3STOP"
+  function isProduct(v) { return /리프트|스태커|운반기계|F\/L|T\/L/i.test(v); }
+  function splitTitle(t) { return String(t || '').split('·').map(function (x) { return x.trim(); }).filter(Boolean); }
+  function setTitleCat(cat) {
+    var f = $('#caseForm'), parts = splitTitle(f.title.value);
+    if (parts.length && isProduct(parts[0])) parts.shift();
+    f.title.value = [CATS[cat]].concat(parts).join(' · ');
+  }
   function buildTitle() {
-    var sel = editing.chipSel, parts = [];
-    chips.forEach(function (g) { if (sel[g.name]) parts.push(sel[g.name]); });
+    var sel = editing.chipSel, parts = editing.cat ? [CATS[editing.cat]] : [];
+    chips.forEach(function (g) { if (sel[g.name] && !isProduct(sel[g.name])) parts.push(sel[g.name]); });
     $('#caseForm').title.value = parts.join(' · ');
   }
   $('#chipEditBtn').addEventListener('click', function () {
@@ -427,6 +442,8 @@
     btn.disabled = true;
     var fd = new FormData(), order = [], news = editing.items.filter(function (x) { return x.kind === 'new'; }), done = 0;
     fd.append('title', f.title.value.trim()); fd.append('category', editing.cat); fd.append('site', f.site.value.trim()); fd.append('body', f.body.value.trim());
+    if (f.date.value && !/^\d{4}-\d{2}$/.test(f.date.value.trim())) { btn.disabled = false; f.date.focus(); return say(msg, '설치 날짜는 2024-05 처럼 적어주세요.', 'err'); }
+    fd.append('date', f.date.value.trim());
     var chain = Promise.resolve();
     editing.items.forEach(function (it) {
       if (it.kind === 'old') { order.push('p:' + it.id); return; }
@@ -443,9 +460,9 @@
     }).then(function (d) {
       btn.disabled = false;
       if (!d.ok) return say(msg, d.error || '저장 실패', 'err');
-      closeEditor(); loadCases();
+      closeEditor(); loadCases(true);
       say($('#caseMsg'), '');
-      flash('저장했습니다. 홈페이지 설치사례 맨 앞에서 확인할 수 있습니다.');
+      flash('저장했습니다. 홈페이지 설치사례에서 확인할 수 있습니다.');
     }).catch(function () { btn.disabled = false; say(msg, '연결 오류로 저장하지 못했습니다.', 'err'); });
   });
   function flash(text) {
@@ -454,17 +471,25 @@
   }
 
   /* ---- 글 목록 ---- */
-  function loadCases() {
-    api('/api/admin/cases').then(function (d) {
+  var caseTotal = 0, caseQ = '', caseReq = 0;
+  function loadCases(reset) {
+    var off = reset ? 0 : cases.length, my = ++caseReq;
+    var url = '/api/admin/cases?limit=60&offset=' + off + (CATS[caseFilter] ? '&cat=' + caseFilter : '') + (caseQ ? '&q=' + encodeURIComponent(caseQ) : '');
+    api(url).then(function (d) {
+      if (my !== caseReq) return;
       if (!d.ok) { $('#caseList').innerHTML = '<p class="empty">' + esc(d.error) + '</p>'; return; }
-      cases = d.items;
+      cases = reset ? d.items : cases.concat(d.items); caseTotal = d.total;
+      $$('#caseFilters button').forEach(function (b) { $('i', b).textContent = d.counts[b.dataset.f] || 0; });
       renderCaseList();
     });
   }
   var caseFilter = 'all';
   $$('#caseFilters button').forEach(function (b) {
-    b.addEventListener('click', function () { caseFilter = b.dataset.f; $$('#caseFilters button').forEach(function (x) { x.classList.toggle('on', x === b); }); renderCaseList(); });
+    b.addEventListener('click', function () { caseFilter = b.dataset.f; $$('#caseFilters button').forEach(function (x) { x.classList.toggle('on', x === b); }); loadCases(true); });
   });
+  var caseQt;
+  $('#caseSearch').addEventListener('input', function () { var v = this.value.trim(); clearTimeout(caseQt); caseQt = setTimeout(function () { caseQ = v; loadCases(true); }, 300); });
+  $('#caseMore').addEventListener('click', function () { loadCases(false); });
   $('#hideSamples').addEventListener('change', function () {
     var cb = this;
     api('/api/admin/settings', { method: 'POST', json: { hideSamples: cb.checked } }).then(function (d) {
@@ -474,14 +499,15 @@
   });
   function renderCaseList() {
     {
-      var list = cases.filter(function (c) { return caseFilter === 'all' || c.cat === caseFilter; });
-      if (!cases.length) { $('#caseList').innerHTML = '<p class="empty">아직 올린 글이 없습니다. "새 글 쓰기"를 눌러 시작하세요.</p>'; return; }
-      if (!list.length) { $('#caseList').innerHTML = '<p class="empty">이 분류에 올린 글이 없습니다.</p>'; return; }
+      var list = cases;
+      $('#caseMore').hidden = cases.length >= caseTotal;
+      if (!list.length) { $('#caseList').innerHTML = '<p class="empty">' + (caseQ ? '찾는 글이 없습니다.' : caseFilter === 'all' ? '아직 올린 글이 없습니다. "새 글 쓰기"를 눌러 시작하세요.' : '이 분류에 올린 글이 없습니다.') + '</p>'; return; }
       $('#caseList').innerHTML = list.map(function (c) {
         var cover = c.photos[0] ? c.photos[0].img : '';
-        return '<article class="post' + (c.visible ? '' : ' hidden') + '"><div class="ph"><img src="' + esc(cover) + '" alt="" loading="lazy"><span class="cnt">사진 ' + c.photos.length + '장</span></div>' +
-          '<span class="pcat">' + esc(CATS[c.cat] || '') + '</span><div class="t">' + esc(c.title) + (c.visible ? '' : ' (숨김)') + '</div><div class="s">' + esc(c.site) + ' · ' + esc((c.updated_at || c.created_at || '').slice(0, 10)) + '</div>' +
+        return '<article class="post' + (c.visible ? '' : ' hidden') + (c.pinned ? ' pinned' : '') + '"><div class="ph"><img src="' + esc(cover) + '" alt="" loading="lazy"><span class="cnt">사진 ' + c.photos.length + '장</span>' + (c.pinned ? '<span class="pin">📌 맨 앞 고정</span>' : '') + '</div>' +
+          '<span class="pcat">' + esc(CATS[c.cat] || '') + '</span><div class="t">' + esc(c.title) + (c.visible ? '' : ' (숨김)') + '</div><div class="s">' + esc([c.site, c.taken_at ? '설치 ' + c.taken_at.slice(0, 7) : '등록 ' + (c.created_at || '').slice(0, 10)].filter(Boolean).join(' · ')) + '</div>' +
           '<div class="a"><button type="button" class="link" data-act="edit" data-id="' + c.id + '">수정</button>' +
+          '<button type="button" class="link" data-act="pin" data-id="' + c.id + '" data-v="' + c.pinned + '">' + (c.pinned ? '고정 풀기' : '맨 앞 고정') + '</button>' +
           '<a class="link" href="/case.html?id=' + c.id + '" target="_blank" rel="noopener">보기</a>' +
           '<button type="button" class="link" data-act="toggle" data-id="' + c.id + '" data-v="' + c.visible + '">' + (c.visible ? '숨기기' : '보이기') + '</button>' +
           '<button type="button" class="link del" data-act="del" data-id="' + c.id + '">삭제</button></div></article>';
@@ -492,8 +518,9 @@
     var b = e.target.closest('button'); if (!b) return;
     var id = +b.dataset.id, post = cases.filter(function (c) { return c.id === id; })[0];
     if (b.dataset.act === 'edit') openEditor(post);
-    else if (b.dataset.act === 'toggle') api('/api/admin/cases/' + id + '/visible', { method: 'POST', json: { visible: b.dataset.v !== '1' } }).then(loadCases);
-    else if (b.dataset.act === 'del' && confirm('이 글과 사진을 완전히 삭제할까요? 되돌릴 수 없습니다.')) api('/api/admin/cases/' + id, { method: 'DELETE' }).then(loadCases);
+    else if (b.dataset.act === 'toggle') api('/api/admin/cases/' + id + '/visible', { method: 'POST', json: { visible: b.dataset.v !== '1' } }).then(function () { loadCases(true); });
+    else if (b.dataset.act === 'pin') api('/api/admin/cases/' + id + '/pin', { method: 'POST', json: { pinned: b.dataset.v !== '1' } }).then(function () { loadCases(true); });
+    else if (b.dataset.act === 'del' && confirm('이 글과 사진을 완전히 삭제할까요? 되돌릴 수 없습니다.')) api('/api/admin/cases/' + id, { method: 'DELETE' }).then(function () { loadCases(true); });
   });
 
   /* ================= 메인 화면 사진 ================= */
@@ -593,6 +620,334 @@
       if (!d.ok) return say($('#ytMsg'), d.error || '저장 실패', 'err');
       videos = d.videos; ytRender(); say($('#ytMsg'), '저장했습니다. 홈페이지 동영상 칸에 반영됩니다.', 'ok');
     });
+  });
+
+  /* ================= 한눈에 보기 (방문 통계) ================= */
+  var dashAt = 0;
+  function loadDash() {
+    if (Date.now() - dashAt < 20000) return; dashAt = Date.now();
+    api('/api/admin/stats').then(function (d) {
+      if (!d.ok) { $('#vChart').innerHTML = '<p class="empty">' + esc(d.error || '통계를 불러오지 못했습니다.') + '</p>'; return; }
+      $('#dToday').textContent = d.today; $('#dTodayPv').textContent = '페이지 ' + d.todayPv + '회 열람';
+      $('#dYest').textContent = d.yesterday; $('#dWeek').textContent = d.week; $('#dMonth').textContent = d.month;
+      $('#dMobile').textContent = d.mobileShare == null ? '' : '휴대폰 ' + d.mobileShare + '% · PC ' + (100 - d.mobileShare) + '%';
+      drawChart(d.days); drawSources(d.sources); drawPages(d.pages);
+    });
+  }
+  function md(day) { return (+day.slice(5, 7)) + '/' + (+day.slice(8, 10)); }
+  function niceMax(v) { if (v <= 4) return 4; var p = Math.pow(10, Math.floor(Math.log10(v))), n = v / p; return (n <= 2 ? 2 : n <= 5 ? 5 : 10) * p; }
+  function drawChart(days) {
+    var box = $('#vChart'), tip = $('#vTip'), max = niceMax(Math.max.apply(null, days.map(function (d) { return d.uv; })));
+    var grid = [max, max / 2, 0].map(function (v) { return '<div class="gl" style="bottom:' + (v / max * 100) + '%"><span>' + v + '</span></div>'; }).join('');
+    var bars = days.map(function (d, i) {
+      var h = d.uv / max * 100, last = i === days.length - 1;
+      return '<div class="vb" data-i="' + i + '" tabindex="0" aria-label="' + md(d.day) + ' 방문자 ' + d.uv + '명">' +
+        (last && d.uv ? '<em>' + d.uv + '</em>' : '') +
+        '<i style="height:' + h + '%"></i>' + (d.inq ? '<b class="inq" title="문의 ' + d.inq + '건"></b>' : '') +
+        '<span class="x">' + (i % 5 === 4 || last ? md(d.day) : '') + '</span></div>';
+    }).join('');
+    box.innerHTML = '<div class="plot">' + grid + '<div class="bars">' + bars + '</div></div><p class="legend"><span class="sw"></span>방문자 <span class="dot"></span>문의가 들어온 날</p>';
+    function show(e) {
+      var b = e.target.closest('.vb'); if (!b) { tip.hidden = true; return; }
+      var d = days[+b.dataset.i], r = b.getBoundingClientRect(), pr = box.parentNode.getBoundingClientRect();
+      tip.innerHTML = '<b>' + d.day.replace(/-/g, '.') + '</b><span>방문자 ' + d.uv + '명</span><span>페이지 열람 ' + d.pv + '회</span>' + (d.inq ? '<span>문의 ' + d.inq + '건</span>' : '');
+      tip.hidden = false;
+      var x = r.left - pr.left + r.width / 2;
+      tip.style.left = Math.min(Math.max(x, 70), pr.width - 70) + 'px';
+      tip.style.top = (r.top - pr.top - 8) + 'px';
+    }
+    box.onmousemove = show; box.onfocusin = show;
+    box.onmouseleave = function () { tip.hidden = true; }; box.onfocusout = function () { tip.hidden = true; };
+    $('#vTable').innerHTML = '<table class="tbl"><thead><tr><th>날짜</th><th>방문자</th><th>페이지 열람</th><th>문의</th></tr></thead><tbody>' +
+      days.slice().reverse().map(function (d) { return '<tr><td>' + d.day + '</td><td>' + d.uv + '</td><td>' + d.pv + '</td><td>' + d.inq + '</td></tr>'; }).join('') + '</tbody></table>';
+  }
+  $('#dashTableBtn').addEventListener('click', function () {
+    var t = $('#vTable'); t.hidden = !t.hidden; this.textContent = t.hidden ? '표로 보기' : '표 닫기'; this.setAttribute('aria-expanded', !t.hidden);
+  });
+  function drawSources(list) {
+    if (!list.length) { $('#dSources').innerHTML = '<p class="empty">아직 기록이 없습니다.</p>'; return; }
+    var tot = list.reduce(function (a, x) { return a + x.n; }, 0), max = list[0].n;
+    $('#dSources').innerHTML = list.map(function (x) {
+      return '<div class="hb"><span class="l">' + esc(x.src) + '</span><span class="tr"><i style="width:' + (x.n / max * 100) + '%"></i></span><span class="v">' + x.n + '<small> · ' + Math.round(x.n / tot * 100) + '%</small></span></div>';
+    }).join('');
+  }
+  function drawPages(list) {
+    if (!list.length) { $('#dPages').innerHTML = '<li class="empty">아직 기록이 없습니다.</li>'; return; }
+    $('#dPages').innerHTML = list.map(function (x) {
+      return '<li><a href="' + esc(x.path) + '" target="_blank" rel="noopener">' + esc(x.label) + '</a><span>' + x.n + '회</span></li>';
+    }).join('');
+  }
+  function dNewGo() { openTab('inq'); filter = 'new'; $$('#filters button').forEach(function (x) { x.classList.toggle('on', x.dataset.f === 'new'); }); renderInquiries(); }
+  $('#dNewBox').addEventListener('click', dNewGo);
+  $('#dNewBox').addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); dNewGo(); } });
+
+  /* ================= 공지사항 ================= */
+  var notices = [], ntEdit = null;
+  function loadNotices() {
+    api('/api/admin/notices').then(function (d) { if (d.ok) { notices = d.items; ntRender(); } else $('#ntList').innerHTML = '<p class="empty">' + esc(d.error) + '</p>'; });
+  }
+  function ntRender() {
+    if (!notices.length) { $('#ntList').innerHTML = '<p class="empty">아직 공지가 없습니다. 공지가 없으면 홈페이지에 공지사항 칸이 보이지 않습니다.</p>'; return; }
+    $('#ntList').innerHTML = notices.map(function (n) {
+      return '<article class="nt' + (n.visible ? '' : ' off') + '"><div class="nt-h">' + (n.pinned ? '<span class="pin">중요</span>' : '') + '<b>' + esc(n.title) + '</b>' + (n.visible ? '' : ' <small>(숨김)</small>') +
+        '<time>' + esc(String(n.created_at).slice(0, 10)) + '</time></div>' + (n.body ? '<p>' + esc(n.body) + '</p>' : '') +
+        '<div class="a"><button type="button" class="link" data-nt="edit" data-id="' + n.id + '">수정</button><button type="button" class="link del" data-nt="del" data-id="' + n.id + '">삭제</button></div></article>';
+    }).join('');
+  }
+  function ntReset() { ntEdit = null; var f = $('#ntForm'); f.reset(); f.visible.checked = true; $('#ntFormTitle').textContent = '새 공지 쓰기'; $('#ntSave').textContent = '공지 올리기'; $('#ntCancel').hidden = true; }
+  $('#ntList').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-nt]'); if (!b) return;
+    var n = notices.filter(function (x) { return x.id === +b.dataset.id; })[0]; if (!n) return;
+    if (b.dataset.nt === 'edit') {
+      ntEdit = n.id; var f = $('#ntForm');
+      f.title.value = n.title; f.body.value = n.body || ''; f.pinned.checked = !!n.pinned; f.visible.checked = !!n.visible;
+      $('#ntFormTitle').textContent = '공지 수정'; $('#ntSave').textContent = '수정 내용 저장'; $('#ntCancel').hidden = false;
+      f.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (confirm('"' + n.title + '" 공지를 삭제할까요?')) {
+      api('/api/admin/notices/' + n.id, { method: 'DELETE' }).then(function (d) { if (d.ok) { notices = d.items; ntRender(); if (ntEdit === n.id) ntReset(); } });
+    }
+  });
+  $('#ntCancel').addEventListener('click', ntReset);
+  $('#ntForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = e.target, msg = $('#ntMsg');
+    if (!f.title.value.trim()) { f.title.focus(); return say(msg, '제목을 입력해 주세요.', 'err'); }
+    api('/api/admin/notices' + (ntEdit ? '/' + ntEdit : ''), { method: 'POST', json: { title: f.title.value, body: f.body.value, pinned: f.pinned.checked, visible: f.visible.checked } }).then(function (d) {
+      if (!d.ok) return say(msg, d.error || '저장 실패', 'err');
+      notices = d.items; ntRender(); ntReset(); say(msg, '저장했습니다. 홈페이지에는 30초 안에 반영됩니다.', 'ok');
+    });
+  });
+
+  /* ================= 자주 묻는 질문 ================= */
+  var faqItems = [];
+  function faqRender() {
+    var box = $('#faqList'); box.innerHTML = '';
+    faqItems.forEach(function (x, i) {
+      var r = el('div', 'frow', '<span class="no">' + (i + 1) + '</span><div class="ff"><input type="text" maxlength="200" placeholder="질문" aria-label="' + (i + 1) + '번 질문"><textarea rows="3" maxlength="2000" placeholder="답변" aria-label="' + (i + 1) + '번 답변"></textarea></div>' +
+        '<div class="sa"><button type="button" data-d="-1" aria-label="위로">▲</button><button type="button" data-d="1" aria-label="아래로">▼</button><button type="button" class="x" aria-label="삭제">×</button></div>');
+      var q = $('input', r), a = $('textarea', r); q.value = x.q; a.value = x.a;
+      q.addEventListener('input', function () { x.q = q.value; }); a.addEventListener('input', function () { x.a = a.value; });
+      $$('button[data-d]', r).forEach(function (b) { b.addEventListener('click', function () { var to = i + +b.dataset.d; if (to < 0 || to >= faqItems.length) return; move(faqItems, i, to); faqRender(); }); });
+      $('.x', r).addEventListener('click', function () { if (!x.q && !x.a || confirm('이 질문을 지울까요?')) { faqItems.splice(i, 1); faqRender(); } });
+      box.appendChild(r);
+    });
+  }
+  $('#faqAdd').addEventListener('click', function () { faqItems.push({ q: '', a: '' }); faqRender(); $$('#faqList input').pop().focus(); });
+  $('#faqSave').addEventListener('click', function () {
+    var bad = faqItems.filter(function (x) { return !!x.q.trim() !== !!x.a.trim(); }).length;
+    if (bad) return say($('#faqMsg'), '질문과 답변을 둘 다 적거나, 빈 줄은 ×로 지워주세요.', 'err');
+    api('/api/admin/settings', { method: 'POST', json: { faq: faqItems } }).then(function (d) {
+      if (!d.ok) return say($('#faqMsg'), d.error || '저장 실패', 'err');
+      faqItems = d.faq; faqRender(); say($('#faqMsg'), '저장했습니다. 홈페이지에는 30초 안에 반영됩니다.', 'ok');
+    });
+  });
+
+  /* ================= 회사 정보 ================= */
+  function coFill(co) { var f = $('#coForm'); Object.keys(co).forEach(function (k) { if (f.elements[k]) f.elements[k].value = co[k] || ''; }); }
+  $('#coForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = e.target, co = {};
+    $$('input, textarea', f).forEach(function (i) { if (i.name) co[i.name] = i.value; });
+    api('/api/admin/settings', { method: 'POST', json: { company: co } }).then(function (d) {
+      if (!d.ok) return say($('#coMsg'), d.error || '저장 실패', 'err');
+      coFill(d.company); say($('#coMsg'), '저장했습니다. 홈페이지에는 30초 안에 반영됩니다.', 'ok');
+    });
+  });
+
+  /* ================= 사진 대량 올리기 ================= */
+  // 사진 속 촬영 날짜(EXIF) 읽기 → 없으면 파일 이름(20230517_143012) → 폴더(2023/05) → 파일 수정 날짜
+  function exifTime(file) {
+    if (!/jpe?g$/i.test(file.name) && file.type !== 'image/jpeg') return Promise.resolve(null);
+    return file.slice(0, 256 * 1024).arrayBuffer().then(function (buf) {
+      var v = new DataView(buf), len = v.byteLength;
+      if (len < 4 || v.getUint16(0) !== 0xFFD8) return null;
+      var p = 2;
+      while (p + 4 < len) {
+        var mk = v.getUint16(p), sz = v.getUint16(p + 2);
+        if (mk === 0xFFE1 && v.getUint32(p + 4) === 0x45786966) { // "Exif"
+          var t = p + 10, le = v.getUint16(t) === 0x4949;
+          var u16 = function (o) { return v.getUint16(t + o, le); }, u32 = function (o) { return v.getUint32(t + o, le); };
+          var str = function (o, n) { var s = ''; for (var k = 0; k < n && t + o + k < len; k++) { var c = v.getUint8(t + o + k); if (!c) break; s += String.fromCharCode(c); } return s; };
+          var readIfd = function (off) {
+            var out = {}; if (t + off + 2 > len) return out;
+            var n = u16(off);
+            for (var k = 0; k < n; k++) {
+              var e = off + 2 + k * 12; if (t + e + 12 > len) break;
+              var tag = u16(e);
+              if (tag === 0x8769) out.exif = u32(e + 8);
+              if (tag === 0x9003 || tag === 0x0132) out[tag] = str(u32(e + 8), 19);
+            }
+            return out;
+          };
+          var i0 = readIfd(u32(4)), d = i0[0x0132];
+          if (i0.exif) { var ie = readIfd(i0.exif); if (ie[0x9003]) d = ie[0x9003]; }
+          var m = d && /^(\d{4}):(\d\d):(\d\d) (\d\d):(\d\d):(\d\d)/.exec(d);
+          return m && +m[1] > 1990 ? new Date(+m[1], m[2] - 1, +m[3], +m[4], +m[5], +m[6]).getTime() : null;
+        }
+        if ((mk & 0xFF00) !== 0xFF00 || mk === 0xFFDA) break;
+        p += 2 + sz;
+      }
+      return null;
+    }).catch(function () { return null; });
+  }
+  function guessTime(f) {
+    var m = /(20\d\d)[-_.]?(0[1-9]|1[0-2])[-_.]?([0-3]\d)[ _-]?([0-2]\d)[-_.:]?([0-5]\d)[-_.:]?([0-5]\d)/.exec(f.name);
+    if (m) return { t: new Date(+m[1], m[2] - 1, +m[3], +m[4], +m[5], +m[6]).getTime(), how: 'name' };
+    var path = f.webkitRelativePath || '';
+    var y = /(?:^|\/)(20\d\d)(?:년)?[\/_ .-]?(0?[1-9]|1[0-2])(?:월)?(?:\/|$)/.exec(path) || /(?:^|\/)(20\d\d)(?:년)?\/(?:[^\/]*?)(0?[1-9]|1[0-2])월?(?:\/|$)/.exec(path);
+    var lm = f.lastModified || Date.now();
+    if (y) {
+      var d = new Date(lm);
+      if (d.getFullYear() === +y[1] && d.getMonth() + 1 === +y[2]) return { t: lm, how: 'file' };
+      return { t: new Date(+y[1], +y[2] - 1, 15, 12).getTime(), how: 'folder' };
+    }
+    return { t: lm, how: 'file' };
+  }
+  function sig(f) { return f.name + '|' + f.size + '|' + f.lastModified; }
+  function doneSet() { try { return JSON.parse(localStorage.getItem('gs_bulk_done') || '[]'); } catch (e) { return []; } }
+  function markDone(key) { try { var a = doneSet(); a.push(key); localStorage.setItem('gs_bulk_done', JSON.stringify(a.slice(-5000))); } catch (e) {} }
+  var bulk = { groups: [], busy: false };
+  function gKey(g) { var ph = g.photos.filter(function (p) { return !p.off; }); return ph.length ? sig(ph[0].file) + '#' + ph.length : ''; }
+  function ymd(t) { var d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+
+  function bulkRead(files) {
+    if (bulk.busy) return;
+    var list = Array.prototype.filter.call(files, function (f) { return /\.(jpe?g|png|webp)$/i.test(f.name) || /^image\/(jpeg|png|webp)$/.test(f.type); });
+    var heic = Array.prototype.filter.call(files, function (f) { return /\.hei[cf]$/i.test(f.name); }).length;
+    var msg = $('#bulkMsg');
+    if (!list.length) return say(msg, heic ? '아이폰 HEIC 사진은 읽을 수 없습니다. JPG로 바꿔서 올려주세요.' : '사진 파일(JPG·PNG·WEBP)을 찾지 못했습니다.', 'err');
+    say(msg, list.length + '장의 촬영 날짜를 읽는 중…');
+    var out = [], i = 0;
+    (function next() {
+      var chunk = list.slice(i, i + 40); i += 40;
+      if (!chunk.length) return grouped();
+      Promise.all(chunk.map(function (f) {
+        return exifTime(f).then(function (t) { var g = t ? { t: t, how: 'exif' } : guessTime(f); out.push({ file: f, t: g.t, how: g.how, off: false }); });
+      })).then(function () { say(msg, Math.min(i, list.length) + ' / ' + list.length + '장 읽음…'); setTimeout(next, 0); });
+    })();
+    function grouped() {
+      out.sort(function (a, b) { return a.t - b.t || a.file.name.localeCompare(b.file.name); });
+      var gap = +$('#bulkGap').value, groups = [], cur = null;
+      out.forEach(function (p) {
+        var newG = !cur || cur.photos.length >= 20 || (gap === 12 ? ymd(p.t) !== ymd(cur.last) : p.t - cur.last > gap * 3600e3);
+        if (newG) { cur = { photos: [], cat: '', site: '', spec: '', last: p.t, open: false }; groups.push(cur); }
+        cur.photos.push(p); cur.last = p.t;
+      });
+      var done = doneSet();
+      groups.forEach(function (g) { g.done = done.indexOf(gKey(g)) >= 0; });
+      bulk.groups = groups;
+      var undated = out.filter(function (p) { return p.how === 'file'; }).length;
+      say(msg, out.length + '장을 ' + groups.length + '개 현장으로 묶었습니다.' + (undated ? ' (' + undated + '장은 사진 속 촬영 날짜가 없어 파일 날짜로 정렬했습니다)' : '') + (heic ? ' HEIC ' + heic + '장은 제외했습니다.' : ''), 'ok');
+      bulkRender();
+    }
+  }
+  function bulkSummary() {
+    var live = bulk.groups.filter(function (g) { return !g.done && g.photos.some(function (p) { return !p.off; }); });
+    var n = live.reduce(function (a, g) { return a + g.photos.filter(function (p) { return !p.off; }).length; }, 0);
+    var miss = live.filter(function (g) { return !g.cat; }).length;
+    $('#bulkSum').textContent = '올릴 현장 ' + live.length + '개 · 사진 ' + n + '장' + (miss ? ' · 분류 안 고른 현장 ' + miss + '개' : '');
+    $('#bulkTools').hidden = !bulk.groups.length;
+  }
+  var thumbIO = 'IntersectionObserver' in window ? new IntersectionObserver(function (es) {
+    es.forEach(function (e) { if (e.isIntersecting) { var im = e.target; if (!im.src) im.src = URL.createObjectURL(im._file); thumbIO.unobserve(im); } });
+  }, { rootMargin: '300px' }) : null;
+  function bulkRender() {
+    var box = $('#bulkGroups'); box.innerHTML = '';
+    bulk.groups.forEach(function (g, gi) {
+      var live = g.photos.filter(function (p) { return !p.off; });
+      var d0 = g.photos[0] ? new Date(g.photos[0].t) : null;
+      var c = el('div', 'bg' + (g.done ? ' done' : '') + (!g.cat && !g.done ? ' need' : ''));
+      c.innerHTML = '<div class="bg-h"><b>현장 ' + (gi + 1) + '</b><span class="d">' + (d0 ? d0.getFullYear() + '.' + (d0.getMonth() + 1) + '.' + d0.getDate() : '') + ' · 사진 ' + live.length + '장</span>' +
+        (g.done ? '<span class="ok">✓ 올림</span>' : '') +
+        '<span class="seg cat">' + Object.keys(CATS).map(function (k) { return '<button type="button" data-cat="' + k + '"' + (g.cat === k ? ' class="on"' : '') + '>' + CATS[k].replace(/\(.*\)/, '') + '</button>'; }).join('') + '</span>' +
+        '<span class="acts">' + (gi ? '<button type="button" class="link" data-g="merge">위 현장과 합치기</button>' : '') + '<button type="button" class="link del" data-g="drop">이 현장 빼기</button></span></div>' +
+        '<div class="bg-f"><input type="text" maxlength="80" placeholder="현장명 (예: 김포 ○○물류)" data-f="site"><input type="text" maxlength="80" placeholder="사양 (예: 2톤 · 3STOP · 양방향)" data-f="spec"><input type="month" data-f="date" aria-label="설치 날짜"></div>' +
+        '<div class="bg-p"></div>';
+      $('[data-f=site]', c).value = g.site; $('[data-f=spec]', c).value = g.spec;
+      g.date = g.date || (d0 ? ymd(g.photos[0].t).slice(0, 7) : '');
+      $('[data-f=date]', c).value = g.date;
+      $$('.bg-f input', c).forEach(function (i) { i.addEventListener('input', function () { g[i.dataset.f] = i.value; }); });
+      $$('.seg.cat button', c).forEach(function (b) { b.addEventListener('click', function () { g.cat = b.dataset.cat; $$('.seg.cat button', c).forEach(function (x) { x.classList.toggle('on', x === b); }); c.classList.remove('need'); bulkSummary(); }); });
+      var pBox = $('.bg-p', c);
+      g.photos.forEach(function (p, pi) {
+        var t = el('div', 'bp' + (p.off ? ' off' : ''));
+        var im = document.createElement('img'); im.alt = p.file.name; im._file = p.file; im.title = p.file.name + ' · ' + new Date(p.t).toLocaleString('ko-KR');
+        if (thumbIO) thumbIO.observe(im); else im.src = URL.createObjectURL(p.file);
+        t.appendChild(im);
+        var tg = el('button', 'tg', p.off ? '되살리기' : '빼기'); tg.type = 'button';
+        tg.addEventListener('click', function () { p.off = !p.off; bulkRender(); });
+        t.appendChild(tg);
+        if (pi) { var sp = el('button', 'sp', '✂ 여기서 나누기'); sp.type = 'button'; sp.addEventListener('click', function () { var rest = g.photos.splice(pi); bulk.groups.splice(gi + 1, 0, { photos: rest, cat: g.cat, site: '', spec: '', open: false }); bulkRender(); }); t.appendChild(sp); }
+        pBox.appendChild(t);
+      });
+      $$('[data-g]', c).forEach(function (b) {
+        b.addEventListener('click', function () {
+          if (b.dataset.g === 'drop') { if (confirm('현장 ' + (gi + 1) + '(사진 ' + g.photos.length + '장)을 이번에 올리지 않을까요?')) { bulk.groups.splice(gi, 1); bulkRender(); } return; }
+          var up = bulk.groups[gi - 1];
+          if (up.photos.length + g.photos.length > 20) return alert('한 글에는 사진을 20장까지 넣을 수 있습니다. 필요 없는 사진을 먼저 빼주세요.');
+          up.photos = up.photos.concat(g.photos); up.cat = up.cat || g.cat; bulk.groups.splice(gi, 1); bulkRender();
+        });
+      });
+      box.appendChild(c);
+    });
+    bulkSummary();
+  }
+  $('#bulkDir').addEventListener('change', function () { bulkRead(this.files); this.value = ''; });
+  $('#bulkFiles').addEventListener('change', function () { bulkRead(this.files); this.value = ''; });
+  $('#bulkGap').addEventListener('change', function () {
+    if (!bulk.groups.length || bulk.busy) return;
+    var all = []; bulk.groups.forEach(function (g) { all = all.concat(g.photos); });
+    var files = all.map(function (p) { return p.file; }); bulkRead(files);
+  });
+  $$('#bulkAllCat button').forEach(function (b) {
+    b.addEventListener('click', function () { bulk.groups.forEach(function (g) { if (!g.done) g.cat = b.dataset.cat; }); bulkRender(); });
+  });
+  $('#bulkGo').addEventListener('click', function () {
+    if (bulk.busy) return;
+    var todo = bulk.groups.filter(function (g) { return !g.done && g.photos.some(function (p) { return !p.off; }); });
+    if (!todo.length) return say($('#bulkMsg'), '올릴 현장이 없습니다.', 'err');
+    var miss = todo.filter(function (g) { return !g.cat; });
+    if (miss.length) { var i = bulk.groups.indexOf(miss[0]); $$('#bulkGroups .bg')[i].scrollIntoView({ behavior: 'smooth', block: 'center' }); return say($('#bulkMsg'), '분류를 고르지 않은 현장이 ' + miss.length + '개 있습니다. (위의 "모든 묶음 분류 한 번에"로 한꺼번에 고를 수도 있습니다)', 'err'); }
+    var bad = todo.filter(function (g) { return g.date && !/^\d{4}-\d{2}$/.test(g.date); });
+    if (bad.length) return say($('#bulkMsg'), '설치 날짜는 2023-05 처럼 적어주세요.', 'err');
+    if (!confirm(todo.length + '개 현장을 올립니다. 끝날 때까지 이 창을 닫지 마세요.')) return;
+    bulk.busy = true; $('#bulkGo').disabled = true;
+    var hidden = $('#bulkHidden').checked, k = 0, msg = $('#bulkMsg');
+    window.onbeforeunload = function () { return '올리는 중입니다.'; };
+    function finish(text, kind) {
+      bulk.busy = false; $('#bulkGo').disabled = false; window.onbeforeunload = null;
+      say(msg, text, kind); bulkRender(); loaded.cases = 0;
+    }
+    var nextGroup = function () {
+      if (k >= todo.length) return finish(todo.length + '개 현장을 모두 올렸습니다. "설치사례" 탭에서 확인하세요.' + (hidden ? ' 숨김 상태이므로 확인 후 "보이기"를 눌러주세요.' : ''), 'ok');
+      var g = todo[k], ph = g.photos.filter(function (p) { return !p.off; }), fd = new FormData(), order = [], j = 0;
+      var key = gKey(g);
+      (function nextPhoto() {
+        if (j >= ph.length) {
+          fd.append('title', [CATS[g.cat]].concat(splitTitle(g.spec)).join(' · '));
+          fd.append('category', g.cat); fd.append('site', (g.site || '').trim()); fd.append('body', '');
+          fd.append('date', g.date || ''); fd.append('order', JSON.stringify(order));
+          if (hidden) fd.append('visible', '0');
+          say(msg, '현장 ' + (k + 1) + ' / ' + todo.length + ' 올리는 중…');
+          return api('/api/admin/cases', { method: 'POST', body: fd }).then(function (d) {
+            if (!d.ok) return finish('현장 ' + (bulk.groups.indexOf(g) + 1) + '에서 멈췄습니다: ' + (d.error || '저장 실패') + ' (다시 "모두 올리기"를 누르면 이어서 올립니다)', 'err');
+            g.done = true; markDone(key); k++;
+            var card = $$('#bulkGroups .bg')[bulk.groups.indexOf(g)]; if (card) { card.classList.add('done'); }
+            nextGroup();
+          }, function () { finish('연결이 끊겼습니다. 다시 "모두 올리기"를 누르면 이어서 올립니다.', 'err'); });
+        }
+        say(msg, '현장 ' + (k + 1) + ' / ' + todo.length + ' · 사진 변환 ' + (j + 1) + ' / ' + ph.length);
+        var p = ph[j];
+        decode(p.file).then(function (bm) {
+          var it = newItem(bm, true);
+          return toBlob(it, CASE_W, CASE_H).then(function (b) {
+            if (bm.close) bm.close();
+            fd.append('photos', b, 'p' + j + (b.type === 'image/webp' ? '.webp' : '.jpg')); order.push('n:' + order.length);
+          });
+        }, function () { /* 읽을 수 없는 사진은 건너뜀 */ }).then(function () { j++; setTimeout(nextPhoto, 0); });
+      })();
+    };
+    wmReady.then(nextGroup);
   });
 
   /* ================= 시작 ================= */

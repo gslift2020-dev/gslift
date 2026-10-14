@@ -61,6 +61,18 @@ const SCHEMA = [
     ip TEXT NOT NULL,
     at TEXT NOT NULL
   )`,
+  // 공지사항
+  `CREATE TABLE IF NOT EXISTS notices (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at TEXT NOT NULL, updated_at TEXT,
+    title TEXT NOT NULL, body TEXT,
+    pinned INTEGER NOT NULL DEFAULT 0,
+    visible INTEGER NOT NULL DEFAULT 1
+  )`,
+  // 방문 통계 (개인 식별 정보 없이 날짜별 숫자만)
+  `CREATE TABLE IF NOT EXISTS visit_uniq (day TEXT NOT NULL, h TEXT NOT NULL, mobile INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (day, h))`,
+  `CREATE TABLE IF NOT EXISTS visit_pages (day TEXT NOT NULL, path TEXT NOT NULL, n INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (day, path))`,
+  `CREATE TABLE IF NOT EXISTS visit_refs (day TEXT NOT NULL, src TEXT NOT NULL, n INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (day, src))`,
 ];
 
 // 예전 표에 새 칸 추가 (이미 있으면 무시)
@@ -72,7 +84,19 @@ const MIGRATIONS = [
   'ALTER TABLE inquiries ADD COLUMN spec TEXT',
   'ALTER TABLE inquiries ADD COLUMN photos TEXT',
   'ALTER TABLE inquiries ADD COLUMN memo TEXT',
+  'ALTER TABLE cases ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0',
+  'ALTER TABLE cases ADD COLUMN taken_at TEXT',
 ];
+
+// 설치사례 분류 (제품소개 4종과 같음)
+export const CATS = { fl: '화물용 리프트(F/L)', tl: '테이블 리프트(T/L)', st: '수동·자동 스태커', tr: '운반기계' };
+export function inferCat(title) {
+  const t = String(title || '');
+  if (/테이블|T\/L/i.test(t)) return 'tl';
+  if (/스태커/.test(t)) return 'st';
+  if (/운반|대차/.test(t)) return 'tr';
+  return 'fl';
+}
 
 let schemaReady = false;
 export async function ensureSchema(env) {
@@ -85,5 +109,8 @@ export async function ensureSchema(env) {
   await env.DB.prepare(
     'INSERT INTO case_photos (case_id, photo_key, sort) SELECT c.id, c.photo_key, 0 FROM cases c WHERE c.photo_key != \'\' AND NOT EXISTS (SELECT 1 FROM case_photos p WHERE p.case_id = c.id)'
   ).run();
+  // 분류가 비어 있는 예전 글은 제목으로 분류를 채움 (목록을 분류별로 바로 꺼낼 수 있게)
+  const { results } = await env.DB.prepare("SELECT id, title FROM cases WHERE category IS NULL OR category = ''").all();
+  if (results.length) await env.DB.batch(results.map((r) => env.DB.prepare('UPDATE cases SET category = ? WHERE id = ?').bind(inferCat(r.title), r.id)));
   schemaReady = true;
 }

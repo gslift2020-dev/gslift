@@ -9,6 +9,13 @@
      (예전에 #contact 같은 주소로 즐겨찾기해 두면 문의하기로 바로 넘어가던 문제)
      다른 페이지에서 특정 위치로 보낼 때는 ?to=cases&cat=fl 처럼 보냄 */
   var params = new URLSearchParams(location.search);
+  var TEL = window.GS_TEL || '031-986-5345';
+  // 방문 통계 (주소를 정리하기 전에 보냄)
+  try {
+    var hitData = JSON.stringify({ p: location.pathname + location.search, r: document.referrer });
+    if (navigator.sendBeacon) navigator.sendBeacon('/api/hit', new Blob([hitData], { type: 'text/plain' }));
+    else fetch('/api/hit', { method: 'POST', body: hitData, keepalive: true });
+  } catch (e) {}
   if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
   if (location.hash || location.search) history.replaceState(null, '', location.pathname);
   window.scrollTo(0, 0);
@@ -170,7 +177,7 @@
   var CATS = window.GS_CATS || {};
   var EMPTY_MSG = { all: '아직 등록된 설치사례가 없습니다.', fl: '화물용 리프트 설치사례를 준비 중입니다.', tl: '테이블 리프트 설치사례를 준비 중입니다.', st: '스태커 설치사례를 준비 중입니다. 문의 주시면 사례 사진을 보내드립니다.', tr: '운반기계 제작 사례를 준비 중입니다. 문의 주시면 사례 사진을 보내드립니다.' };
   var EXPAND = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>';
-  var track = $('#track'), allCases = [], caseFilter = 'all', posts = [], casesReady = false;
+  var track = $('#track'), allCases = [], caseFilter = 'all', posts = [], casesReady = false, caseCounts = {};
 
   function caseCard(c, i) {
     var b = document.createElement('button');
@@ -199,9 +206,16 @@
     $$('#caseTabs button').forEach(function (t) {
       var cat = t.dataset.cat, on = cat === caseFilter;
       t.classList.toggle('on', on); t.setAttribute('aria-selected', on);
-      var n = cat === 'all' ? allCases.length : allCases.filter(function (c) { return c.cat === cat; }).length;
-      $('i', t).textContent = n;
+      $('i', t).textContent = caseCounts[cat] || 0;
     });
+    // 이 분류에 첫 화면에 못 보여준 사례가 더 있으면 끝에 "전체 보기" 칸
+    var more = (caseCounts[caseFilter] || 0) - posts.length;
+    if (posts.length && more > 0) {
+      var a = document.createElement('a'); a.className = 'case case-more'; a.href = '/cases.html' + (caseFilter === 'all' ? '' : '?cat=' + caseFilter);
+      a.innerHTML = '<span class="cm-in"><b>+' + more + '</b>개 사례 더 보기<span class="arr">→</span></span>';
+      track.appendChild(a);
+    }
+    var all = $('#caseAll'); if (all) all.href = '/cases.html' + (caseFilter === 'all' ? '' : '?cat=' + caseFilter);
   }
   function setCaseFilter(cat) {
     caseFilter = CATS[cat] ? cat : 'all';
@@ -214,7 +228,7 @@
 
   // 관리자가 올린 사례(맨 앞) + 기본 예시
   if (track) {
-    var casesP = window.fetch ? fetch('/api/cases').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }) : Promise.resolve(null);
+    var casesP = window.fetch ? fetch('/api/cases?home=1&per=12').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }) : Promise.resolve(null);
     Promise.all([casesP, siteP]).then(function (r) {
       var mine = (r[0] && r[0].ok ? r[0].items : []).map(function (c) {
         return { cat: c.cat, title: c.title, site: c.site, body: c.body, photos: c.photos, href: '/case.html?id=' + c.id };
@@ -224,6 +238,12 @@
         return { cat: c.cat, title: c.title, site: '', body: '', alt: c.alt, photos: [c.img], href: '/case.html?s=' + c.id };
       });
       allCases = mine.concat(samples);
+      var sc = (r[0] && r[0].counts) || {};
+      caseCounts = { all: 0 };
+      Object.keys(CATS).forEach(function (c) {
+        caseCounts[c] = (sc[c] || 0) + samples.filter(function (x) { return x.cat === c; }).length;
+        caseCounts.all += caseCounts[c];
+      });
       casesReady = true;
       if (params.get('cat')) caseFilter = CATS[params.get('cat')] ? params.get('cat') : 'all';
       renderCases();
@@ -260,7 +280,7 @@
   function lbOpen(n) { lastFocus = document.activeElement; lbShow(n, 0); lb.classList.add('open'); document.body.style.overflow = 'hidden'; $('.close', lb).focus(); }
   function lbClose() { lb.classList.remove('open'); document.body.style.overflow = ''; if (lastFocus) lastFocus.focus(); }
   if (lb) {
-    if (track) track.addEventListener('click', function (e) { var b = e.target.closest('.case'); if (b) lbOpen(+b.dataset.i); });
+    if (track) track.addEventListener('click', function (e) { var b = e.target.closest('button.case'); if (b) lbOpen(+b.dataset.i); });
     $$('[data-close]', lb).forEach(function (b) { b.addEventListener('click', lbClose); });
     $('#lbPrev').addEventListener('click', function () { lbStep(-1); });
     $('#lbNext').addEventListener('click', function () { lbStep(1); });
@@ -268,6 +288,95 @@
       if (e.key === 'Escape') lbClose();
       if (e.key === 'ArrowLeft') lbStep(-1);
       if (e.key === 'ArrowRight') lbStep(1);
+    });
+  }
+
+  /* ================= 설치 옵션: 사진 크게 보기 (자연스럽게 커지고, 옆으로 넘기기) =================
+     카드마다 사진 여러 장을 넣으려면 <article class="opt" data-more='[{"src":"assets/img/xx.webp","cap":"설명"}]'> */
+  var gv = $('#gview'), opts = $$('.bento .opt'), gvState = null, gvLast = null;
+  function optData(card) {
+    var im = $('img', card), list = [{ src: im.getAttribute('src'), alt: im.alt, cap: '' }];
+    try { (JSON.parse(card.getAttribute('data-more') || '[]') || []).forEach(function (x) { list.push({ src: x.src, alt: x.cap || im.alt, cap: x.cap || '' }); }); } catch (e) {}
+    return { photos: list, title: $('h3', card).textContent, text: $('.cap p', card).textContent, tags: $$('.tags span', card).map(function (t) { return t.textContent; }) };
+  }
+  function flip(img, from, back, done) {
+    if (reduce || !from || !img.complete || !img.naturalWidth) { if (done) done(); return; }
+    var to = img.getBoundingClientRect();
+    if (!to.width) { if (done) done(); return; }
+    var t = 'translate(' + (from.left - to.left) + 'px,' + (from.top - to.top) + 'px) scale(' + (from.width / to.width) + ',' + (from.height / to.height) + ')';
+    img.style.transformOrigin = '0 0';
+    if (back) {
+      img.style.transition = 'transform .32s cubic-bezier(.4,0,.2,1)'; img.style.transform = t;
+    } else {
+      img.style.transition = 'none'; img.style.transform = t;
+      img.getBoundingClientRect();
+      img.style.transition = 'transform .42s cubic-bezier(.2,.8,.2,1)'; img.style.transform = 'none';
+    }
+    setTimeout(function () { img.style.transition = ''; if (!back) img.style.transform = ''; if (done) done(); }, back ? 330 : 440);
+  }
+  function gvShow(ci, pi, dir) {
+    ci = (ci + opts.length) % opts.length;
+    var d = optData(opts[ci]); pi = (pi + d.photos.length) % d.photos.length;
+    gvState = { ci: ci, pi: pi, d: d };
+    var ph = d.photos[pi], img = $('#gvImg');
+    img.classList.remove('in-l', 'in-r'); void img.offsetWidth;
+    img.src = ph.src; img.alt = ph.alt;
+    if (dir) img.classList.add(dir > 0 ? 'in-r' : 'in-l');
+    $('#gvTitle').textContent = d.title;
+    $('#gvText').textContent = ph.cap ? ph.cap : d.text;
+    $('#gvTags').innerHTML = ''; d.tags.forEach(function (t) { var sp = document.createElement('span'); sp.textContent = t; $('#gvTags').appendChild(sp); });
+    $('#gvCount').textContent = d.photos.length > 1 ? (pi + 1) + ' / ' + d.photos.length : '';
+    $('#gvCount').hidden = d.photos.length < 2;
+    var dots = $('#gvDots'); dots.innerHTML = '';
+    opts.forEach(function (c, k) {
+      var b = document.createElement('button'); b.type = 'button'; b.className = k === ci ? 'on' : '';
+      b.setAttribute('aria-label', (k + 1) + '번째 옵션: ' + $('h3', c).textContent);
+      b.addEventListener('click', function () { gvShow(k, 0, k > ci ? 1 : -1); });
+      dots.appendChild(b);
+    });
+  }
+  function gvStep(dir) {
+    var st = gvState, np = st.pi + dir;
+    if (np >= 0 && np < st.d.photos.length) return gvShow(st.ci, np, dir);
+    var nc = st.ci + dir;
+    gvShow(nc, dir > 0 ? 0 : (optData(opts[(nc + opts.length) % opts.length]).photos.length - 1), dir);
+  }
+  function gvOpen(ci) {
+    gvLast = document.activeElement;
+    var from = $('img', opts[ci]).getBoundingClientRect();
+    gvShow(ci, 0, 0);
+    gv.hidden = false; document.body.style.overflow = 'hidden';
+    requestAnimationFrame(function () { gv.classList.add('open'); flip($('#gvImg'), from, false); });
+    $('.gv-close', gv).focus();
+  }
+  function gvClose() {
+    var card = gvState && opts[gvState.ci], img = $('#gvImg');
+    var r = card && $('img', card).getBoundingClientRect();
+    var visible = r && r.bottom > 0 && r.top < window.innerHeight && gvState.pi === 0;
+    gv.classList.remove('open');
+    flip(img, visible ? r : null, true, function () { gv.hidden = true; img.style.transform = ''; document.body.style.overflow = ''; if (gvLast) gvLast.focus(); });
+  }
+  if (gv && opts.length) {
+    opts.forEach(function (card, k) {
+      card.addEventListener('click', function () { gvOpen(k); });
+      card.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); gvOpen(k); } });
+    });
+    $$('[data-gclose]', gv).forEach(function (b) { b.addEventListener('click', gvClose); });
+    $('#gvPrev').addEventListener('click', function () { gvStep(-1); });
+    $('#gvNext').addEventListener('click', function () { gvStep(1); });
+    gv.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') gvClose();
+      if (e.key === 'ArrowLeft') gvStep(-1);
+      if (e.key === 'ArrowRight') gvStep(1);
+    });
+    var gsx = null, gsy = null;
+    gv.addEventListener('touchstart', function (e) { gsx = e.touches[0].clientX; gsy = e.touches[0].clientY; }, { passive: true });
+    gv.addEventListener('touchend', function (e) {
+      if (gsx == null) return;
+      var dx = e.changedTouches[0].clientX - gsx, dy = e.changedTouches[0].clientY - gsy;
+      if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) gvStep(dx < 0 ? 1 : -1);
+      else if (dy > 90 && Math.abs(dy) > Math.abs(dx) * 1.5) gvClose(); // 아래로 쓸어내리면 닫기
+      gsx = null;
     });
   }
 
@@ -380,8 +489,8 @@
       });
     }
     if (upDrop) {
-      var pick = $('input', upDrop);
-      pick.addEventListener('change', function () { addShots(pick.files); pick.value = ''; });
+      var upPick = $('input', upDrop);
+      upPick.addEventListener('change', function () { addShots(upPick.files); upPick.value = ''; });
       ['dragenter', 'dragover'].forEach(function (t) { upDrop.addEventListener(t, function (e) { e.preventDefault(); upDrop.classList.add('over'); }); });
       ['dragleave', 'drop'].forEach(function (t) { upDrop.addEventListener(t, function (e) { e.preventDefault(); upDrop.classList.remove('over'); }); });
       upDrop.addEventListener('drop', function (e) { addShots(e.dataTransfer.files); });
@@ -406,13 +515,13 @@
         .then(function (d) {
           if (d.ok) {
             form.reset(); shots.forEach(function (sh) { URL.revokeObjectURL(sh.url); }); shots = []; drawShots();
-            say('문의가 접수되었습니다. 담당자가 확인 후 연락드리겠습니다. 급하신 경우 031-986-5345로 전화 주세요.', 'ok');
+            say('문의가 접수되었습니다. 담당자가 확인 후 연락드리겠습니다. 급하신 경우 ' + TEL + '로 전화 주세요.', 'ok');
           } else {
             if (d.field) mark(d.field);
-            say(d.error || '전송에 실패했습니다. 전화(031-986-5345)로 연락 부탁드립니다.', 'err');
+            say(d.error || '전송에 실패했습니다. 전화(' + TEL + ')로 연락 부탁드립니다.', 'err');
           }
         })
-        .catch(function () { say('인터넷 연결을 확인해 주세요. 계속 안 되면 전화(031-986-5345)로 연락 부탁드립니다.', 'err'); })
+        .catch(function () { say('인터넷 연결을 확인해 주세요. 계속 안 되면 전화(' + TEL + ')로 연락 부탁드립니다.', 'err'); })
         .then(function () { btn.disabled = false; btn.textContent = '문의 보내기'; });
     });
   }
