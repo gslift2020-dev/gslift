@@ -75,7 +75,7 @@
       st.offset += d.items.length; st.total = d.total;
       if (st.offset >= d.total || !d.items.length) {
         st.done = true;
-        samples.filter(matchSample).forEach(function (s) { grid.appendChild(card({ href: '/case.html?s=' + s.id, cover: s.img, title: s.title, cat: s.cat, count: 1 })); });
+        samples.filter(matchSample).forEach(function (s) { grid.appendChild(card({ href: '/case.html?s=' + s.id, cover: s.img, title: s.title, site: s.site, cat: s.cat, count: (s.photos || [1]).length })); });
       }
       moreBtn.hidden = st.done;
       if (!grid.children.length) {

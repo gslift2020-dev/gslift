@@ -132,6 +132,11 @@
     $('#stdT').textContent = it.t;
     $('#stdS').textContent = it.spec;
     $('#stdD').textContent = it.d;
+    var ph = $('#stdPh');
+    if (ph) {
+      ph.hidden = !it.img;
+      if (it.img) { $('#stdImg').src = it.img; $('#stdImg').alt = it.cap || it.t; $('#stdCap').textContent = '실제 설치 사진 · ' + (it.cap || it.t); }
+    }
     dots.forEach(function (d, j) { d.classList.toggle('on', j === n); });
     $$('.diagram .ld, .diagram .tg').forEach(function (e) { e.classList.toggle('on', +e.getAttribute('data-i') === n); });
     rows.forEach(function (r, j) { r.classList.toggle('on', j === n); r.setAttribute('aria-pressed', j === n ? 'true' : 'false'); });
@@ -235,7 +240,7 @@
       });
       var hide = r[1] && r[1].hideSamples;
       var samples = hide ? [] : (window.GS_SAMPLE || []).map(function (c) {
-        return { cat: c.cat, title: c.title, site: '', body: '', alt: c.alt, photos: [c.img], href: '/case.html?s=' + c.id };
+        return { cat: c.cat, title: c.title, site: c.site || '', body: c.body || '', alt: c.alt, photos: c.photos || [c.img], href: '/case.html?s=' + c.id };
       });
       allCases = mine.concat(samples);
       var sc = (r[0] && r[0].counts) || {};
@@ -380,6 +385,32 @@
     });
   }
 
+  /* 설치 옵션 더 보기 */
+  var optMore = $('#optMore');
+  if (optMore) {
+    optMore.addEventListener('click', function () {
+      var open = !document.querySelector('.bento').classList.contains('show-all');
+      document.querySelector('.bento').classList.toggle('show-all', open);
+      optMore.setAttribute('aria-expanded', open);
+      optMore.innerHTML = open ? '접기 <span aria-hidden="true">↑</span>' : '설치 옵션 8가지 더 보기 <span aria-hidden="true">↓</span>';
+      if (open) $$('.opt-x').forEach(function (c) { c.classList.add('in'); });
+      else document.getElementById('options').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' });
+    });
+  }
+
+  /* 교체 전후 비교 막대 */
+  var cmp = $('#compare');
+  if (cmp) {
+    var rng = $('input', cmp), dragging = false;
+    var setP = function (v) { v = Math.max(0, Math.min(100, v)); cmp.style.setProperty('--p', v + '%'); rng.value = v; };
+    var at = function (e) { var r = cmp.getBoundingClientRect(); setP(Math.round((e.clientX - r.left) / r.width * 100)); };
+    rng.addEventListener('input', function () { setP(+rng.value); }); // 키보드 ← →
+    cmp.addEventListener('pointerdown', function (e) { dragging = true; cmp.setPointerCapture(e.pointerId); at(e); });
+    cmp.addEventListener('pointermove', function (e) { if (dragging) at(e); });
+    cmp.addEventListener('pointerup', function () { dragging = false; });
+    cmp.addEventListener('pointercancel', function () { dragging = false; });
+  }
+
   /* 다른 페이지에서 ?to=contact&product=fl 로 오면 문의하기로 이동 + 제품 미리 선택 */
   if (params.get('to') && params.get('to') !== 'cases') {
     var want = params.get('to'), prod = CATS[params.get('product')];
@@ -506,7 +537,7 @@
       if (!f.agree.checked) { mark('agree'); return say('개인정보 수집·이용에 동의해 주세요.', 'err'); }
       mark(null);
       var fd = new FormData();
-      ['company', 'name', 'phone', 'product', 'message', 'website', 'dir', 'load', 'stops', 'place', 'cargo', 'w', 'd', 'h'].forEach(function (k) { if (f[k]) fd.append(k, f[k].value); });
+      ['company', 'name', 'phone', 'product', 'loc', 'message', 'website', 'dir', 'load', 'stops', 'place', 'cargo', 'w', 'd', 'h'].forEach(function (k) { if (f[k]) fd.append(k, f[k].value); });
       fd.append('agree', f.agree.checked ? 'true' : 'false');
       shots.forEach(function (sh, i) { fd.append('photos', sh.blob, 'photo' + (i + 1) + '.jpg'); });
       btn.disabled = true; btn.textContent = shots.length ? '사진과 함께 보내는 중…' : '보내는 중…'; say('');

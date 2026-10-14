@@ -126,7 +126,7 @@
     $('#cdMore').hidden = false;
   }
 
-  function sampleToCase(s) { return { key: 's' + s.id, cat: s.cat, title: s.title, site: '', body: '', date: '', photos: [s.img], cover: s.img, href: '/case.html?s=' + s.id }; }
+  function sampleToCase(s) { return { key: 's' + s.id, cat: s.cat, title: s.title, site: s.site || '', body: s.body || '', date: '', photos: s.photos || [s.img], cover: s.img, href: '/case.html?s=' + s.id }; }
   function notFound() {
     $('#cdBody').innerHTML = '<p class="case-empty">찾는 설치사례가 없거나 내려간 사례입니다. <a href="/cases.html">설치사례 목록으로</a></p>';
   }

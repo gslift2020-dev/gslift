@@ -505,3 +505,46 @@ th:last-child,td:last-child{text-align:right}
   body{padding-bottom:calc(60px + env(safe-area-inset-bottom))}
   .to-top{bottom:calc(76px + env(safe-area-inset-bottom));right:14px;width:46px;height:46px}
 }
+
+/* 안전검사 항목 실제 사진 */
+.std-detail{flex-wrap:wrap}
+.std-detail .std-tx{flex:1 1 260px;min-width:0}
+.std-ph{margin:0;flex:0 0 200px;display:flex;flex-direction:column;gap:6px}
+.std-ph img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:12px;display:block;animation:stdIn .4s ease}
+.std-ph figcaption{font-size:12px;color:var(--muted);font-weight:600}
+@keyframes stdIn{from{opacity:.2}to{opacity:1}}
+@media (max-width:640px){.std-ph{flex:1 1 100%}.std-ph img{aspect-ratio:16/9}}
+.sp-ph{margin:0;display:flex;flex-direction:column;gap:8px}
+.sp-ph figcaption{color:var(--sky-2);font-size:14px;font-weight:600}
+
+/* 설치 옵션 더 보기 */
+.bento .opt-x{display:none}
+.bento.show-all .opt-x{display:block}
+.opt-more{display:flex;justify-content:center;margin-top:24px}
+
+/* 교체 전후 */
+.ba{display:flex;flex-wrap:wrap;gap:48px;align-items:center}
+.ba-l{flex:1 1 380px;min-width:0;display:flex;flex-direction:column;gap:18px}
+.ba-r{flex:1 1 380px;min-width:0;display:flex;flex-direction:column;align-items:center;gap:10px}
+.ba-steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.ba-steps li{display:flex;flex-direction:column;gap:4px}
+.ba-steps img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;margin-bottom:4px}
+.ba-steps b{font-size:14px}
+.ba-steps span{font-size:13px;color:var(--muted)}
+.compare{position:relative;width:100%;max-width:480px;aspect-ratio:3/4;border-radius:18px;overflow:hidden;box-shadow:0 20px 50px rgba(6,38,86,.2);user-select:none;touch-action:pan-y;background:#0F1E3A}
+.compare img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.cmp-before{position:absolute;inset:0;clip-path:inset(0 calc(100% - var(--p)) 0 0)}
+.cmp-line{position:absolute;top:0;bottom:0;left:var(--p);width:3px;margin-left:-1.5px;background:#fff;box-shadow:0 0 8px rgba(0,0,0,.4);pointer-events:none}
+.cmp-knob{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:48px;height:48px;border-radius:50%;background:#fff;color:var(--navy);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+.cmp-tag{position:absolute;top:14px;padding:5px 12px;border-radius:999px;font-size:13px;font-weight:700;pointer-events:none}
+.cmp-tag.l{left:14px;background:rgba(15,30,58,.85);color:#fff}
+.cmp-tag.r{right:14px;background:#F5B800;color:var(--navy)}
+.compare{cursor:ew-resize}
+.compare input[type=range]{position:absolute;left:0;bottom:0;width:100%;height:1px;margin:0;opacity:0;pointer-events:none}
+.compare:focus-within .cmp-knob{outline:3px solid var(--sky);outline-offset:2px}
+.cmp-hint{font-size:14px;color:var(--muted);margin:0}
+@media (max-width:640px){.ba-steps{grid-template-columns:repeat(3,1fr);gap:8px}.ba-steps span{display:none}.ba-steps b{font-size:12px}}
+
+/* 메인 슬라이드 막대: 사진이 많아져도 한 줄 */
+.slider .bars{flex-wrap:nowrap}
+.slider .bars button{flex:1 1 0;min-width:0}

@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex, nofollow">
 <title>관리자 | 거산리프트</title>
 <link rel="icon" href="/favicon.png">
-<link rel="stylesheet" href="/admin/admin.css?v=ed2b8eab">
+<link rel="stylesheet" href="/admin/admin.css?v=cde5ae45">
 </head>
 <body>
 
@@ -143,7 +143,7 @@
 <input type="search" id="caseSearch" class="search" placeholder="제목·현장명으로 찾기" aria-label="설치사례 검색" style="max-width:280px">
 </div>
 <div class="bar"><p class="hint" style="margin:0">📌 <b>맨 앞 고정</b>을 누르면 홈페이지 설치사례 맨 앞에 나옵니다. 나머지는 설치 날짜 최신순입니다.</p>
-<label class="check" style="font-weight:500;font-size:14px"><input type="checkbox" id="hideSamples"> 홈페이지의 기본 예시 사례 8개 숨기기</label></div>
+<label class="check" style="font-weight:500;font-size:14px"><input type="checkbox" id="hideSamples"> 홈페이지의 기본 예시 사례 12개 숨기기</label></div>
 <div id="caseList" class="posts"><p class="empty">불러오는 중…</p></div>
 <div class="more-row"><button type="button" class="btn small ghost" id="caseMore" hidden>더 보기</button></div>
 </section>
@@ -154,14 +154,14 @@
 <h2>예전 사진 한꺼번에 올리기</h2>
 <ol class="steps">
 <li><b>구글 드라이브</b>에서 올릴 폴더(예: <i>2023</i> 또는 <i>2023/05</i>)를 오른쪽 클릭 → <b>다운로드</b> → 받은 압축 파일을 풀어 둡니다.</li>
-<li>아래 <b>폴더 고르기</b>로 그 폴더를 고르면 사진을 <b>찍은 날짜</b> 순으로 읽어서, 같은 날 비슷한 시간에 찍은 사진끼리 <b>한 현장(글 1개)</b>으로 자동으로 묶습니다.</li>
-<li>묶음마다 <b>분류</b>를 고르고(필수), 필요하면 현장명·사양을 적습니다. 잘못 묶였으면 <b>여기서 나누기 / 위 묶음과 합치기</b>로 고칩니다. 안 올릴 사진은 눌러서 빼면 됩니다.</li>
+<li>아래 <b>폴더 고르기</b>로 그 폴더를 고릅니다. 안에 <b>거래처별 폴더</b>가 있으면 폴더마다 <b>현장 1개(글 1개)</b>로 나누고 폴더 이름을 현장명으로 넣습니다. 폴더가 없으면 사진을 <b>찍은 시간</b>으로 묶습니다.</li>
+<li>묶음마다 <b>분류</b>를 고르고(필수), 필요하면 현장명·사양을 적습니다. 잘못 묶였으면 <b>여기서 나누기 / 위 현장과 합치기</b>로 고칩니다. <b>★ 대표로</b>를 누르면 그 사진이 대표 사진이 되고, 안 올릴 사진은 <b>빼기</b>를 누릅니다.</li>
 <li><b>모두 올리기</b>를 누르면 사진을 3:4로 맞추고 가운데에 로고 워터마크를 넣어 순서대로 올립니다. 창을 닫지 마세요. 중간에 끊겨도 다시 폴더를 고르면 이미 올린 묶음은 건너뜁니다.</li>
 </ol>
 <div class="bulk-pick">
 <label class="btn" for="bulkDir">폴더 고르기</label><input type="file" id="bulkDir" webkitdirectory directory multiple hidden>
 <label class="btn ghost" for="bulkFiles">사진 파일 고르기</label><input type="file" id="bulkFiles" accept="image/*" multiple hidden>
-<label class="inl">같은 현장으로 묶을 간격 <select id="bulkGap"><option value="2">2시간</option><option value="4" selected>4시간</option><option value="12">같은 날</option></select></label>
+<label class="inl">현장 나누는 방법 <select id="bulkGap"><option value="folder">폴더별 (폴더 이름 = 현장명)</option><option value="2">찍은 시간 2시간 간격</option><option value="4" selected>찍은 시간 4시간 간격</option><option value="12">찍은 날짜별</option></select></label>
 <label class="check"><input type="checkbox" id="bulkHidden"> 숨김 상태로 올리기 (확인 후 하나씩 공개)</label>
 </div>
 <p class="msg" id="bulkMsg" role="status" aria-live="polite"></p>
@@ -280,6 +280,6 @@
 </section>
 </main>
 
-<script src="/admin/admin.js?v=a30a07d7" defer></script>
+<script src="/admin/admin.js?v=b0888485" defer></script>
 </body>
 </html>

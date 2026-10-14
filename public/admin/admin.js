@@ -112,6 +112,19 @@
       it.memo = t.value; t.classList.add('saved'); setTimeout(function () { t.classList.remove('saved'); }, 1200);
     });
   });
+  // 처리 상태 바꾸기 (신규 → 처리중 → 완료)
+  $('#inqList').addEventListener('change', function (e) {
+    var sel = e.target; if (!sel.dataset || !sel.dataset.id || sel.tagName !== 'SELECT') return;
+    var id = +sel.dataset.id, it = inquiries.filter(function (x) { return x.id === id; })[0], prev = it && it.status;
+    sel.disabled = true;
+    api('/api/admin/inquiries/' + id, { method: 'POST', json: { status: sel.value } }).then(function (d) {
+      sel.disabled = false;
+      if (!d.ok) { sel.value = prev; return alert(d.error || '상태를 바꾸지 못했습니다.'); }
+      if (it) it.status = sel.value;
+      renderInquiries();
+      $('#dNew').textContent = inquiries.filter(function (x) { return x.status === 'new'; }).length;
+    }, function () { sel.disabled = false; sel.value = prev; alert('연결 오류로 상태를 바꾸지 못했습니다.'); });
+  });
   $('#inqList').addEventListener('click', function (e) {
     var b = e.target.closest('[data-del]'); if (!b) return;
     if (!confirm('#' + b.dataset.del + ' 문의를 삭제할까요? 첨부 사진도 함께 지워지며 되돌릴 수 없습니다.')) return;
@@ -807,10 +820,11 @@
   function doneSet() { try { return JSON.parse(localStorage.getItem('gs_bulk_done') || '[]'); } catch (e) { return []; } }
   function markDone(key) { try { var a = doneSet(); a.push(key); localStorage.setItem('gs_bulk_done', JSON.stringify(a.slice(-5000))); } catch (e) {} }
   var bulk = { groups: [], busy: false };
-  function gKey(g) { var ph = g.photos.filter(function (p) { return !p.off; }); return ph.length ? sig(ph[0].file) + '#' + ph.length : ''; }
+  // 대표 사진을 바꿔도 같은 현장으로 알아보도록 순서와 무관하게 만듦
+  function gKey(g) { var ph = g.photos.filter(function (p) { return !p.off; }).map(function (p) { return sig(p.file); }).sort(); return ph.length ? ph[0] + '#' + ph.length : ''; }
   function ymd(t) { var d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
 
-  function bulkRead(files) {
+  function bulkRead(files, auto) {
     if (bulk.busy) return;
     var list = Array.prototype.filter.call(files, function (f) { return /\.(jpe?g|png|webp)$/i.test(f.name) || /^image\/(jpeg|png|webp)$/.test(f.type); });
     var heic = Array.prototype.filter.call(files, function (f) { return /\.hei[cf]$/i.test(f.name); }).length;
@@ -827,17 +841,46 @@
     })();
     function grouped() {
       out.sort(function (a, b) { return a.t - b.t || a.file.name.localeCompare(b.file.name); });
-      var gap = +$('#bulkGap').value, groups = [], cur = null;
-      out.forEach(function (p) {
-        var newG = !cur || cur.photos.length >= 20 || (gap === 12 ? ymd(p.t) !== ymd(cur.last) : p.t - cur.last > gap * 3600e3);
-        if (newG) { cur = { photos: [], cat: '', site: '', spec: '', last: p.t, open: false }; groups.push(cur); }
-        cur.photos.push(p); cur.last = p.t;
-      });
+      // 폴더 구조: "9월/풀무원 나또공장/사진.jpg" → 폴더 "9월/풀무원 나또공장"
+      var dirOf = function (p) { var r = p.file.webkitRelativePath || ''; var i = r.lastIndexOf('/'); return i > 0 ? r.slice(0, i) : ''; };
+      var dirs = {}; out.forEach(function (p) { dirs[dirOf(p)] = 1; });
+      var dirList = Object.keys(dirs);
+      // 처음 폴더를 골랐을 때 안에 하위 폴더가 있으면 자동으로 "폴더별" 묶기
+      if (auto && dirList.length > 1) $('#bulkGap').value = 'folder';
+      var mode = $('#bulkGap').value, groups = [];
+      var byTime = function (list) {
+        var gap = +mode || 4, cur = null, res = [];
+        list.forEach(function (p) {
+          var newG = !cur || cur.photos.length >= 20 || (gap === 12 ? ymd(p.t) !== ymd(cur.last) : p.t - cur.last > gap * 3600e3);
+          if (newG) { cur = { photos: [], cat: '', site: '', spec: '', last: p.t }; res.push(cur); }
+          cur.photos.push(p); cur.last = p.t;
+        });
+        return res;
+      };
+      if (mode === 'folder' && dirList.length > 1) {
+        var depth = function (d) { return d ? d.split('/').length : 0; };
+        var minDepth = Math.min.apply(null, dirList.map(depth));
+        var buckets = {};
+        out.forEach(function (p) { var d = dirOf(p); (buckets[d] = buckets[d] || []).push(p); });
+        // 먼저 찍은 폴더부터
+        Object.keys(buckets).sort(function (a, b) { return buckets[a][0].t - buckets[b][0].t; }).forEach(function (d) {
+          var list = buckets[d];
+          if (depth(d) === minDepth) { groups = groups.concat(byTime(list)); return; } // 하위 폴더 없이 바로 들어있는 사진
+          var name = d.split('/').pop().replace(/[_]+/g, ' ').trim();
+          for (var i = 0; i < list.length; i += 20) {
+            var chunk = list.slice(i, i + 20);
+            groups.push({ photos: chunk, cat: '', site: name + (list.length > 20 ? ' (' + (i / 20 + 1) + ')' : ''), spec: '', folder: d, last: chunk[chunk.length - 1].t });
+          }
+        });
+      } else {
+        groups = byTime(out);
+      }
       var done = doneSet();
       groups.forEach(function (g) { g.done = done.indexOf(gKey(g)) >= 0; });
       bulk.groups = groups;
       var undated = out.filter(function (p) { return p.how === 'file'; }).length;
-      say(msg, out.length + '장을 ' + groups.length + '개 현장으로 묶었습니다.' + (undated ? ' (' + undated + '장은 사진 속 촬영 날짜가 없어 파일 날짜로 정렬했습니다)' : '') + (heic ? ' HEIC ' + heic + '장은 제외했습니다.' : ''), 'ok');
+      var byFolder = groups.filter(function (g) { return g.folder; }).length;
+      say(msg, out.length + '장을 ' + groups.length + '개 현장으로 묶었습니다.' + (byFolder ? ' 하위 폴더 ' + byFolder + '개는 폴더 이름을 현장명으로 넣었습니다.' : '') + (undated ? ' (' + undated + '장은 사진 속 촬영 날짜가 없어 파일 날짜로 정렬했습니다)' : '') + (heic ? ' HEIC ' + heic + '장은 제외했습니다.' : ''), 'ok');
       bulkRender();
     }
   }
@@ -857,7 +900,7 @@
       var live = g.photos.filter(function (p) { return !p.off; });
       var d0 = g.photos[0] ? new Date(g.photos[0].t) : null;
       var c = el('div', 'bg' + (g.done ? ' done' : '') + (!g.cat && !g.done ? ' need' : ''));
-      c.innerHTML = '<div class="bg-h"><b>현장 ' + (gi + 1) + '</b><span class="d">' + (d0 ? d0.getFullYear() + '.' + (d0.getMonth() + 1) + '.' + d0.getDate() : '') + ' · 사진 ' + live.length + '장</span>' +
+      c.innerHTML = '<div class="bg-h"><b>현장 ' + (gi + 1) + '</b>' + (g.folder ? '<span class="fd" title="' + esc(g.folder) + '">📁 ' + esc(g.folder.split('/').pop()) + '</span>' : '') + '<span class="d">' + (d0 ? d0.getFullYear() + '.' + (d0.getMonth() + 1) + '.' + d0.getDate() : '') + ' · 사진 ' + live.length + '장</span>' +
         (g.done ? '<span class="ok">✓ 올림</span>' : '') +
         '<span class="seg cat">' + Object.keys(CATS).map(function (k) { return '<button type="button" data-cat="' + k + '"' + (g.cat === k ? ' class="on"' : '') + '>' + CATS[k].replace(/\(.*\)/, '') + '</button>'; }).join('') + '</span>' +
         '<span class="acts">' + (gi ? '<button type="button" class="link" data-g="merge">위 현장과 합치기</button>' : '') + '<button type="button" class="link del" data-g="drop">이 현장 빼기</button></span></div>' +
@@ -877,6 +920,8 @@
         var tg = el('button', 'tg', p.off ? '되살리기' : '빼기'); tg.type = 'button';
         tg.addEventListener('click', function () { p.off = !p.off; bulkRender(); });
         t.appendChild(tg);
+        if (pi === 0) t.appendChild(el('span', 'cv', '대표 사진'));
+        else { var cv = el('button', 'mkcv', '★ 대표로'); cv.type = 'button'; cv.title = '이 사진을 대표 사진(첫 번째)으로'; cv.addEventListener('click', function () { g.photos.splice(pi, 1); g.photos.unshift(p); p.off = false; bulkRender(); }); t.appendChild(cv); }
         if (pi) { var sp = el('button', 'sp', '✂ 여기서 나누기'); sp.type = 'button'; sp.addEventListener('click', function () { var rest = g.photos.splice(pi); bulk.groups.splice(gi + 1, 0, { photos: rest, cat: g.cat, site: '', spec: '', open: false }); bulkRender(); }); t.appendChild(sp); }
         pBox.appendChild(t);
       });
@@ -892,8 +937,8 @@
     });
     bulkSummary();
   }
-  $('#bulkDir').addEventListener('change', function () { bulkRead(this.files); this.value = ''; });
-  $('#bulkFiles').addEventListener('change', function () { bulkRead(this.files); this.value = ''; });
+  $('#bulkDir').addEventListener('change', function () { bulkRead(this.files, true); this.value = ''; });
+  $('#bulkFiles').addEventListener('change', function () { bulkRead(this.files, false); this.value = ''; });
   $('#bulkGap').addEventListener('change', function () {
     if (!bulk.groups.length || bulk.busy) return;
     var all = []; bulk.groups.forEach(function (g) { all = all.concat(g.photos); });

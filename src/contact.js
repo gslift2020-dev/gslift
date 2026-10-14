@@ -8,10 +8,11 @@ const MAX_PHOTO_BYTES = 3 * 1024 * 1024;
 
 // 고객이 아는 만큼만 적는 리프트 사양 (모두 선택)
 export const SPEC_FIELDS = [
+  ['loc', '설치 현장 위치', 100],
   ['dir', '출입방향', 30],
   ['load', '적재하중', 30],
   ['stops', '정지 층수', 30],
-  ['place', '설치 위치', 30],
+  ['place', '실내·외부', 30],
   ['cargo', '주로 싣는 물건', 100],
   ['w', '카 가로(W, mm)', 8],
   ['d', '카 깊이(D, mm)', 8],
@@ -71,7 +72,7 @@ ${photos.length ? `<p style="color:#4A5A78">현장 사진 ${photos.length}장이
       body: JSON.stringify({
         from: env.MAIL_FROM || '거산리프트 홈페이지 <onboarding@resend.dev>',
         to: [env.NOTIFY_EMAIL || 'gslift2020@naver.com'],
-        subject: `[홈페이지 문의] ${row.company || row.name} · ${row.product || '문의'}${photos.length ? ` (사진 ${photos.length})` : ''}`,
+        subject: `[홈페이지 문의] ${row.company || row.name} · ${row.product || '문의'}${spec.loc ? ' · ' + spec.loc.slice(0, 20) : ''}${photos.length ? ` (사진 ${photos.length})` : ''}`,
         html,
         attachments: photos.map((p, i) => ({ filename: `문의${row.id}_현장사진${i + 1}.${p.ext}`, content: toBase64(p.bytes) })),
       }),
