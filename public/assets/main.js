@@ -126,6 +126,7 @@
     $('#stdS').textContent = it.spec;
     $('#stdD').textContent = it.d;
     dots.forEach(function (d, j) { d.classList.toggle('on', j === n); });
+    $$('.diagram .ld, .diagram .tg').forEach(function (e) { e.classList.toggle('on', +e.getAttribute('data-i') === n); });
     rows.forEach(function (r, j) { r.classList.toggle('on', j === n); r.setAttribute('aria-pressed', j === n ? 'true' : 'false'); });
   }
   if (items.length) {
@@ -143,6 +144,27 @@
       dots.concat(rows).forEach(function (b) { b.addEventListener('click', function () { safety.dataset.touched = '1'; }); });
     }
   }
+
+  /* 공정 카드: 사진 여러 장을 천천히 넘김 (마우스를 올리면 멈춤) */
+  $$('.mslide').forEach(function (box) {
+    var ims = $$('img', box), dots = $$('.ms-dots button', box), cap = $('.ms-cap', box), i = 0, timer, hover = false;
+    if (ims.length < 2) return;
+    function show(n) {
+      i = (n + ims.length) % ims.length;
+      ims.forEach(function (im, k) { im.classList.toggle('on', k === i); });
+      dots.forEach(function (d, k) { d.classList.toggle('on', k === i); });
+      if (cap) cap.textContent = ims[i].getAttribute('data-cap');
+    }
+    dots.forEach(function (d, k) { d.addEventListener('click', function (e) { e.stopPropagation(); show(k); }); });
+    box.addEventListener('mouseenter', function () { hover = true; });
+    box.addEventListener('mouseleave', function () { hover = false; });
+    if (!reduce && 'IntersectionObserver' in window) {
+      new IntersectionObserver(function (es) {
+        clearInterval(timer);
+        if (es[0].isIntersecting) timer = setInterval(function () { if (!hover) show(i + 1); }, 3200 + Math.random() * 800);
+      }, { threshold: 0.3 }).observe(box);
+    }
+  });
 
   /* ================= 설치사례: 분류 탭 + 가로 목록 + 크게 보기 ================= */
   var CATS = window.GS_CATS || {};

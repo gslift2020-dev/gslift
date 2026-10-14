@@ -341,3 +341,31 @@ th:last-child,td:last-child{text-align:right}
 .to-top.show{opacity:1;transform:none;pointer-events:auto}
 .to-top:hover{background:var(--blue)}
 @media (max-width:600px){.to-top{right:14px;bottom:14px;width:48px;height:48px}}
+
+/* 안전검사 도면 (마스트 2개 + 카박스) */
+.diagram .dg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.diagram .dg .dl{font-size:9px;fill:#9DBAF0;text-anchor:middle;font-weight:600;letter-spacing:.05em}
+.diagram .dg .car-l{fill:rgba(255,255,255,.75)}
+.diagram .ld{fill:none;stroke:rgba(157,186,240,.4);stroke-width:1;stroke-dasharray:2 2.5;transition:stroke .3s}
+.diagram .ld.on{stroke:#fff;stroke-width:1.4;stroke-dasharray:none}
+.diagram .tg{fill:rgba(157,186,240,.65);transition:fill .3s}
+.diagram .tg.on{fill:#fff;animation:gsPing 1.6s ease-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes gsPing{0%{stroke:rgba(255,255,255,.9);stroke-width:0}70%{stroke:rgba(255,255,255,0);stroke-width:10}100%{stroke:rgba(255,255,255,0);stroke-width:10}}
+.diagram .dot{z-index:2}
+@media (prefers-reduced-motion:reduce){.diagram .tg.on{animation:none}}
+
+/* 안전검사 배지 카드 */
+.note-card.insp{background:linear-gradient(160deg,rgba(255,255,255,.12),rgba(255,255,255,.04));border-color:rgba(255,255,255,.28)}
+.insp-badge{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;background:#F5B800;color:#062656;font-size:13px;font-weight:800;padding:5px 12px;border-radius:999px}
+
+/* 공정 카드: 여러 장 사진 */
+.mslide{overflow:hidden}
+.mslide img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .8s ease,transform .6s cubic-bezier(.2,.7,.2,1)}
+.mslide img.on{opacity:1}
+.card.lift:hover .mslide img.on{transform:scale(1.05)}
+.mslide .step{z-index:2}
+.ms-cap{position:absolute;left:12px;bottom:12px;z-index:2;background:rgba(6,38,86,.85);color:#fff;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px}
+.ms-dots{position:absolute;right:8px;bottom:6px;z-index:2;display:flex}
+.ms-dots button{width:24px;height:28px;border:0;background:transparent;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.ms-dots button::before{content:"";width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.55);box-shadow:0 0 0 1px rgba(0,0,0,.15)}
+.ms-dots button.on::before{background:#fff;width:18px;border-radius:4px}
