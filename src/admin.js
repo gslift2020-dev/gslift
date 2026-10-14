@@ -1,5 +1,6 @@
 // 관리자 기능: 로그인, 문의, 설치사례(여러 사진·글), 메인 슬라이드, 설정
 import { json, clean, kst, ensureSchema } from './util.js';
+import { specRows } from './contact.js';
 
 const COOKIE = 'gs_admin';
 const SESSION_SECONDS = 12 * 3600;
@@ -140,16 +141,48 @@ function parseOrder(raw, max) {
 
 async function listInquiries(env) {
   const { results } = await env.DB.prepare(
-    'SELECT id, created_at, company, name, phone, product, message, status, email_sent, email_error FROM inquiries ORDER BY id DESC LIMIT 300'
+    'SELECT id, created_at, company, name, phone, product, message, spec, photos, memo, status, email_sent, email_error FROM inquiries ORDER BY id DESC LIMIT 1000'
   ).all();
-  return json({ ok: true, items: results });
+  const parse = (s, d) => { try { return JSON.parse(s || '') || d; } catch { return d; } };
+  return json({
+    ok: true,
+    items: results.map((r) => ({
+      ...r,
+      spec: specRows(parse(r.spec, {})),
+      photos: parse(r.photos, []).map((k) => '/api/admin/inq-photo/' + encodeURIComponent(k)),
+    })),
+  });
 }
 async function setInquiryStatus(request, env, id) {
   let body = {};
   try { body = await request.json(); } catch {}
-  if (!STATUSES.includes(body.status)) return json({ ok: false, error: '잘못된 상태값입니다.' }, 400);
-  await env.DB.prepare('UPDATE inquiries SET status = ? WHERE id = ?').bind(body.status, id).run();
+  if ('status' in body) {
+    if (!STATUSES.includes(body.status)) return json({ ok: false, error: '잘못된 상태값입니다.' }, 400);
+    await env.DB.prepare('UPDATE inquiries SET status = ? WHERE id = ?').bind(body.status, id).run();
+  }
+  if ('memo' in body) await env.DB.prepare('UPDATE inquiries SET memo = ? WHERE id = ?').bind(clean(body.memo, 3000), id).run();
   return json({ ok: true });
+}
+
+async function deleteInquiry(env, id) {
+  const r = await env.DB.prepare('SELECT photos FROM inquiries WHERE id = ?').bind(id).first();
+  if (!r) return json({ ok: false, error: '없는 문의입니다.' }, 404);
+  let keys = [];
+  try { keys = JSON.parse(r.photos || '[]') || []; } catch {}
+  if (env.PHOTOS) for (const k of keys) await env.PHOTOS.delete(k);
+  await env.DB.prepare('DELETE FROM inquiries WHERE id = ?').bind(id).run();
+  return json({ ok: true });
+}
+
+// 문의 사진은 로그인한 관리자만 볼 수 있음
+async function inquiryPhoto(env, key) {
+  if (!env.PHOTOS || !/^inquiries\/[\w-]+\.(jpg|webp|png)$/.test(key)) return new Response('Not found', { status: 404 });
+  const obj = await env.PHOTOS.get(key);
+  if (!obj) return new Response('Not found', { status: 404 });
+  const headers = new Headers();
+  obj.writeHttpMetadata(headers);
+  headers.set('cache-control', 'private, max-age=3600');
+  return new Response(obj.body, { headers });
 }
 
 /* ---------- 설치사례 ---------- */
@@ -416,6 +449,8 @@ export async function handleAdmin(request, env, path) {
   if (path === '/api/admin/inquiries' && method === 'GET') return listInquiries(env);
   let m = /^\/api\/admin\/inquiries\/(\d+)$/.exec(path);
   if (m && method === 'POST') return setInquiryStatus(request, env, Number(m[1]));
+  if (m && method === 'DELETE') return deleteInquiry(env, Number(m[1]));
+  if (path.startsWith('/api/admin/inq-photo/') && method === 'GET') return inquiryPhoto(env, decodeURIComponent(path.slice('/api/admin/inq-photo/'.length)));
 
   if (path === '/api/admin/cases' && method === 'GET') return listCasesAdmin(env);
   if (path === '/api/admin/cases' && method === 'POST') return saveCase(request, env, null);

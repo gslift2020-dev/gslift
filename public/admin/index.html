@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex, nofollow">
 <title>관리자 | 거산리프트</title>
 <link rel="icon" href="/favicon.png">
-<link rel="stylesheet" href="/admin/admin.css?v=4ec8f828">
+<link rel="stylesheet" href="/admin/admin.css?v=fae088f8">
 </head>
 <body>
 
@@ -38,6 +38,16 @@
 
 <!-- ===== 문의 ===== -->
 <section id="tab-inq" role="tabpanel">
+<div class="kpis" id="kpis">
+<div class="kpi warn"><small>처리 안 한 신규 문의</small><b id="kNew">-</b></div>
+<div class="kpi"><small>이번 달 문의</small><b id="kMonth">-</b></div>
+<div class="kpi"><small>지난 30일 문의</small><b id="k30">-</b></div>
+<div class="kpi"><small>전체 문의</small><b id="kAll">-</b></div>
+</div>
+<div class="bar">
+<input type="search" id="inqSearch" class="search" placeholder="회사명·이름·연락처·내용으로 검색" aria-label="문의 검색">
+<button type="button" class="link" id="csvBtn">엑셀로 내려받기</button>
+</div>
 <div class="bar">
 <div class="filters" id="filters">
 <button type="button" class="on" data-f="all">전체</button>
@@ -149,6 +159,6 @@
 </section>
 </main>
 
-<script src="/admin/admin.js?v=1c430c71" defer></script>
+<script src="/admin/admin.js?v=e5798a06" defer></script>
 </body>
 </html>

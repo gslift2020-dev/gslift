@@ -62,32 +62,72 @@
       inquiries = d.items; renderInquiries();
     });
   }
+  var inqQuery = '';
   function renderInquiries() {
+    var now = new Date(Date.now() + 9 * 3600 * 1000), month = now.toISOString().slice(0, 7);
+    var d30 = new Date(Date.now() + 9 * 3600 * 1000 - 30 * 864e5).toISOString().replace('T', ' ').slice(0, 19);
     var n = inquiries.filter(function (x) { return x.status === 'new'; }).length;
     $('#newCount').hidden = !n; $('#newCount').textContent = n;
-    var rows = inquiries.filter(function (x) { return filter === 'all' || x.status === filter; });
+    $('#kNew').textContent = n;
+    $('#kMonth').textContent = inquiries.filter(function (x) { return (x.created_at || '').slice(0, 7) === month; }).length;
+    $('#k30').textContent = inquiries.filter(function (x) { return (x.created_at || '') > d30; }).length;
+    $('#kAll').textContent = inquiries.length;
+    var q = inqQuery.trim().toLowerCase();
+    var rows = inquiries.filter(function (x) {
+      if (filter !== 'all' && x.status !== filter) return false;
+      if (!q) return true;
+      return [x.company, x.name, x.phone, x.message, x.memo, x.product, (x.spec || []).map(function (r) { return r[1]; }).join(' ')].join(' ').toLowerCase().indexOf(q) >= 0;
+    });
     if (!rows.length) { $('#inqList').innerHTML = '<p class="empty">해당하는 문의가 없습니다.</p>'; return; }
     $('#inqList').innerHTML = rows.map(function (x) {
       var opts = Object.keys(STATUS).map(function (k) { return '<option value="' + k + '"' + (k === x.status ? ' selected' : '') + '>' + STATUS[k] + '</option>'; }).join('');
+      var spec = (x.spec || []).map(function (r) { return '<div><small>' + esc(r[0]) + '</small><b>' + esc(r[1]) + '</b></div>'; }).join('');
+      var photos = (x.photos || []).map(function (u, i) { return '<a href="' + esc(u) + '" target="_blank" rel="noopener" aria-label="현장 사진 ' + (i + 1) + ' 크게 보기"><img src="' + esc(u) + '" alt="" loading="lazy"></a>'; }).join('');
       return '<article class="inq ' + esc(x.status) + '">' +
         '<div><div class="who">#' + x.id + ' ' + esc(x.company || '(회사명 없음)') + ' · ' + esc(x.name) + '</div>' +
-        '<div class="meta">' + esc(x.created_at) + ' · ' + esc(x.product || '-') + '</div></div>' +
+        '<div class="meta">' + esc(x.created_at) + ' · ' + esc(x.product || '-') + (x.photos && x.photos.length ? ' · 사진 ' + x.photos.length + '장' : '') + '</div></div>' +
         '<span class="st st-' + esc(x.status) + '">' + STATUS[x.status] + '</span>' +
+        (spec ? '<div class="ispec">' + spec + '</div>' : '') +
         '<div class="body">' + esc(x.message) + '</div>' +
+        (photos ? '<div class="iphotos">' + photos + '</div>' : '') +
+        '<label class="memo">내부 메모 <small>(고객에게 보이지 않음 · 입력 후 다른 곳을 누르면 저장)</small><textarea rows="2" data-memo="' + x.id + '" placeholder="예) 10/15 현장 방문 예정, 견적 1,800만원 제출">' + esc(x.memo || '') + '</textarea></label>' +
         '<div class="acts"><a class="tel" href="tel:' + esc(x.phone) + '">' + esc(x.phone) + ' 전화</a>' +
         '<label style="flex-direction:row;align-items:center;gap:6px;font-weight:500">상태 <select data-id="' + x.id + '" aria-label="처리 상태">' + opts + '</select></label>' +
         (x.email_sent ? '' : '<span class="warn">알림 메일 미발송' + (x.email_error ? ': ' + esc(x.email_error) : '') + '</span>') +
+        '<button type="button" class="link del" data-del="' + x.id + '">삭제</button>' +
         '</div></article>';
     }).join('');
   }
-  $('#inqList').addEventListener('change', function (e) {
-    var sel = e.target; if (!sel.dataset.id) return;
-    var id = +sel.dataset.id;
-    api('/api/admin/inquiries/' + id, { method: 'POST', json: { status: sel.value } }).then(function (d) {
-      if (!d.ok) return alert(d.error || '저장 실패');
-      inquiries.forEach(function (x) { if (x.id === id) x.status = sel.value; });
-      renderInquiries();
+  $('#inqSearch').addEventListener('input', function () { inqQuery = this.value; renderInquiries(); });
+  $('#inqList').addEventListener('focusout', function (e) {
+    var t = e.target; if (!t.dataset || !t.dataset.memo) return;
+    var id = +t.dataset.memo, it = inquiries.filter(function (x) { return x.id === id; })[0];
+    if (!it || (it.memo || '') === t.value) return;
+    api('/api/admin/inquiries/' + id, { method: 'POST', json: { memo: t.value } }).then(function (d) {
+      if (!d.ok) return alert(d.error || '메모 저장 실패');
+      it.memo = t.value; t.classList.add('saved'); setTimeout(function () { t.classList.remove('saved'); }, 1200);
     });
+  });
+  $('#inqList').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-del]'); if (!b) return;
+    if (!confirm('#' + b.dataset.del + ' 문의를 삭제할까요? 첨부 사진도 함께 지워지며 되돌릴 수 없습니다.')) return;
+    api('/api/admin/inquiries/' + b.dataset.del, { method: 'DELETE' }).then(function (d) {
+      if (!d.ok) return alert(d.error || '삭제 실패');
+      inquiries = inquiries.filter(function (x) { return x.id !== +b.dataset.del; }); renderInquiries();
+    });
+  });
+  // 엑셀에서 한글이 깨지지 않도록 BOM 붙인 CSV
+  $('#csvBtn').addEventListener('click', function () {
+    var cols = ['번호', '접수시각', '상태', '회사명', '담당자', '연락처', '관심제품', '사양', '문의내용', '사진수', '내부메모'];
+    var cell = function (v) { v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+    var lines = [cols.join(',')].concat(inquiries.map(function (x) {
+      return [x.id, x.created_at, STATUS[x.status], x.company, x.name, x.phone, x.product,
+        (x.spec || []).map(function (r) { return r[0] + ': ' + r[1]; }).join(' / '), x.message, (x.photos || []).length, x.memo].map(cell).join(',');
+    }));
+    var blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = '거산리프트_문의목록_' + new Date().toISOString().slice(0, 10) + '.csv';
+    document.body.appendChild(a); a.click(); a.remove();
   });
   $$('#filters button').forEach(function (b) {
     b.addEventListener('click', function () {

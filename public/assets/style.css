@@ -369,3 +369,28 @@ th:last-child,td:last-child{text-align:right}
 .ms-dots button{width:24px;height:28px;border:0;background:transparent;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .ms-dots button::before{content:"";width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.55);box-shadow:0 0 0 1px rgba(0,0,0,.15)}
 .ms-dots button.on::before{background:#fff;width:18px;border-radius:4px}
+
+/* 문의: 사양 + 사진 */
+.spec-set{border:1px solid var(--line);border-radius:12px;padding:16px 16px 18px;margin:0;background:var(--bg-soft)}
+.spec-set legend{font-weight:700;font-size:15px;padding:0 6px}
+.spec-set legend small{font-weight:400;color:var(--muted);font-size:13px;margin-left:6px}
+.spec-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.spec-grid .wide{grid-column:1/-1}
+.form .spec-grid select,.form .spec-grid input{height:46px}
+.size{display:flex;flex-direction:column;gap:6px;font-weight:500;font-size:14px}
+.size small{font-weight:400;color:var(--muted)}
+.size-in{display:flex;align-items:center;gap:8px}
+.size-in label{flex:1;min-width:0}
+.size-in input{width:100%}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.up{display:flex;flex-direction:column;gap:8px}
+.up-l{font-weight:500;font-size:14px}.up-l small{color:var(--muted);font-weight:400}
+.up-drop{position:relative;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:4px!important;text-align:center;border:2px dashed #9FB3D6;border-radius:12px;padding:18px;color:var(--blue);background:#F7F9FD;cursor:pointer;transition:border-color .2s,background .2s}
+.up-drop input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.up-drop span{color:var(--muted);font-size:13px;font-weight:400}
+.up-drop.over,.up-drop:hover{border-color:var(--blue);background:#EEF3FB}
+.up-list{display:flex;flex-wrap:wrap;gap:8px}
+.up-list:empty{display:none}
+.up-item{position:relative;width:84px;height:84px;border-radius:10px;overflow:hidden;background:#dde3ee}
+.up-item img{width:100%;height:100%;object-fit:cover}
+.up-item button{position:absolute;right:3px;top:3px;width:26px;height:26px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;cursor:pointer;font-size:15px;line-height:26px;padding:0}

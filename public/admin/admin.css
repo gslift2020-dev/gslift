@@ -153,3 +153,20 @@ input:focus,textarea:focus{outline:2px solid var(--blue-2);outline-offset:1px}
 .post .pcat{margin:10px 12px 0;align-self:flex-start;font-size:11px;font-weight:700;background:#E6ECF7;color:var(--blue);border-radius:999px;padding:2px 8px}
 .post .t{padding-top:4px}
 .post .a a.link{text-decoration:none;display:inline-flex;align-items:center}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:18px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+.kpi small{color:var(--muted);font-size:13px;font-weight:600}
+.kpi b{font-size:28px;color:var(--navy);font-variant-numeric:tabular-nums}
+.kpi.warn b{color:var(--warn)}
+.search{flex:1 1 260px;max-width:420px;height:44px!important}
+.ispec{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px}
+.ispec div{background:#EEF3FB;border-radius:8px;padding:6px 10px;display:flex;flex-direction:column}
+.ispec small{font-size:11px;color:var(--muted);font-weight:600}
+.ispec b{font-size:14px}
+.iphotos{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px}
+.iphotos img{width:88px;height:88px;object-fit:cover;border-radius:8px;display:block;background:#dde3ee}
+.memo{grid-column:1/-1;font-size:13px;font-weight:600}
+.memo small{font-weight:400;color:var(--muted)}
+.memo textarea{font-size:14px;min-height:60px;background:#FFFDF5;border-color:#E9DDB0}
+.memo textarea.saved{outline:2px solid #4CAF50}
+.inq .acts .del{color:#8A1F1F;margin-left:auto}

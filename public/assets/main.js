@@ -333,16 +333,62 @@
     }).catch(function () {});
   }
 
-  /* 문의 폼: 서버로 전송 → 저장 + 메일 알림 */
+  /* 문의 폼: 사양 + 현장 사진(브라우저에서 줄여서) → 서버 저장 + 메일 알림 */
   var form = $('#form');
   if (form) {
-    var btn = $('#formBtn'), msg = $('#formMsg');
+    var btn = $('#formBtn'), msg = $('#formMsg'), shots = [], MAX_SHOTS = 5;
     function say(text, kind) { msg.textContent = text; msg.className = 'form-msg full ' + (kind || ''); }
     function mark(name) {
       $$('.invalid', form).forEach(function (el) { el.classList.remove('invalid'); });
       var el = name && form.elements[name];
-      if (el) { el.classList.add('invalid'); el.focus(); }
+      if (el && el.classList) { el.classList.add('invalid'); el.focus(); }
     }
+    // 사진을 긴 변 1600px JPEG로 줄임 (휴대폰 원본 4~8MB → 300KB 안팎)
+    function shrink(file) {
+      return new Promise(function (ok, no) {
+        var url = URL.createObjectURL(file), im = new Image();
+        im.onload = function () {
+          var k = Math.min(1, 1600 / Math.max(im.naturalWidth, im.naturalHeight));
+          var c = document.createElement('canvas'); c.width = Math.round(im.naturalWidth * k); c.height = Math.round(im.naturalHeight * k);
+          c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+          URL.revokeObjectURL(url);
+          c.toBlob(function (b) { b ? ok({ blob: b, url: URL.createObjectURL(b) }) : no(); }, 'image/jpeg', 0.82);
+        };
+        im.onerror = function () { URL.revokeObjectURL(url); no(); };
+        im.src = url;
+      });
+    }
+    var upList = $('#upList'), upDrop = $('#upDrop');
+    function drawShots() {
+      upList.innerHTML = '';
+      shots.forEach(function (sh, i) {
+        var d = document.createElement('div'); d.className = 'up-item';
+        var im = document.createElement('img'); im.src = sh.url; im.alt = '첨부 사진 ' + (i + 1);
+        var x = document.createElement('button'); x.type = 'button'; x.textContent = '×'; x.setAttribute('aria-label', (i + 1) + '번째 사진 빼기');
+        x.addEventListener('click', function () { URL.revokeObjectURL(sh.url); shots.splice(i, 1); drawShots(); });
+        d.appendChild(im); d.appendChild(x); upList.appendChild(d);
+      });
+    }
+    function addShots(files) {
+      var list = Array.prototype.filter.call(files, function (f) { return /^image\//.test(f.type) || /\.(jpe?g|png|webp|heic)$/i.test(f.name); });
+      if (shots.length + list.length > MAX_SHOTS) say('사진은 ' + MAX_SHOTS + '장까지 보낼 수 있어 앞의 ' + (MAX_SHOTS - shots.length) + '장만 넣었습니다.', 'err');
+      list = list.slice(0, Math.max(0, MAX_SHOTS - shots.length));
+      Promise.all(list.map(function (f) { return shrink(f).catch(function () { return null; }); })).then(function (r) {
+        var bad = r.filter(function (x) { return !x; }).length;
+        shots = shots.concat(r.filter(Boolean)); drawShots();
+        if (bad) say(bad + '장은 읽을 수 없는 형식입니다. (아이폰은 설정 > 카메라 > 포맷 > "높은 호환성"으로 찍거나 JPG로 저장 후 올려주세요)', 'err');
+      });
+    }
+    if (upDrop) {
+      var pick = $('input', upDrop);
+      pick.addEventListener('change', function () { addShots(pick.files); pick.value = ''; });
+      ['dragenter', 'dragover'].forEach(function (t) { upDrop.addEventListener(t, function (e) { e.preventDefault(); upDrop.classList.add('over'); }); });
+      ['dragleave', 'drop'].forEach(function (t) { upDrop.addEventListener(t, function (e) { e.preventDefault(); upDrop.classList.remove('over'); }); });
+      upDrop.addEventListener('drop', function (e) { addShots(e.dataTransfer.files); });
+    }
+    $$('input[name=w], input[name=d], input[name=h]', form).forEach(function (i) {
+      i.addEventListener('input', function () { i.value = i.value.replace(/[^0-9]/g, ''); });
+    });
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       var f = form.elements;
@@ -350,20 +396,16 @@
       if (!/^[0-9+\-() ]{8,20}$/.test(f.phone.value.trim())) { mark('phone'); return say('연락처를 정확히 입력해 주세요. 예) 010-1234-5678', 'err'); }
       if (!f.agree.checked) { mark('agree'); return say('개인정보 수집·이용에 동의해 주세요.', 'err'); }
       mark(null);
-      btn.disabled = true; btn.textContent = '보내는 중…'; say('');
-      fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          company: f.company.value, name: f.name.value, phone: f.phone.value,
-          product: f.product.value, message: f.message.value,
-          agree: f.agree.checked, website: f.website.value
-        })
-      })
+      var fd = new FormData();
+      ['company', 'name', 'phone', 'product', 'message', 'website', 'dir', 'load', 'stops', 'place', 'cargo', 'w', 'd', 'h'].forEach(function (k) { if (f[k]) fd.append(k, f[k].value); });
+      fd.append('agree', f.agree.checked ? 'true' : 'false');
+      shots.forEach(function (sh, i) { fd.append('photos', sh.blob, 'photo' + (i + 1) + '.jpg'); });
+      btn.disabled = true; btn.textContent = shots.length ? '사진과 함께 보내는 중…' : '보내는 중…'; say('');
+      fetch('/api/contact', { method: 'POST', body: fd })
         .then(function (r) { return r.json().catch(function () { return { ok: false }; }); })
         .then(function (d) {
           if (d.ok) {
-            form.reset();
+            form.reset(); shots.forEach(function (sh) { URL.revokeObjectURL(sh.url); }); shots = []; drawShots();
             say('문의가 접수되었습니다. 담당자가 확인 후 연락드리겠습니다. 급하신 경우 031-986-5345로 전화 주세요.', 'ok');
           } else {
             if (d.field) mark(d.field);

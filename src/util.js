@@ -69,6 +69,9 @@ const MIGRATIONS = [
   'ALTER TABLE cases ADD COLUMN body TEXT',
   'ALTER TABLE cases ADD COLUMN updated_at TEXT',
   'ALTER TABLE cases ADD COLUMN category TEXT',
+  'ALTER TABLE inquiries ADD COLUMN spec TEXT',
+  'ALTER TABLE inquiries ADD COLUMN photos TEXT',
+  'ALTER TABLE inquiries ADD COLUMN memo TEXT',
 ];
 
 let schemaReady = false;
