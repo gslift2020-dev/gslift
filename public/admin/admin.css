@@ -148,3 +148,8 @@ input:focus,textarea:focus{outline:2px solid var(--blue-2);outline-offset:1px}
   .srow{grid-template-columns:60px 1fr auto}
   .cgroup .gname{width:100%}
 }
+.cat-seg{flex-wrap:wrap}
+.cat-seg button{min-height:46px}
+.post .pcat{margin:10px 12px 0;align-self:flex-start;font-size:11px;font-weight:700;background:#E6ECF7;color:var(--blue);border-radius:999px;padding:2px 8px}
+.post .t{padding-top:4px}
+.post .a a.link{text-decoration:none;display:inline-flex;align-items:center}

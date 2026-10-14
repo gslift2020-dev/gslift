@@ -8,6 +8,8 @@
   var HERO_W = 1200, HERO_H = 1500;   // 메인 슬라이드 (세로 4:5)
   var WM_RATIO = 0.30, WM_ALPHA = 0.38;
   var STATUS = { 'new': '신규', progress: '처리중', done: '완료' };
+  var CATS = { fl: '화물용 리프트(F/L)', tl: '테이블 리프트(T/L)', st: '수동·자동 스태커', tr: '운반기계' };
+  function inferCat(t) { t = String(t || ''); if (/테이블|T\/L/i.test(t)) return 'tl'; if (/스태커/.test(t)) return 'st'; if (/운반|대차/.test(t)) return 'tr'; return 'fl'; }
 
   /* ================= 공통 ================= */
   function api(path, opts) {
@@ -224,7 +226,7 @@
   function loadSettings() {
     return api('/api/admin/settings').then(function (d) {
       if (!d.ok) return;
-      chips = d.chips; videos = d.videos;
+      chips = d.chips; videos = d.videos; $('#hideSamples').checked = !!d.hideSamples;
       renderChips(); heroLoad(d.slides); ytRender();
     });
   }
@@ -241,7 +243,7 @@
   });
 
   function openEditor(post) {
-    editing = { id: post ? post.id : null, items: [], sel: -1, chipSel: {} };
+    editing = { id: post ? post.id : null, items: [], sel: -1, chipSel: {}, cat: post ? post.cat : '' };
     var f = $('#caseForm');
     f.hidden = false; f.reset(); say($('#caseMsg'), '');
     $('#caseFormTitle').textContent = post ? '설치사례 수정' : '새 설치사례';
@@ -253,7 +255,7 @@
       var parts = post.title.split('·').map(function (s) { return s.trim(); });
       chips.forEach(function (g) { g.items.forEach(function (v) { if (parts.indexOf(v) >= 0) editing.chipSel[g.name] = v; }); });
     }
-    renderChips(); renderThumbs(); caseAdj.show(null);
+    renderChips(); renderThumbs(); caseAdj.show(null); renderCat();
     f.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
   function closeEditor() { $('#caseForm').hidden = true; editing = null; }
@@ -334,6 +336,7 @@
           if (chipEditing) { g.items.splice(vi, 1); renderChips(); return; }
           if (!editing) return;
           if (sel[g.name] === v) delete sel[g.name]; else sel[g.name] = v;
+          if (sel[g.name] === v && /리프트|스태커|운반/.test(v)) { editing.cat = inferCat(v); renderCat(); }
           buildTitle(); renderChips();
         });
         row.appendChild(b);
@@ -355,6 +358,10 @@
     });
     box.appendChild(ng);
   }
+  function renderCat() {
+    $$('#catSeg button').forEach(function (b) { var on = editing && b.dataset.cat === editing.cat; b.classList.toggle('on', on); b.setAttribute('aria-checked', on); });
+  }
+  $$('#catSeg button').forEach(function (b) { b.addEventListener('click', function () { if (editing) { editing.cat = b.dataset.cat; renderCat(); } }); });
   function buildTitle() {
     var sel = editing.chipSel, parts = [];
     chips.forEach(function (g) { if (sel[g.name]) parts.push(sel[g.name]); });
@@ -376,9 +383,10 @@
     var f = e.target, msg = $('#caseMsg'), btn = $('#caseSave');
     if (!editing.items.length) return say(msg, '사진을 1장 이상 올려주세요.', 'err');
     if (!f.title.value.trim()) { f.title.focus(); return say(msg, '제목을 입력하거나 사양 버튼을 골라주세요.', 'err'); }
+    if (!editing.cat) { $('#catSeg').scrollIntoView({ block: 'center' }); return say(msg, '분류(화물용·테이블·스태커·운반기계)를 골라주세요.', 'err'); }
     btn.disabled = true;
     var fd = new FormData(), order = [], news = editing.items.filter(function (x) { return x.kind === 'new'; }), done = 0;
-    fd.append('title', f.title.value.trim()); fd.append('site', f.site.value.trim()); fd.append('body', f.body.value.trim());
+    fd.append('title', f.title.value.trim()); fd.append('category', editing.cat); fd.append('site', f.site.value.trim()); fd.append('body', f.body.value.trim());
     var chain = Promise.resolve();
     editing.items.forEach(function (it) {
       if (it.kind === 'old') { order.push('p:' + it.id); return; }
@@ -410,16 +418,35 @@
     api('/api/admin/cases').then(function (d) {
       if (!d.ok) { $('#caseList').innerHTML = '<p class="empty">' + esc(d.error) + '</p>'; return; }
       cases = d.items;
+      renderCaseList();
+    });
+  }
+  var caseFilter = 'all';
+  $$('#caseFilters button').forEach(function (b) {
+    b.addEventListener('click', function () { caseFilter = b.dataset.f; $$('#caseFilters button').forEach(function (x) { x.classList.toggle('on', x === b); }); renderCaseList(); });
+  });
+  $('#hideSamples').addEventListener('change', function () {
+    var cb = this;
+    api('/api/admin/settings', { method: 'POST', json: { hideSamples: cb.checked } }).then(function (d) {
+      if (!d.ok) { cb.checked = !cb.checked; return alert(d.error || '저장 실패'); }
+      flash(cb.checked ? '기본 예시 사례를 홈페이지에서 숨겼습니다.' : '기본 예시 사례를 다시 보이게 했습니다.');
+    });
+  });
+  function renderCaseList() {
+    {
+      var list = cases.filter(function (c) { return caseFilter === 'all' || c.cat === caseFilter; });
       if (!cases.length) { $('#caseList').innerHTML = '<p class="empty">아직 올린 글이 없습니다. "새 글 쓰기"를 눌러 시작하세요.</p>'; return; }
-      $('#caseList').innerHTML = cases.map(function (c) {
+      if (!list.length) { $('#caseList').innerHTML = '<p class="empty">이 분류에 올린 글이 없습니다.</p>'; return; }
+      $('#caseList').innerHTML = list.map(function (c) {
         var cover = c.photos[0] ? c.photos[0].img : '';
         return '<article class="post' + (c.visible ? '' : ' hidden') + '"><div class="ph"><img src="' + esc(cover) + '" alt="" loading="lazy"><span class="cnt">사진 ' + c.photos.length + '장</span></div>' +
-          '<div class="t">' + esc(c.title) + (c.visible ? '' : ' (숨김)') + '</div><div class="s">' + esc(c.site) + ' · ' + esc((c.updated_at || c.created_at || '').slice(0, 10)) + '</div>' +
+          '<span class="pcat">' + esc(CATS[c.cat] || '') + '</span><div class="t">' + esc(c.title) + (c.visible ? '' : ' (숨김)') + '</div><div class="s">' + esc(c.site) + ' · ' + esc((c.updated_at || c.created_at || '').slice(0, 10)) + '</div>' +
           '<div class="a"><button type="button" class="link" data-act="edit" data-id="' + c.id + '">수정</button>' +
+          '<a class="link" href="/case.html?id=' + c.id + '" target="_blank" rel="noopener">보기</a>' +
           '<button type="button" class="link" data-act="toggle" data-id="' + c.id + '" data-v="' + c.visible + '">' + (c.visible ? '숨기기' : '보이기') + '</button>' +
           '<button type="button" class="link del" data-act="del" data-id="' + c.id + '">삭제</button></div></article>';
       }).join('');
-    });
+    }
   }
   $('#caseList').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;

@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex, nofollow">
 <title>관리자 | 거산리프트</title>
 <link rel="icon" href="/favicon.png">
-<link rel="stylesheet" href="/admin/admin.css?v=3">
+<link rel="stylesheet" href="/admin/admin.css?v=4ec8f828">
 </head>
 <body>
 
@@ -79,6 +79,13 @@
 </div>
 
 <div class="field">
+<span class="lbl">분류 <span class="req">*</span> <small>(홈페이지 설치사례의 어느 탭에 나올지)</small></span>
+<div class="seg cat-seg" id="catSeg" role="radiogroup" aria-label="설치사례 분류">
+<button type="button" data-cat="fl" role="radio">화물용 리프트(F/L)</button><button type="button" data-cat="tl" role="radio">테이블 리프트(T/L)</button><button type="button" data-cat="st" role="radio">수동·자동 스태커</button><button type="button" data-cat="tr" role="radio">운반기계</button>
+</div>
+</div>
+
+<div class="field">
 <div class="lbl-row"><span class="lbl">사양 버튼 <small>(눌러서 고르면 제목이 자동으로 만들어집니다)</small></span><button type="button" class="link" id="chipEditBtn">버튼 편집</button></div>
 <div id="chipBox" class="chips"></div>
 </div>
@@ -91,6 +98,10 @@
 <p class="msg" id="caseMsg" role="status" aria-live="polite"></p>
 </form>
 
+<div class="bar">
+<div class="filters" id="caseFilters"><button type="button" class="on" data-f="all">전체</button><button type="button" data-f="fl">화물용(F/L)</button><button type="button" data-f="tl">테이블(T/L)</button><button type="button" data-f="st">스태커</button><button type="button" data-f="tr">운반기계</button></div>
+<label class="check" style="font-weight:500;font-size:14px"><input type="checkbox" id="hideSamples"> 홈페이지의 기본 예시 사례 8개 숨기기</label>
+</div>
 <div id="caseList" class="posts"><p class="empty">불러오는 중…</p></div>
 </section>
 
@@ -138,6 +149,6 @@
 </section>
 </main>
 
-<script src="/admin/admin.js?v=3" defer></script>
+<script src="/admin/admin.js?v=1c430c71" defer></script>
 </body>
 </html>

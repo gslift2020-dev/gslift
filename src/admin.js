@@ -8,6 +8,16 @@ const FAIL_WINDOW_MS = 15 * 60 * 1000;
 const MAX_PHOTO_BYTES = 4 * 1024 * 1024;
 const MAX_PHOTOS_PER_CASE = 20;
 const MAX_SLIDES = 10;
+
+// 설치사례 분류 (제품소개 4종과 같음)
+export const CATS = { fl: '화물용 리프트(F/L)', tl: '테이블 리프트(T/L)', st: '수동·자동 스태커', tr: '운반기계' };
+export function inferCat(title) {
+  const t = String(title || '');
+  if (/테이블|T\/L/i.test(t)) return 'tl';
+  if (/스태커/.test(t)) return 'st';
+  if (/운반|대차/.test(t)) return 'tr';
+  return 'fl';
+}
 const STATUSES = ['new', 'progress', 'done'];
 
 export const DEFAULT_CHIPS = [
@@ -155,15 +165,16 @@ async function casePhotos(env, ids) {
 }
 
 async function listCasesAdmin(env) {
-  const { results } = await env.DB.prepare('SELECT id, created_at, updated_at, title, sub, site, body, visible FROM cases ORDER BY id DESC').all();
+  const { results } = await env.DB.prepare('SELECT id, created_at, updated_at, title, sub, site, body, category, visible FROM cases ORDER BY id DESC').all();
   const photos = await casePhotos(env, results.map((r) => r.id));
-  return json({ ok: true, items: results.map((r) => ({ ...r, site: r.site ?? r.sub ?? '', photos: photos[r.id] || [] })) });
+  return json({ ok: true, items: results.map((r) => ({ ...r, cat: CATS[r.category] ? r.category : inferCat(r.title), site: r.site ?? r.sub ?? '', photos: photos[r.id] || [] })) });
 }
 
 function caseFields(form) {
   const title = clean(form.get('title'), 120);
   if (!title) throw new UserError('제목을 입력하거나 사양 버튼을 골라주세요.');
-  return { title, site: clean(form.get('site'), 80), body: clean(form.get('body'), 5000) };
+  const c = String(form.get('category') || '');
+  return { title, cat: CATS[c] ? c : inferCat(title), site: clean(form.get('site'), 80), body: clean(form.get('body'), 5000) };
 }
 
 // 새 글 또는 수정: 사진 순서(order)대로 저장
@@ -199,12 +210,12 @@ async function saveCase(request, env, id) {
     const keys = order.map((t) => (t[0] === 'n' ? newKeys[Number(t.slice(2))] : existingById[Number(t.slice(2))].photo_key));
 
     if (!id) {
-      const r = await env.DB.prepare('INSERT INTO cases (created_at, title, sub, site, body, photo_key) VALUES (?, ?, ?, ?, ?, ?)')
-        .bind(kst(), f.title, '', f.site, f.body, keys[0]).run();
+      const r = await env.DB.prepare('INSERT INTO cases (created_at, title, sub, site, body, category, photo_key) VALUES (?, ?, ?, ?, ?, ?, ?)')
+        .bind(kst(), f.title, '', f.site, f.body, f.cat, keys[0]).run();
       id = r.meta.last_row_id;
     } else {
-      await env.DB.prepare('UPDATE cases SET title = ?, site = ?, body = ?, photo_key = ?, updated_at = ? WHERE id = ?')
-        .bind(f.title, f.site, f.body, keys[0], kst(), id).run();
+      await env.DB.prepare('UPDATE cases SET title = ?, site = ?, body = ?, category = ?, photo_key = ?, updated_at = ? WHERE id = ?')
+        .bind(f.title, f.site, f.body, f.cat, keys[0], kst(), id).run();
     }
     const stmts = [env.DB.prepare('DELETE FROM case_photos WHERE case_id = ?').bind(id)];
     keys.forEach((k, i) => stmts.push(env.DB.prepare('INSERT INTO case_photos (case_id, photo_key, sort) VALUES (?, ?, ?)').bind(id, k, i)));
@@ -319,6 +330,7 @@ async function getSettingsAdmin(env) {
     ok: true,
     chips: await getSetting(env, 'chips', DEFAULT_CHIPS),
     videos: await getSetting(env, 'videos', []),
+    hideSamples: !!(await getSetting(env, 'hideSamples', false)),
     slides: await getSlides(env),
   });
 }
@@ -329,6 +341,7 @@ async function saveSettings(request, env) {
   try {
     if ('chips' in body) await putSetting(env, 'chips', cleanChips(body.chips));
     if ('videos' in body) await putSetting(env, 'videos', cleanVideos(body.videos));
+    if ('hideSamples' in body) await putSetting(env, 'hideSamples', !!body.hideSamples);
     return getSettingsAdmin(env);
   } catch (e) {
     if (e instanceof UserError) return json({ ok: false, error: e.message }, 400);
@@ -341,19 +354,36 @@ async function saveSettings(request, env) {
 export async function publicCases(env) {
   if (!env.DB) return json({ ok: true, items: [] });
   await ensureSchema(env);
-  const { results } = await env.DB.prepare('SELECT id, title, sub, site, body FROM cases WHERE visible = 1 ORDER BY id DESC LIMIT 60').all();
+  const { results } = await env.DB.prepare('SELECT id, created_at, title, sub, site, body, category FROM cases WHERE visible = 1 ORDER BY id DESC LIMIT 100').all();
   const photos = await casePhotos(env, results.map((r) => r.id));
-  const items = results
-    .map((r) => ({ id: r.id, title: r.title, site: r.site ?? r.sub ?? '', body: r.body || '', photos: (photos[r.id] || []).map((p) => p.img) }))
-    .filter((r) => r.photos.length);
-  return json({ ok: true, items }, 200, { 'cache-control': 'public, max-age=60' });
+  const items = results.map((r) => publicRow(r, photos[r.id])).filter((r) => r.photos.length);
+  return json({ ok: true, items }, 200, { 'cache-control': 'no-cache' });
+}
+
+function publicRow(r, photos) {
+  return {
+    id: r.id, title: r.title, site: r.site ?? r.sub ?? '', body: r.body || '',
+    cat: CATS[r.category] ? r.category : inferCat(r.title),
+    date: String(r.created_at || '').slice(0, 7).replace('-', '.'),
+    photos: (photos || []).map((p) => p.img),
+  };
+}
+
+// 상세 페이지용 한 건
+export async function publicCase(env, id) {
+  if (!env.DB) return json({ ok: false, error: '없는 사례입니다.' }, 404);
+  await ensureSchema(env);
+  const r = await env.DB.prepare('SELECT id, created_at, title, sub, site, body, category FROM cases WHERE id = ? AND visible = 1').bind(id).first();
+  if (!r) return json({ ok: false, error: '없는 사례입니다.' }, 404);
+  const photos = await casePhotos(env, [r.id]);
+  return json({ ok: true, item: publicRow(r, photos[r.id]) }, 200, { 'cache-control': 'no-cache' });
 }
 
 export async function publicSite(env) {
   if (!env.DB) return json({ ok: true, slides: [], videos: [] });
   await ensureSchema(env);
   const slides = (await getSlides(env)).map(({ img, tag, title }) => ({ img, tag, title }));
-  return json({ ok: true, slides, videos: await getSetting(env, 'videos', []) }, 200, { 'cache-control': 'public, max-age=60' });
+  return json({ ok: true, slides, videos: await getSetting(env, 'videos', []), hideSamples: !!(await getSetting(env, 'hideSamples', false)) }, 200, { 'cache-control': 'no-cache' });
 }
 
 // /photos/... 사진 제공

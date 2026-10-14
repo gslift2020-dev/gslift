@@ -5,6 +5,38 @@
   function $(s, r) { return (r || document).querySelector(s); }
   function $$(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
 
+  /* 첫 화면은 항상 맨 위에서 시작.
+     (예전에 #contact 같은 주소로 즐겨찾기해 두면 문의하기로 바로 넘어가던 문제)
+     다른 페이지에서 특정 위치로 보낼 때는 ?to=cases&cat=fl 처럼 보냄 */
+  var params = new URLSearchParams(location.search);
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  if (location.hash || location.search) history.replaceState(null, '', location.pathname);
+  window.scrollTo(0, 0);
+  function goTo(id) {
+    var el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+  }
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('a[href^="#"]');
+    if (!a) return;
+    var id = a.getAttribute('href').slice(1);
+    if (!id || !document.getElementById(id)) return;
+    e.preventDefault();
+    if (a.dataset.cat) setCaseFilter(a.dataset.cat);
+    goTo(id);
+  });
+
+  /* 맨 위로 버튼 */
+  var toTop = $('#toTop');
+  if (toTop) {
+    var onScroll = function () { toTop.classList.toggle('show', window.scrollY > 700); };
+    window.addEventListener('scroll', onScroll, { passive: true }); onScroll();
+    toTop.addEventListener('click', function () { window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' }); });
+  }
+
+  /* 관리자 설정(메인 사진·유튜브·예시 숨김)은 한 번만 불러와서 같이 씀 */
+  var siteP = window.fetch ? fetch('/api/site').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }) : Promise.resolve(null);
+
   /* 모바일 메뉴 */
   var nav = $('#nav'), menuBtn = $('#menuBtn');
   if (menuBtn) {
@@ -112,23 +144,80 @@
     }
   }
 
-  /* 설치사례 가로 스크롤 */
-  var track = $('#track');
+  /* ================= 설치사례: 분류 탭 + 가로 목록 + 크게 보기 ================= */
+  var CATS = window.GS_CATS || {};
+  var EMPTY_MSG = { all: '아직 등록된 설치사례가 없습니다.', fl: '화물용 리프트 설치사례를 준비 중입니다.', tl: '테이블 리프트 설치사례를 준비 중입니다.', st: '스태커 설치사례를 준비 중입니다. 문의 주시면 사례 사진을 보내드립니다.', tr: '운반기계 제작 사례를 준비 중입니다. 문의 주시면 사례 사진을 보내드립니다.' };
+  var EXPAND = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>';
+  var track = $('#track'), allCases = [], caseFilter = 'all', posts = [], casesReady = false;
+
+  function caseCard(c, i) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'case'; b.dataset.i = i;
+    b.setAttribute('aria-label', c.title + ' 크게 보기');
+    var z = document.createElement('div'); z.className = 'zoom';
+    var im = document.createElement('img'); im.src = c.photos[0]; im.alt = c.alt || c.title; im.loading = 'lazy'; im.width = 900; im.height = 1200;
+    z.appendChild(im);
+    if (c.photos.length > 1) { var n = document.createElement('span'); n.className = 'cnt'; n.textContent = '사진 ' + c.photos.length + '장'; z.appendChild(n); }
+    z.insertAdjacentHTML('beforeend', '<span class="exp">' + EXPAND + '</span>');
+    var t = document.createElement('b'); t.textContent = c.title;
+    var sm = document.createElement('small'); sm.textContent = [CATS[c.cat], c.site].filter(Boolean).join(' · ');
+    b.appendChild(z); b.appendChild(t); b.appendChild(sm);
+    return b;
+  }
+  function renderCases() {
+    if (!track) return;
+    posts = allCases.filter(function (c) { return caseFilter === 'all' || c.cat === caseFilter; });
+    track.innerHTML = '';
+    if (!posts.length) {
+      var p = document.createElement('p'); p.className = 'case-empty'; p.textContent = EMPTY_MSG[caseFilter] || EMPTY_MSG.all;
+      track.appendChild(p);
+    }
+    posts.forEach(function (c, i) { track.appendChild(caseCard(c, i)); });
+    track.scrollLeft = 0;
+    $$('#caseTabs button').forEach(function (t) {
+      var cat = t.dataset.cat, on = cat === caseFilter;
+      t.classList.toggle('on', on); t.setAttribute('aria-selected', on);
+      var n = cat === 'all' ? allCases.length : allCases.filter(function (c) { return c.cat === cat; }).length;
+      $('i', t).textContent = n;
+    });
+  }
+  function setCaseFilter(cat) {
+    caseFilter = CATS[cat] ? cat : 'all';
+    if (casesReady) renderCases();
+  }
+  $$('#caseTabs button').forEach(function (t) { t.addEventListener('click', function () { setCaseFilter(t.dataset.cat); }); });
   function scrollCases(dir) { if (track) track.scrollBy({ left: dir * 276, behavior: reduce ? 'auto' : 'smooth' }); }
   if ($('#casePrev')) $('#casePrev').addEventListener('click', function () { scrollCases(-1); });
   if ($('#caseNext')) $('#caseNext').addEventListener('click', function () { scrollCases(1); });
 
-  /* 설치사례 크게 보기: 글마다 사진 여러 장 + 내용 */
-  var lb = $('#lightbox'), lastFocus;
-  var posts = (GS.cases || []).map(function (c) { return { title: c.title, site: c.sub, body: '', photos: [c.img] }; });
-  var cur = { p: 0, ph: 0 };
+  // 관리자가 올린 사례(맨 앞) + 기본 예시
+  if (track) {
+    var casesP = window.fetch ? fetch('/api/cases').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }) : Promise.resolve(null);
+    Promise.all([casesP, siteP]).then(function (r) {
+      var mine = (r[0] && r[0].ok ? r[0].items : []).map(function (c) {
+        return { cat: c.cat, title: c.title, site: c.site, body: c.body, photos: c.photos, href: '/case.html?id=' + c.id };
+      });
+      var hide = r[1] && r[1].hideSamples;
+      var samples = hide ? [] : (window.GS_SAMPLE || []).map(function (c) {
+        return { cat: c.cat, title: c.title, site: '', body: '', alt: c.alt, photos: [c.img], href: '/case.html?s=' + c.id };
+      });
+      allCases = mine.concat(samples);
+      casesReady = true;
+      if (params.get('cat')) caseFilter = CATS[params.get('cat')] ? params.get('cat') : 'all';
+      renderCases();
+      if (params.get('to') === 'cases') goTo('cases');
+    });
+  }
+
+  /* 크게 보기 */
+  var lb = $('#lightbox'), lastFocus, cur = { p: 0, ph: 0 };
   function lbShow(p, ph) {
     p = (p + posts.length) % posts.length;
     var post = posts[p]; ph = Math.max(0, Math.min(ph, post.photos.length - 1));
     cur = { p: p, ph: ph };
     $('#lbImg').src = post.photos[ph]; $('#lbImg').alt = post.title + (post.photos.length > 1 ? ' (' + (ph + 1) + '/' + post.photos.length + ')' : '');
     $('#lbTitle').textContent = post.title;
-    $('#lbSub').textContent = (post.site ? post.site + ' · ' : '') + (p + 1) + ' / ' + posts.length;
+    $('#lbSub').textContent = [CATS[post.cat], post.site, (p + 1) + ' / ' + posts.length].filter(Boolean).join(' · ');
     var th = $('#lbThumbs'); th.innerHTML = '';
     if (post.photos.length > 1) post.photos.forEach(function (src, k) {
       var b = document.createElement('button'); b.type = 'button'; b.className = k === ph ? 'on' : '';
@@ -138,6 +227,7 @@
       th.appendChild(b);
     });
     var body = $('#lbBody'); body.textContent = post.body || ''; body.hidden = !post.body;
+    $('#lbMore').href = post.href;
   }
   function lbStep(d) {
     var post = posts[cur.p], ph = cur.ph + d;
@@ -159,28 +249,16 @@
     });
   }
 
-  /* 관리자 페이지에서 올린 설치사례를 맨 앞에 추가 */
-  if (track && window.fetch) {
-    fetch('/api/cases').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
-      if (!d || !d.ok || !d.items.length) return;
-      var expand = $('.case .exp', track), frag = document.createDocumentFragment();
-      d.items.forEach(function (c) {
-        var b = document.createElement('button');
-        b.type = 'button'; b.className = 'case'; b.setAttribute('aria-label', c.title + ' 크게 보기');
-        var z = document.createElement('div'); z.className = 'zoom';
-        var im = document.createElement('img'); im.src = c.photos[0]; im.alt = c.title; im.loading = 'lazy'; im.width = 900; im.height = 1200;
-        z.appendChild(im);
-        if (c.photos.length > 1) { var n = document.createElement('span'); n.className = 'cnt'; n.textContent = '사진 ' + c.photos.length + '장'; z.appendChild(n); }
-        if (expand) z.appendChild(expand.cloneNode(true));
-        var t = document.createElement('b'); t.textContent = c.title;
-        var s = document.createElement('small'); s.textContent = c.site;
-        b.appendChild(z); b.appendChild(t); b.appendChild(s);
-        frag.appendChild(b);
-      });
-      track.insertBefore(frag, track.firstChild);
-      posts = d.items.map(function (c) { return { title: c.title, site: c.site, body: c.body, photos: c.photos }; }).concat(posts);
-      $$('.case', track).forEach(function (b, i) { b.dataset.i = i; });
-    }).catch(function () {});
+  /* 다른 페이지에서 ?to=contact&product=fl 로 오면 문의하기로 이동 + 제품 미리 선택 */
+  if (params.get('to') && params.get('to') !== 'cases') {
+    var want = params.get('to'), prod = CATS[params.get('product')];
+    window.addEventListener('load', function () {
+      if (want === 'contact' && prod) {
+        var sel = $('#form select[name=product]');
+        if (sel) $$('option', sel).forEach(function (o) { if (o.textContent.replace(/\s/g, '').indexOf(prod.replace(/\s/g, '').slice(0, 5)) === 0) sel.value = o.value || o.textContent; });
+      }
+      goTo(want);
+    });
   }
 
   /* 유튜브: 누를 때만 불러오기. 관리자가 정한 영상이 있으면 그 영상들, 없으면 채널 최신 영상 */
@@ -226,7 +304,7 @@
 
   /* 관리자 설정 불러오기: 메인 사진, 유튜브 영상 */
   if (window.fetch) {
-    fetch('/api/site').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+    siteP.then(function (d) {
       if (!d || !d.ok) return;
       if (slider && d.slides && d.slides.length) slideReplace(d.slides);
       if (yt && d.videos && d.videos.length) ytList(d.videos);
