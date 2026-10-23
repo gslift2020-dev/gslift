@@ -656,6 +656,368 @@
      "date": "2026-02"
     }
    ]
+  },
+  {
+   "id": "2025-01-a",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 진입판 · 양개 도어",
+     "site": "경기 화성(동탄)",
+     "body": "실내에 설치한 화물용 리프트입니다.\n\n대차가 바로 오를 수 있도록 승강장 바닥에 진입판을 붙였습니다.",
+     "photos": [
+      "imports/2025-01/dt-01.webp",
+      "imports/2025-01/dt-02.webp"
+     ],
+     "category": "fl",
+     "date": "2025-01"
+    },
+    {
+     "title": "화물용 리프트(F/L) · 외부 승강로 · 캐노피 · 진입판",
+     "site": "경북 울릉도",
+     "body": "건물 외벽에 외장재로 마감한 승강로를 세운 화물용 리프트입니다.\n\n바깥 승강장 위에 캐노피를 달고, 바닥에는 진입판을 붙였습니다.",
+     "photos": [
+      "imports/2025-01/ul-01.webp",
+      "imports/2025-01/ul-02.webp",
+      "imports/2025-01/ul-03.webp"
+     ],
+     "category": "fl",
+     "date": "2025-01"
+    }
+   ]
+  },
+  {
+   "id": "2025-02-a",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 3층 · 양개 철문",
+     "site": "",
+     "body": "3개 층을 오가는 화물용 리프트입니다.\n\n각 층 승강장은 양개 철문으로 마감했습니다.",
+     "photos": [
+      "imports/2025-02/lk-01.webp",
+      "imports/2025-02/lk-02.webp",
+      "imports/2025-02/lk-03.webp",
+      "imports/2025-02/lk-04.webp"
+     ],
+     "category": "fl",
+     "date": "2025-02"
+    },
+    {
+     "title": "화물용 리프트(F/L) · 실내 · 양개 도어",
+     "site": "경기 안산",
+     "body": "공장 실내에 설치한 화물용 리프트입니다.\n\n위층 승강장은 양개 도어로 마감했습니다.",
+     "photos": [
+      "imports/2025-02/as-01.webp",
+      "imports/2025-02/as-02.webp"
+     ],
+     "category": "fl",
+     "date": "2025-02"
+    },
+    {
+     "title": "화물용 리프트(F/L) · 2대 나란히 · 양개 도어",
+     "site": "부산",
+     "body": "리프트 2대를 나란히 설치한 현장입니다.\n\n승강장은 양개 도어로 마감했습니다.",
+     "photos": [
+      "imports/2025-02/bs-01.webp",
+      "imports/2025-02/bs-02.webp",
+      "imports/2025-02/bs-03.webp",
+      "imports/2025-02/bs-04.webp"
+     ],
+     "category": "fl",
+     "date": "2025-02"
+    },
+    {
+     "title": "화물용 리프트(F/L) · 식품 공장 · 복층 연결",
+     "site": "식품 공장",
+     "body": "식품 공장의 바닥층과 위층을 잇는 화물용 리프트입니다.\n\n위층 승강장 양옆에 계단과 안전 난간을 함께 두었습니다.",
+     "photos": [
+      "imports/2025-02/nt-01.webp",
+      "imports/2025-02/nt-02.webp",
+      "imports/2025-02/nt-03.webp",
+      "imports/2025-02/nt-04.webp",
+      "imports/2025-02/nt-05.webp"
+     ],
+     "category": "fl",
+     "date": "2025-02"
+    },
+    {
+     "title": "화물용 리프트(F/L) · 승강장 도어 마감",
+     "site": "경기 화성",
+     "body": "실내에 설치한 화물용 리프트입니다.\n\n승강장 출입구를 벽체와 맞춰 깔끔하게 마감했습니다.",
+     "photos": [
+      "imports/2025-02/hs-01.webp",
+      "imports/2025-02/hs-02.webp"
+     ],
+     "category": "fl",
+     "date": "2025-02"
+    }
+   ]
+  },
+  {
+   "id": "2025-03-a",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 소형 · 랙 사이 설치",
+     "site": "경기 여주 · 제약 공장",
+     "body": "보관 랙 사이 좁은 공간에 맞춰 작게 제작한 화물용 리프트입니다.\n\n바닥층과 위층 랙 통로를 잇습니다.",
+     "photos": [
+      "imports/2025-03/yj-01.webp",
+      "imports/2025-03/yj-02.webp",
+      "imports/2025-03/yj-03.webp",
+      "imports/2025-03/yj-04.webp"
+     ],
+     "category": "fl",
+     "date": "2025-03"
+    },
+    {
+     "title": "화물용 리프트(F/L) · 노란색 철망 도어",
+     "site": "서울 충무로",
+     "body": "건물 실내에 설치한 화물용 리프트입니다.\n\n승강장은 눈에 잘 띄는 노란색 철망 도어로 마감했습니다.",
+     "photos": [
+      "imports/2025-03/cm-01.webp",
+      "imports/2025-03/cm-02.webp"
+     ],
+     "category": "fl",
+     "date": "2025-03"
+    },
+    {
+     "title": "화물용 리프트(F/L) · 공장 · 대형 승강로",
+     "site": "공장 실내",
+     "body": "공장 안에 높게 세운 대형 화물용 리프트입니다.\n\n철망 승강로와 양개 도어로 마감했습니다.",
+     "photos": [
+      "imports/2025-03/dr-01.webp",
+      "imports/2025-03/dr-02.webp",
+      "imports/2025-03/dr-03.webp",
+      "imports/2025-03/dr-04.webp",
+      "imports/2025-03/dr-05.webp"
+     ],
+     "category": "fl",
+     "date": "2025-03"
+    }
+   ]
+  },
+  {
+   "id": "2025-04-a",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 메자닌 연결 · 안전 난간",
+     "site": "",
+     "body": "공장 메자닌(복층)과 바닥층을 잇는 화물용 리프트입니다.\n\n위층 승강장 양옆에 안전 난간을 함께 설치했습니다.",
+     "photos": [
+      "imports/2025-04/kr-01.webp",
+      "imports/2025-04/kr-02.webp",
+      "imports/2025-04/kr-03.webp"
+     ],
+     "category": "fl",
+     "date": "2025-04"
+    },
+    {
+     "title": "화물용 리프트(F/L) · 외부 설치 · 캐노피",
+     "site": "",
+     "body": "건물 외부에 설치한 화물용 리프트입니다.\n\n승강장 위에 캐노피를 달고, 바닥에는 진입판을 붙였습니다.",
+     "photos": [
+      "imports/2025-04/sh-01.webp",
+      "imports/2025-04/sh-02.webp",
+      "imports/2025-04/sh-03.webp"
+     ],
+     "category": "fl",
+     "date": "2025-04"
+    },
+    {
+     "title": "화물용 리프트(F/L) · 실내 · 셔터 + 도어",
+     "site": "",
+     "body": "건물 실내에 설치한 화물용 리프트입니다.\n\n층마다 셔터와 도어로 승강장을 마감했습니다.",
+     "photos": [
+      "imports/2025-04/sj-01.webp",
+      "imports/2025-04/sj-02.webp",
+      "imports/2025-04/sj-03.webp",
+      "imports/2025-04/sj-04.webp"
+     ],
+     "category": "fl",
+     "date": "2025-04"
+    },
+    {
+     "title": "화물용 리프트(F/L) · 물류센터 · 진입판",
+     "site": "경기 용인 · 물류센터",
+     "body": "물류센터에 설치한 화물용 리프트입니다.\n\n노란색 철망과 파란색 프레임으로 마감하고, 바닥에는 진입판을 붙였습니다.",
+     "photos": [
+      "imports/2025-04/mg-01.webp",
+      "imports/2025-04/mg-02.webp",
+      "imports/2025-04/mg-03.webp",
+      "imports/2025-04/mg-04.webp"
+     ],
+     "category": "fl",
+     "date": "2025-04"
+    },
+    {
+     "title": "화물용 리프트(F/L) · 건물 외부 · 노란색 철망",
+     "site": "",
+     "body": "건물 외부 계단 옆에 설치한 화물용 리프트입니다.\n\n노란색 철망 승강로로 마감했습니다.",
+     "photos": [
+      "imports/2025-04/ts-01.webp",
+      "imports/2025-04/ts-02.webp",
+      "imports/2025-04/ts-03.webp",
+      "imports/2025-04/ts-04.webp",
+      "imports/2025-04/ts-05.webp"
+     ],
+     "category": "fl",
+     "date": "2025-04"
+    }
+   ]
+  },
+  {
+   "id": "2025-06-a",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 소형 · 노란색 철망",
+     "site": "공장 실내",
+     "body": "공장 안에 작게 제작해 설치한 화물용 리프트입니다.\n\n노란색 철망으로 마감했습니다.",
+     "photos": [
+      "imports/2025-06/sc-01.webp",
+      "imports/2025-06/sc-02.webp",
+      "imports/2025-06/sc-03.webp",
+      "imports/2025-06/sc-04.webp"
+     ],
+     "category": "fl",
+     "date": "2025-06"
+    }
+   ]
+  },
+  {
+   "id": "2025-07-a",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 실내 · 진입판",
+     "site": "",
+     "body": "건물 실내에 설치한 화물용 리프트입니다.\n\n승강장 바닥에 진입판을 붙여 대차가 쉽게 오르도록 했습니다.",
+     "photos": [
+      "imports/2025-07/mh-01.webp",
+      "imports/2025-07/mh-02.webp",
+      "imports/2025-07/mh-03.webp"
+     ],
+     "category": "fl",
+     "date": "2025-07"
+    },
+    {
+     "title": "화물용 리프트(F/L) · 외부 · 셔터 + 양개 도어",
+     "site": "",
+     "body": "건물 외부에 설치한 화물용 리프트입니다.\n\n승강장은 양개 도어와 셔터로 마감했습니다.",
+     "photos": [
+      "imports/2025-07/sjj-01.webp",
+      "imports/2025-07/sjj-02.webp",
+      "imports/2025-07/sjj-03.webp"
+     ],
+     "category": "fl",
+     "date": "2025-07"
+    },
+    {
+     "title": "화물용 리프트(F/L) · 철강 공장 · 양개 도어",
+     "site": "철강 공장",
+     "body": "철강 공장 설비 사이에 설치한 화물용 리프트입니다.\n\n승강장은 양개 도어로 마감했습니다.",
+     "photos": [
+      "imports/2025-07/st-01.webp",
+      "imports/2025-07/st-02.webp",
+      "imports/2025-07/st-03.webp"
+     ],
+     "category": "fl",
+     "date": "2025-07"
+    }
+   ]
+  },
+  {
+   "id": "2025-08-a",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 승강장 출입구 마감",
+     "site": "",
+     "body": "실내에 설치한 화물용 리프트입니다.\n\n승강장 출입구를 벽체와 맞춰 깔끔하게 마감했습니다.",
+     "photos": [
+      "imports/2025-08/gd-01.webp",
+      "imports/2025-08/gd-02.webp"
+     ],
+     "category": "fl",
+     "date": "2025-08"
+    },
+    {
+     "title": "화물용 리프트(F/L) · 외부 + 실내 · 양개 도어",
+     "site": "충북 청주",
+     "body": "건물 외부와 실내 승강장을 잇는 화물용 리프트입니다.\n\n외장 패널로 승강로를 감싸고, 승강장은 양개 도어로 마감했습니다.",
+     "photos": [
+      "imports/2025-08/cj-01.webp",
+      "imports/2025-08/cj-02.webp",
+      "imports/2025-08/cj-03.webp",
+      "imports/2025-08/cj-04.webp"
+     ],
+     "category": "fl",
+     "date": "2025-08"
+    },
+    {
+     "title": "화물용 리프트(F/L) · 공장 · 양개 도어",
+     "site": "공장 실내",
+     "body": "공장 안에 설치한 화물용 리프트입니다.\n\n외장 패널로 승강로를 감싸고, 승강장은 양개 도어로 마감했습니다.",
+     "photos": [
+      "imports/2025-08/wi-01.webp",
+      "imports/2025-08/wi-02.webp"
+     ],
+     "category": "fl",
+     "date": "2025-08"
+    },
+    {
+     "title": "화물용 리프트(F/L) · 외부 승강로 · 옥상 연결",
+     "site": "식품 공장",
+     "body": "건물 외벽에 승강로를 세워 옥상까지 연결한 화물용 리프트입니다.\n\n옥상 승강장 위에는 캐노피를 달았습니다.",
+     "photos": [
+      "imports/2025-08/wf-01.webp",
+      "imports/2025-08/wf-02.webp",
+      "imports/2025-08/wf-03.webp",
+      "imports/2025-08/wf-04.webp"
+     ],
+     "category": "fl",
+     "date": "2025-08"
+    }
+   ]
+  },
+  {
+   "id": "2025-09-a",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 주황색 도장 · 승강장 도어",
+     "site": "",
+     "body": "공장에 설치한 화물용 리프트입니다.\n\n승강로를 주황색으로 도장했습니다.",
+     "photos": [
+      "imports/2025-09/ss-01.webp",
+      "imports/2025-09/ss-02.webp"
+     ],
+     "category": "fl",
+     "date": "2025-09"
+    }
+   ]
+  },
+  {
+   "id": "2025-10-a",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 실내 · 양개 도어",
+     "site": "",
+     "body": "실내에 설치한 화물용 리프트입니다.\n\n승강장은 양개 도어로 마감했습니다.",
+     "photos": [
+      "imports/2025-10/nf-01.webp",
+      "imports/2025-10/nf-02.webp"
+     ],
+     "category": "fl",
+     "date": "2025-10"
+    },
+    {
+     "title": "화물용 리프트(F/L) · 식품 공장 · 양개 도어",
+     "site": "식품 공장",
+     "body": "식품 공장에 설치한 화물용 리프트입니다.\n\n승강장은 양개 도어로 마감했습니다.",
+     "photos": [
+      "imports/2025-10/hc-01.webp",
+      "imports/2025-10/hc-02.webp"
+     ],
+     "category": "fl",
+     "date": "2025-10"
+    }
+   ]
   }
  ]
 }
