@@ -1,44 +1,99 @@
 {
  "batches": [
   {
-   "id": "2026-10-23-pignet-v2",
+   "id": "2026-10-23-reset",
+   "removeAll": true,
+   "cases": []
+  },
+  {
+   "id": "2026-09-a",
    "cases": [
     {
-     "title": "화물용 리프트(F/L) · 2,000kg · 유압식 · 양개 도어",
-     "category": "fl",
-     "site": "피그넷",
-     "date": "2026-08",
-     "body": "공장 실내에 적재용량 2,000kg 유압식 화물용 리프트를 설치했습니다.\n\n승강장 출입구는 철망 양개 도어로 마감하고, 바닥에는 노란 안전 표시를 했습니다. 리프트 옆에 제어반과 유압 유닛을 함께 설치했고, 설치 후 안전검사를 거쳐 인도했습니다.",
+     "title": "화물용 리프트(F/L) · 메자닌 연결 · 진입판",
+     "site": "경기 군포 · 자동차 폐차장",
+     "body": "폐차장 작업동의 복층(메자닌)과 바닥층을 잇는 화물용 리프트입니다.\n\n검은색 프레임과 철망으로 마감하고, 대차가 바로 오를 수 있도록 바닥에 진입판을 붙였습니다. 제어반과 유압 유닛은 리프트 옆 계단 아래에 함께 설치했습니다.",
      "photos": [
-      "imports/pignet/01.webp",
-      "imports/pignet/02.webp",
-      "imports/pignet/03.webp",
-      "imports/pignet/04.webp",
-      "imports/pignet/05.webp",
-      "imports/pignet/06.webp",
-      "imports/pignet/07.webp",
-      "imports/pignet/08.webp",
-      "imports/pignet/09.webp",
-      "imports/pignet/10.webp"
-     ]
+      "imports/2026-09/gunpo-01.webp",
+      "imports/2026-09/gunpo-02.webp",
+      "imports/2026-09/gunpo-03.webp",
+      "imports/2026-09/gunpo-04.webp"
+     ],
+     "category": "fl",
+     "date": "2026-09"
     },
     {
-     "title": "화물용 리프트(F/L) · 실내 설치 · 양개 도어",
-     "category": "fl",
-     "site": "피그넷",
-     "date": "2026-07",
-     "body": "같은 공장 안에 설치한 화물용 리프트입니다. 철망 양개 도어로 마감했습니다.",
+     "title": "화물용 리프트(F/L) · 외부 설치 · 양개 도어+셔터",
+     "site": "",
+     "body": "건물 외벽에 승강로 철골을 세워 설치한 화물용 리프트입니다.\n\n건물 안쪽 승강장은 양쪽으로 여는 스윙 도어와 셔터로 이중 마감했습니다.",
      "photos": [
-      "imports/pignet/11.webp",
-      "imports/pignet/12.webp",
-      "imports/pignet/13.webp"
-     ]
-    }
-   ],
-   "remove": [
+      "imports/2026-09/ext-01.webp",
+      "imports/2026-09/ext-02.webp",
+      "imports/2026-09/ext-03.webp",
+      "imports/2026-09/ext-04.webp"
+     ],
+     "category": "fl",
+     "date": "2026-09"
+    },
     {
-     "id": 8,
-     "title": "화물용 리프트(F/L) · 2,000kg · 유압식 · 양개 도어"
+     "title": "화물용 리프트(F/L) · 유압식 · 창고 · 양개 도어",
+     "site": "창고 실내",
+     "body": "창고 안에 설치한 유압식 화물용 리프트입니다.\n\n승강장은 철망 양개 도어로 마감했고, 리프트 옆에 제어반과 유압 유닛을 함께 설치했습니다. 경광등과 과부하방지장치, 운행 리밋 스위치 등 안전장치를 갖췄습니다.",
+     "photos": [
+      "imports/2026-09/whs-01.webp",
+      "imports/2026-09/whs-02.webp",
+      "imports/2026-09/whs-03.webp",
+      "imports/2026-09/whs-04.webp",
+      "imports/2026-09/whs-05.webp",
+      "imports/2026-09/whs-06.webp",
+      "imports/2026-09/whs-07.webp",
+      "imports/2026-09/whs-08.webp",
+      "imports/2026-09/whs-09.webp",
+      "imports/2026-09/whs-10.webp"
+     ],
+     "category": "fl",
+     "date": "2026-09"
+    },
+    {
+     "title": "화물용 리프트(F/L) · 유압식 · 셔터 마감",
+     "site": "",
+     "body": "실내에 설치한 유압식 화물용 리프트입니다.\n\n카 입구를 셔터로 마감하고 위쪽에 경광등을 달았습니다. 제어반과 유압 유닛은 리프트 옆 공간에 설치했습니다.",
+     "photos": [
+      "imports/2026-09/shut-01.webp",
+      "imports/2026-09/shut-02.webp",
+      "imports/2026-09/shut-03.webp",
+      "imports/2026-09/shut-04.webp"
+     ],
+     "category": "fl",
+     "date": "2026-09"
+    },
+    {
+     "title": "화물용 리프트(F/L) · 구내식당 · 양개 도어+셔터",
+     "site": "구내식당",
+     "body": "구내식당에 식자재를 옮기기 위해 설치한 유압식 화물용 리프트입니다.\n\n승강장은 깔끔한 양개 도어로 마감하고, 안쪽 카 입구에는 셔터를 달았습니다. 문 위 경광등으로 운행 중임을 알립니다.",
+     "photos": [
+      "imports/2026-09/cafe-01.webp",
+      "imports/2026-09/cafe-02.webp",
+      "imports/2026-09/cafe-03.webp",
+      "imports/2026-09/cafe-04.webp",
+      "imports/2026-09/cafe-05.webp"
+     ],
+     "category": "fl",
+     "date": "2026-09"
+    },
+    {
+     "title": "화물용 리프트(F/L) · 유압식 · 양개 도어",
+     "site": "",
+     "body": "유압식 화물용 리프트입니다.\n\n승강장 출입구는 양개 도어로 마감하고 문 위에 경광등을 달았습니다. 셔터로 마감한 승강장과 출입문 인터록, 제어반·유압 유닛 사진을 함께 실었습니다.",
+     "photos": [
+      "imports/2026-09/door-01.webp",
+      "imports/2026-09/door-02.webp",
+      "imports/2026-09/door-03.webp",
+      "imports/2026-09/door-04.webp",
+      "imports/2026-09/door-05.webp",
+      "imports/2026-09/door-06.webp"
+     ],
+     "category": "fl",
+     "date": "2026-09"
     }
    ]
   }

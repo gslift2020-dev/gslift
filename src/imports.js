@@ -20,6 +20,23 @@ export async function runImports(request, env) {
   for (const batch of manifest.batches || []) {
     if (!/^[\w-]{3,60}$/.test(batch.id || '')) continue;
     const cases = batch.cases || [];
+    // 설치사례 전체 삭제 (한 번만): 사진까지 지우고 기본 예시도 숨김
+    if (batch.removeAll) {
+      const key = `import:${batch.id}:reset`;
+      const lock = await env.DB.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)').bind(key, JSON.stringify({ at: kst() })).run();
+      if (lock.meta && lock.meta.changes) {
+        const { results } = await env.DB.prepare('SELECT photo_key FROM case_photos').all();
+        const keys = results.map((r) => r.photo_key);
+        for (let i = 0; i < keys.length; i += 500) await env.PHOTOS.delete(keys.slice(i, i + 500));
+        await env.DB.batch([
+          env.DB.prepare('DELETE FROM case_photos'),
+          env.DB.prepare('DELETE FROM cases'),
+          env.DB.prepare("INSERT INTO settings (key, value) VALUES ('hideSamples', 'true') ON CONFLICT(key) DO UPDATE SET value = 'true'"),
+        ]);
+        checkedAt = 0; // 새 글 올리기는 다음 방문 때
+        return;
+      }
+    }
     // 예전에 중간에 끊겨 올라간 글 정리 (번호와 제목이 둘 다 맞을 때만)
     for (const rm of batch.remove || []) {
       const key = `import:${batch.id}:rm${rm.id}`;

@@ -499,7 +499,7 @@ th:last-child,td:last-child{text-align:right}
 /* 휴대폰 하단 고정 연락 바 */
 .mbar{display:none}
 @media (max-width:900px){
-  .mbar{position:fixed;left:0;right:0;bottom:0;z-index:40;display:grid;grid-template-columns:1fr 1fr 1.3fr;background:#fff;border-top:1px solid var(--line);box-shadow:0 -6px 20px rgba(6,38,86,.12);padding-bottom:env(safe-area-inset-bottom)}
+  .mbar{position:fixed;left:0;right:0;bottom:0;z-index:40;display:grid;grid-template-columns:1fr 1.3fr;background:#fff;border-top:1px solid var(--line);box-shadow:0 -6px 20px rgba(6,38,86,.12);padding-bottom:env(safe-area-inset-bottom)}
   .mbar a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:60px;font-size:13px;font-weight:700;color:var(--navy)}
   .mbar a+a{border-left:1px solid var(--line)}
   .mbar a.go{background:var(--blue);color:#fff;border-left:0}
