@@ -8,7 +8,7 @@
     "binding": "ASSETS",
     "not_found_handling": "404-page",
     // /api/, 사진, 주요 페이지만 서버 코드가 처리하고, 나머지(그림·디자인 파일)는 정적 파일을 바로 보여줌
-    "run_worker_first": ["/api/*", "/photos/*", "/", "/index.html", "/case", "/case.html", "/cases", "/cases.html", "/robots.txt", "/sitemap.xml"]
+    "run_worker_first": ["/api/*", "/photos/*", "/", "/index.html", "/case", "/case.html", "/cases", "/cases.html", "/robots.txt", "/sitemap.xml", "/default", "/default/*", "/bbs", "/bbs/*"]
   },
   "vars": {
     "NOTIFY_EMAIL": "gslift2020@naver.com"

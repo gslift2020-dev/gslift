@@ -13,11 +13,23 @@ import { handleAdmin, publicCases, publicCase, publicSite, servePhoto } from './
 import { recordHit } from './stats.js';
 import { isPage, servePage } from './pages.js';
 
+const OTHER_HOSTS = ['gslift.co.kr', 'www.gslift.co.kr'];
+// 예전 홈페이지 주소를 새 주소로 (설치사례 게시판 → 설치사례 목록, 나머지 → 첫 화면)
+function oldPath(path) {
+  if (/^\/bbs\/sub3/i.test(path)) return '/cases.html';
+  if (/^\/(default|bbs)(\/|$)/i.test(path)) return '/';
+  return path;
+}
+
 const OOPS = '일시적인 오류가 발생했습니다. 전화(031-986-5345)로 연락 부탁드립니다.';
 
 export default {
   async fetch(request, env, ctx) {
-    const path = new URL(request.url).pathname;
+    const url = new URL(request.url);
+    const path = url.pathname;
+    // 예전 주소 정리: gslift.co.kr·www → gslift.kr, 예전 홈페이지 주소(/default/…, /bbs/…) → 새 페이지
+    if (OTHER_HOSTS.includes(url.hostname)) return Response.redirect('https://gslift.kr' + oldPath(path) + url.search, 301);
+    if (/^\/(default|bbs)(\/|$)/i.test(path)) return Response.redirect(url.origin + oldPath(path), 301);
     try {
       if (path === '/api/contact') return await handleContact(request, env, ctx);
       if (path === '/api/cases') return await publicCases(request, env);
