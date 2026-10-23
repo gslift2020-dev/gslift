@@ -10,13 +10,14 @@ export async function runImports(request, env) {
   if (!env.DB || !env.PHOTOS || !env.ASSETS) return;
   if (Date.now() - checkedAt < 10000) return; // 10초에 한 번만 확인
   checkedAt = Date.now();
+  const started = Date.now();
   const origin = new URL(request.url).origin;
   const r = await env.ASSETS.fetch(new Request(origin + '/imports/manifest.json'));
   if (!r.ok) return;
   let manifest;
   try { manifest = await r.json(); } catch { return; }
   await ensureSchema(env);
-  // 한 번에 한 건만 올림 (Cloudflare 무료 요금제의 뒤처리 시간 제한 안에 끝나도록)
+  // 8초 안에서 여러 건을 차례로 올림 (Cloudflare 무료 요금제의 뒤처리 시간 제한 안에 끝나도록)
   for (const batch of manifest.batches || []) {
     if (!/^[\w-]{3,60}$/.test(batch.id || '')) continue;
     const cases = batch.cases || [];
@@ -90,7 +91,8 @@ export async function runImports(request, env) {
         await env.DB.prepare('DELETE FROM settings WHERE key = ?').bind(key).run();
       }
       checkedAt = 0; // 남은 건은 다음 방문 때 바로 이어서
-      return;
+      if (Date.now() - started > 8000) return; // 시간이 남으면 한 건 더
+
     }
   }
 }
