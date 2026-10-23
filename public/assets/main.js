@@ -298,7 +298,22 @@
 
   /* ================= 설치 옵션: 사진 크게 보기 (자연스럽게 커지고, 옆으로 넘기기) =================
      카드마다 사진 여러 장을 넣으려면 <article class="opt" data-more='[{"src":"assets/img/xx.webp","cap":"설명"}]'> */
-  var gv = $('#gview'), opts = $$('.bento .opt'), gvState = null, gvLast = null;
+  var gv = $('#gview'), opts = $$('.bento .opt'), gvState = null, gvLast = null, optCache = [];
+  // 사진 미리 받아 두기 (넘길 때 멈칫하지 않게): 주소 → 디코딩 끝난 약속
+  var pre = {};
+  function preload(src) {
+    if (!pre[src]) {
+      var im = new Image(); im.decoding = 'async'; im.src = src;
+      pre[src] = (im.decode ? im.decode() : new Promise(function (ok) { im.onload = ok; })).then(function () { return true; }, function () { return false; });
+    }
+    return pre[src];
+  }
+  function optOf(ci) { ci = (ci + opts.length) % opts.length; return optCache[ci] || (optCache[ci] = optData(opts[ci])); }
+  function preloadAround(ci, pi) {
+    var d = optOf(ci);
+    [pi + 1, pi - 1, pi + 2].forEach(function (k) { if (k >= 0 && k < d.photos.length) preload(d.photos[k].src); });
+    preload(optOf(ci + 1).photos[0].src); preload(optOf(ci - 1).photos[optOf(ci - 1).photos.length - 1].src);
+  }
   function optData(card) {
     var im = $('img', card), list = [{ src: im.getAttribute('src'), alt: im.alt, cap: '' }];
     try { (JSON.parse(card.getAttribute('data-more') || '[]') || []).forEach(function (x) { list.push({ src: x.src, alt: x.cap || im.alt, cap: x.cap || '' }); }); } catch (e) {}
@@ -321,36 +336,44 @@
   }
   function gvShow(ci, pi, dir) {
     ci = (ci + opts.length) % opts.length;
-    var d = optData(opts[ci]); pi = (pi + d.photos.length) % d.photos.length;
+    var d = optOf(ci); pi = (pi + d.photos.length) % d.photos.length;
     gvState = { ci: ci, pi: pi, d: d };
-    var ph = d.photos[pi], img = $('#gvImg');
-    img.classList.remove('in-l', 'in-r'); void img.offsetWidth;
-    img.src = ph.src; img.alt = ph.alt;
-    if (dir) img.classList.add(dir > 0 ? 'in-r' : 'in-l');
+    var ph = d.photos[pi], img = $('#gvImg'), token = gvState;
+    // 다음 사진이 준비되면 바꿔 끼움 (그 사이 더 넘겼으면 무시)
+    var swap = function () {
+      if (gvState !== token) return;
+      img.classList.remove('in-l', 'in-r', 'wait');
+      img.src = ph.src; img.alt = ph.alt;
+      if (dir && !reduce) { void img.offsetWidth; img.classList.add(dir > 0 ? 'in-r' : 'in-l'); }
+    };
+    if (!dir) swap();
+    else { img.classList.add('wait'); preload(ph.src).then(swap); }
+    preloadAround(ci, pi);
     $('#gvTitle').textContent = d.title;
     $('#gvText').textContent = ph.cap ? ph.cap : d.text;
     $('#gvTags').innerHTML = ''; d.tags.forEach(function (t) { var sp = document.createElement('span'); sp.textContent = t; $('#gvTags').appendChild(sp); });
     $('#gvCount').textContent = d.photos.length > 1 ? (pi + 1) + ' / ' + d.photos.length : '';
     $('#gvCount').hidden = d.photos.length < 2;
-    var dots = $('#gvDots'); dots.innerHTML = '';
-    opts.forEach(function (c, k) {
-      var b = document.createElement('button'); b.type = 'button'; b.className = k === ci ? 'on' : '';
+    var dots = $('#gvDots');
+    if (!dots.children.length) opts.forEach(function (c, k) {
+      var b = document.createElement('button'); b.type = 'button';
       b.setAttribute('aria-label', (k + 1) + '번째 옵션: ' + $('h3', c).textContent);
-      b.addEventListener('click', function () { gvShow(k, 0, k > ci ? 1 : -1); });
+      b.addEventListener('click', function () { gvShow(k, 0, k > gvState.ci ? 1 : -1); });
       dots.appendChild(b);
     });
+    Array.prototype.forEach.call(dots.children, function (b, k) { b.classList.toggle('on', k === ci); });
   }
   function gvStep(dir) {
     var st = gvState, np = st.pi + dir;
     if (np >= 0 && np < st.d.photos.length) return gvShow(st.ci, np, dir);
     var nc = st.ci + dir;
-    gvShow(nc, dir > 0 ? 0 : (optData(opts[(nc + opts.length) % opts.length]).photos.length - 1), dir);
+    gvShow(nc, dir > 0 ? 0 : optOf(nc).photos.length - 1, dir);
   }
   function gvOpen(ci) {
     gvLast = document.activeElement;
     var from = $('img', opts[ci]).getBoundingClientRect();
     gvShow(ci, 0, 0);
-    gv.hidden = false; document.body.style.overflow = 'hidden';
+    gv.hidden = false; document.body.style.overflow = 'hidden'; document.body.classList.add('gv-on');
     requestAnimationFrame(function () { gv.classList.add('open'); flip($('#gvImg'), from, false); });
     $('.gv-close', gv).focus();
   }
@@ -359,10 +382,14 @@
     var r = card && $('img', card).getBoundingClientRect();
     var visible = r && r.bottom > 0 && r.top < window.innerHeight && gvState.pi === 0;
     gv.classList.remove('open');
-    flip(img, visible ? r : null, true, function () { gv.hidden = true; img.style.transform = ''; document.body.style.overflow = ''; if (gvLast) gvLast.focus(); });
+    flip(img, visible ? r : null, true, function () { gv.hidden = true; img.style.transform = ''; document.body.style.overflow = ''; document.body.classList.remove('gv-on'); if (gvLast) gvLast.focus({ preventScroll: true }); });
   }
   if (gv && opts.length) {
     opts.forEach(function (card, k) {
+      // 마우스를 올리거나 손가락을 대면 그 카드의 사진을 미리 받아 둠
+      var warm = function () { optOf(k).photos.slice(0, 3).forEach(function (x) { preload(x.src); }); };
+      card.addEventListener('pointerenter', warm, { once: true });
+      card.addEventListener('touchstart', warm, { once: true, passive: true });
       card.addEventListener('click', function () { gvOpen(k); });
       card.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); gvOpen(k); } });
     });

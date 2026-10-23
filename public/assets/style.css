@@ -440,11 +440,12 @@ th:last-child,td:last-child{text-align:right}
 .gv-bg{position:absolute;inset:0;border:0;padding:0;background:rgba(3,14,36,.94);opacity:0;transition:opacity .35s;cursor:zoom-out}
 .gview.open .gv-bg{opacity:1}
 .gv-fig{position:relative;margin:0;z-index:1;display:flex;justify-content:center;max-width:100%}
-.gv-fig img{display:block;max-width:min(1100px,100%);max-height:calc(100vh - 230px);width:auto;height:auto;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.45);background:#0F1E3A;will-change:transform}
-.gv-fig img.in-r{animation:gvInR .38s cubic-bezier(.2,.8,.2,1)}
-.gv-fig img.in-l{animation:gvInL .38s cubic-bezier(.2,.8,.2,1)}
-@keyframes gvInR{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
-@keyframes gvInL{from{opacity:0;transform:translateX(-40px)}to{opacity:1;transform:none}}
+.gv-fig img{display:block;max-width:min(1100px,100%);max-height:calc(100vh - 230px);width:auto;height:auto;border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.4);background:#0F1E3A;transition:opacity .15s}
+.gv-fig img.wait{opacity:.55}
+.gv-fig img.in-r{animation:gvInR .26s cubic-bezier(.2,.8,.2,1)}
+.gv-fig img.in-l{animation:gvInL .26s cubic-bezier(.2,.8,.2,1)}
+@keyframes gvInR{from{opacity:.3;transform:translateX(28px)}to{opacity:1;transform:none}}
+@keyframes gvInL{from{opacity:.3;transform:translateX(-28px)}to{opacity:1;transform:none}}
 .gv-count{position:absolute;right:12px;top:12px;background:rgba(6,38,86,.85);color:#fff;font-size:13px;font-weight:700;padding:4px 10px;border-radius:999px}
 .gv-info{position:relative;z-index:1;max-width:720px;width:100%;color:#fff;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;opacity:0;transform:translateY(10px);transition:opacity .35s .12s,transform .35s .12s}
 .gview.open .gv-info{opacity:1;transform:none}
@@ -548,3 +549,7 @@ th:last-child,td:last-child{text-align:right}
 /* 메인 슬라이드 막대: 사진이 많아져도 한 줄 */
 .slider .bars{flex-wrap:nowrap}
 .slider .bars button{flex:1 1 0;min-width:0}
+
+/* 크게 보기가 열려 있을 때 뒤쪽 화면의 무거운 효과 끄기 */
+body.gv-on .opt .tags span{backdrop-filter:none}
+body.gv-on .bento .opt img{transition:none}
