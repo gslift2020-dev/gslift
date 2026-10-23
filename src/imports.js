@@ -16,19 +16,45 @@ export async function runImports(request, env) {
   let manifest;
   try { manifest = await r.json(); } catch { return; }
   await ensureSchema(env);
+  // 한 번에 한 건만 올림 (Cloudflare 무료 요금제의 뒤처리 시간 제한 안에 끝나도록)
   for (const batch of manifest.batches || []) {
     if (!/^[\w-]{3,60}$/.test(batch.id || '')) continue;
-    // 자리 잡기: 이미 가져갔거나 다른 요청이 가져가는 중이면 건너뜀
-    const lock = await env.DB.prepare("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)").bind('import:' + batch.id, JSON.stringify({ at: kst(), state: 'running' })).run();
-    if (!lock.meta || !lock.meta.changes) continue;
-    try {
-      const ids = [];
-      for (const c of batch.cases || []) ids.push(await importCase(env, origin, c));
-      await env.DB.prepare('UPDATE settings SET value = ? WHERE key = ?').bind(JSON.stringify({ at: kst(), state: 'done', ids }), 'import:' + batch.id).run();
-    } catch (e) {
-      console.error('import failed', batch.id, e);
-      // 실패하면 자리를 풀어서 다음에 다시 시도
-      await env.DB.prepare('DELETE FROM settings WHERE key = ?').bind('import:' + batch.id).run();
+    const cases = batch.cases || [];
+    // 예전에 중간에 끊겨 올라간 글 정리 (번호와 제목이 둘 다 맞을 때만)
+    for (const rm of batch.remove || []) {
+      const key = `import:${batch.id}:rm${rm.id}`;
+      const lock = await env.DB.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)').bind(key, JSON.stringify({ at: kst() })).run();
+      if (!lock.meta || !lock.meta.changes) continue;
+      const row = await env.DB.prepare('SELECT id FROM cases WHERE id = ? AND title = ?').bind(rm.id, rm.title).first();
+      if (!row) continue;
+      const { results } = await env.DB.prepare('SELECT photo_key FROM case_photos WHERE case_id = ?').bind(rm.id).all();
+      for (const p of results) await env.PHOTOS.delete(p.photo_key);
+      await env.DB.batch([env.DB.prepare('DELETE FROM case_photos WHERE case_id = ?').bind(rm.id), env.DB.prepare('DELETE FROM cases WHERE id = ?').bind(rm.id)]);
+    }
+    for (let i = 0; i < cases.length; i++) {
+      const key = `import:${batch.id}:${i}`;
+      const got = await env.DB.prepare('SELECT value FROM settings WHERE key = ?').bind(key).first();
+      if (got) {
+        let v = {};
+        try { v = JSON.parse(got.value); } catch {}
+        if (v.state === 'done') continue;
+        // 3분 넘게 "진행 중"이면 중간에 끊긴 것 → 다시 시도
+        if (v.state === 'running' && Date.now() - (v.t || 0) < 180000) return;
+        const took = await env.DB.prepare('UPDATE settings SET value = ? WHERE key = ? AND value = ?').bind(JSON.stringify({ state: 'running', t: Date.now() }), key, got.value).run();
+        if (!took.meta || !took.meta.changes) return;
+      } else {
+        const lock = await env.DB.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)').bind(key, JSON.stringify({ state: 'running', t: Date.now() })).run();
+        if (!lock.meta || !lock.meta.changes) return;
+      }
+      try {
+        const id = await importCase(env, origin, cases[i]);
+        await env.DB.prepare('UPDATE settings SET value = ? WHERE key = ?').bind(JSON.stringify({ state: 'done', id, at: kst() }), key).run();
+      } catch (e) {
+        console.error('import failed', key, e);
+        await env.DB.prepare('DELETE FROM settings WHERE key = ?').bind(key).run();
+      }
+      checkedAt = 0; // 남은 건은 다음 방문 때 바로 이어서
+      return;
     }
   }
 }

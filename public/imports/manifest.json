@@ -1,7 +1,7 @@
 {
  "batches": [
   {
-   "id": "2026-10-23-pignet",
+   "id": "2026-10-23-pignet-v2",
    "cases": [
     {
      "title": "화물용 리프트(F/L) · 2,000kg · 유압식 · 양개 도어",
@@ -33,6 +33,12 @@
       "imports/pignet/12.webp",
       "imports/pignet/13.webp"
      ]
+    }
+   ],
+   "remove": [
+    {
+     "id": 8,
+     "title": "화물용 리프트(F/L) · 2,000kg · 유압식 · 양개 도어"
     }
    ]
   }
