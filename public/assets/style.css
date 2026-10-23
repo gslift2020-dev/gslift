@@ -553,3 +553,8 @@ th:last-child,td:last-child{text-align:right}
 /* 크게 보기가 열려 있을 때 뒤쪽 화면의 무거운 효과 끄기 */
 body.gv-on .opt .tags span{backdrop-filter:none}
 body.gv-on .bento .opt img{transition:none}
+/* 크게 보기: 한 화면에 다 들어오게, 스크롤바는 보이지 않게 */
+.lightbox .inner{scrollbar-width:none;-ms-overflow-style:none}
+.lightbox .inner::-webkit-scrollbar{display:none}
+.lightbox img#lbImg{max-height:calc(100vh - 330px);min-height:240px;object-fit:contain}
+.lb-body{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;white-space:normal}
