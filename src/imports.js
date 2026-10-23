@@ -101,6 +101,11 @@ export async function runImports(request, env) {
 }
 
 async function importCase(env, origin, c) {
+  // 이전 시도가 글은 넣고 끊긴 경우 → 같은 글이 이미 있으면 그 번호를 그대로 씀 (중복 방지)
+  const date0 = /^\d{4}-\d{2}$/.test(c.date || '') ? c.date + '-01' : null;
+  const dup = await env.DB.prepare('SELECT id FROM cases WHERE title = ? AND site = ? AND body = ? AND IFNULL(taken_at, \'\') = ? ORDER BY id LIMIT 1')
+    .bind(String(c.title).slice(0, 120), String(c.site || '').slice(0, 80), String(c.body || '').slice(0, 5000), date0 || '').first();
+  if (dup) return dup.id;
   const keys = [];
   for (const p of c.photos || []) {
     const res = await env.ASSETS.fetch(new Request(origin + '/' + String(p).replace(/^\/+/, '')));
