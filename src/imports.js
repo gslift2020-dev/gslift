@@ -74,14 +74,17 @@ export async function runImports(request, env) {
       if (got) {
         let v = {};
         try { v = JSON.parse(got.value); } catch {}
-        if (v.state === 'done') continue;
-        // 2분 넘게 "진행 중"이면 중간에 끊긴 것 → 다시 시도
-        if (v.state === 'running' && Date.now() - (v.t || 0) < 120000) return;
-        const took = await env.DB.prepare('UPDATE settings SET value = ? WHERE key = ? AND value = ?').bind(JSON.stringify({ state: 'running', t: Date.now() }), key, got.value).run();
-        if (!took.meta || !took.meta.changes) return;
+        if (v.state === 'done' || v.state === 'failed') continue;
+        // 2분 안의 "진행 중"은 다른 처리가 맡은 것 → 건너뛰고 다음 건으로
+        if (v.state === 'running' && Date.now() - (v.t || 0) < 120000) continue;
+        // 세 번 넘게 끊긴 건은 포기하고 다음 건으로 (관리자 화면에서 직접 올릴 수 있음)
+        const tries = (v.tries || 0) + 1;
+        if (tries > 3) { await env.DB.prepare('UPDATE settings SET value = ? WHERE key = ?').bind(JSON.stringify({ state: 'failed', at: kst() }), key).run(); continue; }
+        const took = await env.DB.prepare('UPDATE settings SET value = ? WHERE key = ? AND value = ?').bind(JSON.stringify({ state: 'running', t: Date.now(), tries }), key, got.value).run();
+        if (!took.meta || !took.meta.changes) continue;
       } else {
         const lock = await env.DB.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)').bind(key, JSON.stringify({ state: 'running', t: Date.now() })).run();
-        if (!lock.meta || !lock.meta.changes) return;
+        if (!lock.meta || !lock.meta.changes) continue;
       }
       try {
         const id = await importCase(env, origin, cases[i]);
