@@ -15,8 +15,7 @@
      "photos": [
       "imports/2026-09/gunpo-01.webp",
       "imports/2026-09/gunpo-02.webp",
-      "imports/2026-09/gunpo-03.webp",
-      "imports/2026-09/gunpo-04.webp"
+      "imports/2026-09/gunpo-03.webp"
      ],
      "category": "fl",
      "date": "2026-09"
@@ -37,18 +36,13 @@
     {
      "title": "화물용 리프트(F/L) · 유압식 · 창고 · 양개 도어",
      "site": "창고 실내",
-     "body": "창고 안에 설치한 유압식 화물용 리프트입니다.\n\n승강장은 철망 양개 도어로 마감했고, 리프트 옆에 제어반과 유압 유닛을 함께 설치했습니다. 경광등과 과부하방지장치, 운행 리밋 스위치 등 안전장치를 갖췄습니다.",
+     "body": "창고 안에 설치한 유압식 화물용 리프트입니다.\n\n승강장은 철망 양개 도어로 마감했고, 리프트 옆에 제어반과 유압 유닛을 함께 설치했습니다.",
      "photos": [
       "imports/2026-09/whs-01.webp",
       "imports/2026-09/whs-02.webp",
       "imports/2026-09/whs-03.webp",
       "imports/2026-09/whs-04.webp",
-      "imports/2026-09/whs-05.webp",
-      "imports/2026-09/whs-06.webp",
-      "imports/2026-09/whs-07.webp",
-      "imports/2026-09/whs-08.webp",
-      "imports/2026-09/whs-09.webp",
-      "imports/2026-09/whs-10.webp"
+      "imports/2026-09/whs-05.webp"
      ],
      "category": "fl",
      "date": "2026-09"
@@ -60,8 +54,7 @@
      "photos": [
       "imports/2026-09/shut-01.webp",
       "imports/2026-09/shut-02.webp",
-      "imports/2026-09/shut-03.webp",
-      "imports/2026-09/shut-04.webp"
+      "imports/2026-09/shut-03.webp"
      ],
      "category": "fl",
      "date": "2026-09"
@@ -73,9 +66,7 @@
      "photos": [
       "imports/2026-09/cafe-01.webp",
       "imports/2026-09/cafe-02.webp",
-      "imports/2026-09/cafe-03.webp",
-      "imports/2026-09/cafe-04.webp",
-      "imports/2026-09/cafe-05.webp"
+      "imports/2026-09/cafe-03.webp"
      ],
      "category": "fl",
      "date": "2026-09"
@@ -83,17 +74,63 @@
     {
      "title": "화물용 리프트(F/L) · 유압식 · 양개 도어",
      "site": "",
-     "body": "유압식 화물용 리프트입니다.\n\n승강장 출입구는 양개 도어로 마감하고 문 위에 경광등을 달았습니다. 셔터로 마감한 승강장과 출입문 인터록, 제어반·유압 유닛 사진을 함께 실었습니다.",
+     "body": "유압식 화물용 리프트입니다.\n\n승강장 출입구는 양개 도어로 마감하고 문 위에 경광등을 달았습니다. 셔터로 마감한 승강장 사진도 함께 실었습니다.",
      "photos": [
       "imports/2026-09/door-01.webp",
       "imports/2026-09/door-02.webp",
-      "imports/2026-09/door-03.webp",
-      "imports/2026-09/door-04.webp",
-      "imports/2026-09/door-05.webp",
-      "imports/2026-09/door-06.webp"
+      "imports/2026-09/door-03.webp"
      ],
      "category": "fl",
      "date": "2026-09"
+    }
+   ]
+  },
+  {
+   "id": "2026-10-23-trim-details",
+   "trim": [
+    {
+     "title": "화물용 리프트(F/L) · 메자닌 연결 · 진입판",
+     "drop": [
+      3
+     ],
+     "expect": 4
+    },
+    {
+     "title": "화물용 리프트(F/L) · 유압식 · 창고 · 양개 도어",
+     "drop": [
+      5,
+      6,
+      7,
+      8,
+      9
+     ],
+     "expect": 10,
+     "body": "창고 안에 설치한 유압식 화물용 리프트입니다.\n\n승강장은 철망 양개 도어로 마감했고, 리프트 옆에 제어반과 유압 유닛을 함께 설치했습니다."
+    },
+    {
+     "title": "화물용 리프트(F/L) · 유압식 · 셔터 마감",
+     "drop": [
+      3
+     ],
+     "expect": 4
+    },
+    {
+     "title": "화물용 리프트(F/L) · 구내식당 · 양개 도어+셔터",
+     "drop": [
+      3,
+      4
+     ],
+     "expect": 5
+    },
+    {
+     "title": "화물용 리프트(F/L) · 유압식 · 양개 도어",
+     "drop": [
+      3,
+      4,
+      5
+     ],
+     "expect": 6,
+     "body": "유압식 화물용 리프트입니다.\n\n승강장 출입구는 양개 도어로 마감하고 문 위에 경광등을 달았습니다. 셔터로 마감한 승강장 사진도 함께 실었습니다."
     }
    ]
   }

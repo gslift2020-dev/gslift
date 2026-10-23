@@ -20,6 +20,25 @@ export async function runImports(request, env) {
   for (const batch of manifest.batches || []) {
     if (!/^[\w-]{3,60}$/.test(batch.id || '')) continue;
     const cases = batch.cases || [];
+    // 이미 올린 글에서 일부 사진 빼기: 제목으로 글을 찾고, 정해진 순서(0부터)의 사진을 삭제
+    if (batch.trim) {
+      const key = `import:${batch.id}:trim`;
+      const lock = await env.DB.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)').bind(key, JSON.stringify({ at: kst() })).run();
+      if (lock.meta && lock.meta.changes) {
+        for (const t of batch.trim) {
+          const row = await env.DB.prepare('SELECT id FROM cases WHERE title = ? ORDER BY id DESC LIMIT 1').bind(t.title).first();
+          if (!row) continue;
+          if (t.body != null) await env.DB.prepare('UPDATE cases SET body = ? WHERE id = ?').bind(String(t.body).slice(0, 5000), row.id).run();
+          if (!Array.isArray(t.drop) || !t.drop.length) continue;
+          const { results } = await env.DB.prepare('SELECT id, photo_key, sort FROM case_photos WHERE case_id = ? ORDER BY sort, id').bind(row.id).all();
+          if (t.expect && results.length !== t.expect) continue; // 사진 수가 예상과 다르면 건드리지 않음
+          const gone = results.filter((p, i) => t.drop.includes(i) && i > 0); // 대표 사진(0번)은 지우지 않음
+          for (const p of gone) await env.PHOTOS.delete(p.photo_key);
+          if (gone.length) await env.DB.batch(gone.map((p) => env.DB.prepare('DELETE FROM case_photos WHERE id = ?').bind(p.id)));
+        }
+      }
+      continue;
+    }
     // 설치사례 전체 삭제 (한 번만): 사진까지 지우고 기본 예시도 숨김
     if (batch.removeAll) {
       const key = `import:${batch.id}:reset`;
