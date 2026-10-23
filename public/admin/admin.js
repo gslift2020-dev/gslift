@@ -308,7 +308,7 @@
     $('#caseSave').textContent = post ? '수정 내용 저장' : '홈페이지에 올리기';
     if (post) {
       editing.items = post.photos.map(function (p) { return { kind: 'old', id: p.id, img: p.img }; });
-      f.title.value = post.title; f.site.value = post.site || ''; f.body.value = post.body || '';
+      f.title.value = post.title; f.site.value = post.site || ''; f.body.value = post.body || ''; f.note.value = post.note || '';
       f.date.value = post.taken_at ? post.taken_at.slice(0, 7) : '';
       // 제목에 들어있는 사양을 버튼에 표시
       var parts = post.title.split('·').map(function (s) { return s.trim(); });
@@ -454,7 +454,7 @@
     if (!editing.cat) { $('#catSeg').scrollIntoView({ block: 'center' }); return say(msg, '분류(화물용·테이블·스태커·운반기계)를 골라주세요.', 'err'); }
     btn.disabled = true;
     var fd = new FormData(), order = [], news = editing.items.filter(function (x) { return x.kind === 'new'; }), done = 0;
-    fd.append('title', f.title.value.trim()); fd.append('category', editing.cat); fd.append('site', f.site.value.trim()); fd.append('body', f.body.value.trim());
+    fd.append('title', f.title.value.trim()); fd.append('category', editing.cat); fd.append('site', f.site.value.trim()); fd.append('body', f.body.value.trim()); fd.append('note', f.note.value.trim());
     if (f.date.value && !/^\d{4}-\d{2}$/.test(f.date.value.trim())) { btn.disabled = false; f.date.focus(); return say(msg, '설치 날짜는 2024-05 처럼 적어주세요.', 'err'); }
     fd.append('date', f.date.value.trim());
     var chain = Promise.resolve();
@@ -503,6 +503,19 @@
   var caseQt;
   $('#caseSearch').addEventListener('input', function () { var v = this.value.trim(); clearTimeout(caseQt); caseQt = setTimeout(function () { caseQ = v; loadCases(true); }, 300); });
   $('#caseMore').addEventListener('click', function () { loadCases(false); });
+  // 내부 메모 한꺼번에 넣기
+  $('#notesGo').addEventListener('click', function () {
+    var t = $('#notesText').value.trim(), msg = $('#notesMsg'), btn = this;
+    if (!t) return say(msg, '목록을 붙여넣어 주세요.', 'err');
+    btn.disabled = true; say(msg, '넣는 중…');
+    api('/api/admin/case-notes', { method: 'POST', json: { text: t } }).then(function (d) {
+      btn.disabled = false;
+      if (!d.ok) return say(msg, d.error || '실패했습니다.', 'err');
+      say(msg, d.done + '건 넣었습니다.' + (d.miss.length ? ' 못 찾은 줄 ' + d.miss.length + '개: ' + d.miss.slice(0, 3).join(' / ') : ''), d.miss.length ? 'err' : 'ok');
+      if (!d.miss.length) $('#notesText').value = '';
+      loadCases(true);
+    });
+  });
   $('#hideSamples').addEventListener('change', function () {
     var cb = this;
     api('/api/admin/settings', { method: 'POST', json: { hideSamples: cb.checked } }).then(function (d) {
@@ -518,7 +531,7 @@
       $('#caseList').innerHTML = list.map(function (c) {
         var cover = c.photos[0] ? c.photos[0].img : '';
         return '<article class="post' + (c.visible ? '' : ' hidden') + (c.pinned ? ' pinned' : '') + '"><div class="ph"><img src="' + esc(cover) + '" alt="" loading="lazy"><span class="cnt">사진 ' + c.photos.length + '장</span>' + (c.pinned ? '<span class="pin">📌 맨 앞 고정</span>' : '') + '</div>' +
-          '<span class="pcat">' + esc(CATS[c.cat] || '') + '</span><div class="t">' + esc(c.title) + (c.visible ? '' : ' (숨김)') + '</div><div class="s">' + esc([c.site, c.taken_at ? '설치 ' + c.taken_at.slice(0, 7) : '등록 ' + (c.created_at || '').slice(0, 10)].filter(Boolean).join(' · ')) + '</div>' +
+          '<span class="pcat">' + esc(CATS[c.cat] || '') + '</span><div class="t">' + esc(c.title) + (c.visible ? '' : ' (숨김)') + '</div><div class="s">' + esc([c.site, c.taken_at ? '설치 ' + c.taken_at.slice(0, 7) : '등록 ' + (c.created_at || '').slice(0, 10)].filter(Boolean).join(' · ')) + '</div>' + (c.note ? '<div class="s note">🔒 ' + esc(c.note) + '</div>' : '') +
           '<div class="a"><button type="button" class="link" data-act="edit" data-id="' + c.id + '">수정</button>' +
           '<button type="button" class="link" data-act="pin" data-id="' + c.id + '" data-v="' + c.pinned + '">' + (c.pinned ? '고정 풀기' : '맨 앞 고정') + '</button>' +
           '<a class="link" href="/case.html?id=' + c.id + '" target="_blank" rel="noopener">보기</a>' +
@@ -869,7 +882,7 @@
           var name = d.split('/').pop().replace(/[_]+/g, ' ').trim();
           for (var i = 0; i < list.length; i += 20) {
             var chunk = list.slice(i, i + 20);
-            groups.push({ photos: chunk, cat: '', site: name + (list.length > 20 ? ' (' + (i / 20 + 1) + ')' : ''), spec: '', folder: d, last: chunk[chunk.length - 1].t });
+            groups.push({ photos: chunk, cat: '', site: '', note: d + (list.length > 20 ? ' (' + (i / 20 + 1) + ')' : ''), spec: '', folder: d, last: chunk[chunk.length - 1].t });
           }
         });
       } else {
@@ -904,9 +917,9 @@
         (g.done ? '<span class="ok">✓ 올림</span>' : '') +
         '<span class="seg cat">' + Object.keys(CATS).map(function (k) { return '<button type="button" data-cat="' + k + '"' + (g.cat === k ? ' class="on"' : '') + '>' + CATS[k].replace(/\(.*\)/, '') + '</button>'; }).join('') + '</span>' +
         '<span class="acts">' + (gi ? '<button type="button" class="link" data-g="merge">위 현장과 합치기</button>' : '') + '<button type="button" class="link del" data-g="drop">이 현장 빼기</button></span></div>' +
-        '<div class="bg-f"><input type="text" maxlength="80" placeholder="현장명 (예: 김포 ○○물류)" data-f="site"><input type="text" maxlength="80" placeholder="사양 (예: 2톤 · 3STOP · 양방향)" data-f="spec"><input type="month" data-f="date" aria-label="설치 날짜"></div>' +
+        '<div class="bg-f"><input type="text" maxlength="80" placeholder="현장 표기 (홈페이지에 보임 · 예: 경기 김포 · 물류센터)" data-f="site"><input type="text" maxlength="300" placeholder="🔒 내부 메모 (업체명·폴더명)" data-f="note"><input type="text" maxlength="80" placeholder="사양 (예: 2톤 · 3STOP · 양방향)" data-f="spec"><input type="month" data-f="date" aria-label="설치 날짜"></div>' +
         '<div class="bg-p"></div>';
-      $('[data-f=site]', c).value = g.site; $('[data-f=spec]', c).value = g.spec;
+      $('[data-f=site]', c).value = g.site; $('[data-f=note]', c).value = g.note || ''; $('[data-f=spec]', c).value = g.spec;
       g.date = g.date || (d0 ? ymd(g.photos[0].t).slice(0, 7) : '');
       $('[data-f=date]', c).value = g.date;
       $$('.bg-f input', c).forEach(function (i) { i.addEventListener('input', function () { g[i.dataset.f] = i.value; }); });
@@ -970,7 +983,7 @@
       (function nextPhoto() {
         if (j >= ph.length) {
           fd.append('title', [CATS[g.cat]].concat(splitTitle(g.spec)).join(' · '));
-          fd.append('category', g.cat); fd.append('site', (g.site || '').trim()); fd.append('body', '');
+          fd.append('category', g.cat); fd.append('site', (g.site || '').trim()); fd.append('note', (g.note || '').trim()); fd.append('body', '');
           fd.append('date', g.date || ''); fd.append('order', JSON.stringify(order));
           if (hidden) fd.append('visible', '0');
           say(msg, '현장 ' + (k + 1) + ' / ' + todo.length + ' 올리는 중…');

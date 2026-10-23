@@ -265,7 +265,7 @@ input[type=month],input[type=email],input[type=search]{height:46px;padding:0 14p
 .bg-h .ok{color:#1E5A32;font-weight:700}
 .bg-h .acts{margin-left:auto;display:flex;gap:4px}
 .bg-h .acts .del{color:#8A1F1F}
-.bg-f{display:grid;grid-template-columns:1fr 1fr 150px;gap:8px}
+.bg-f{display:grid;grid-template-columns:1fr 1fr 1fr 150px;gap:8px}
 .bg-f input{height:40px}
 .bg-p{display:flex;flex-wrap:wrap;gap:6px}
 .bp{position:relative;width:96px;height:128px;border-radius:8px;overflow:hidden;background:#dde3ee}
@@ -283,3 +283,10 @@ input[type=month],input[type=email],input[type=search]{height:46px;padding:0 14p
 .bp:hover .mkcv,.bp .mkcv:focus{opacity:1}
 @media (hover:none){.bp .mkcv{opacity:1}}
 .bp{width:104px;height:138px}
+/* 내부 메모: 관리자만 보는 정보 */
+.post .s.note{color:#8a5a00;padding-top:2px}
+.note-f input{background:#fffaf0;border-color:#f0d9a8}
+.bg-f input[data-f=note]{background:#fffaf0}
+.notes-bulk{background:#fffaf0;border:1px solid #f0d9a8;border-radius:10px;padding:10px 14px;margin:0 0 14px}
+.notes-bulk summary{cursor:pointer;font-weight:600}
+.notes-bulk textarea{width:100%;box-sizing:border-box;margin:8px 0;font-family:inherit;font-size:14px;padding:8px;border:1px solid #e3cf9e;border-radius:8px}

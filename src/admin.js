@@ -216,7 +216,12 @@ function caseWhere(url, onlyVisible) {
   const cat = url.searchParams.get('cat');
   if (CATS[cat]) { where.push('category = ?'); args.push(cat); }
   const q = clean(url.searchParams.get('q'), 40);
-  if (q) { where.push('(title LIKE ? OR site LIKE ? OR body LIKE ?)'); const like = '%' + q.replace(/[%_]/g, '') + '%'; args.push(like, like, like); }
+  if (q) {
+    const like = '%' + q.replace(/[%_]/g, '') + '%';
+    // 내부 메모는 관리자 검색에서만 찾음 (홈페이지에는 절대 노출 안 함)
+    if (onlyVisible) { where.push('(title LIKE ? OR site LIKE ? OR body LIKE ?)'); args.push(like, like, like); }
+    else { where.push("(title LIKE ? OR site LIKE ? OR body LIKE ? OR IFNULL(note, '') LIKE ?)"); args.push(like, like, like, like); }
+  }
   return { sql: where.length ? 'WHERE ' + where.join(' AND ') : '', args };
 }
 function pageArgs(url, def, max) {
@@ -235,7 +240,7 @@ async function listCasesAdmin(request, env) {
   const url = new URL(request.url);
   const w = caseWhere(url, false), { limit, offset } = pageArgs(url, 60, 200);
   const [{ results }, total, counts] = await Promise.all([
-    env.DB.prepare(`SELECT id, created_at, updated_at, taken_at, title, sub, site, body, category, visible, pinned FROM cases ${w.sql} ${CASE_ORDER} LIMIT ? OFFSET ?`).bind(...w.args, limit, offset).all(),
+    env.DB.prepare(`SELECT id, created_at, updated_at, taken_at, title, sub, site, body, note, category, visible, pinned FROM cases ${w.sql} ${CASE_ORDER} LIMIT ? OFFSET ?`).bind(...w.args, limit, offset).all(),
     env.DB.prepare(`SELECT COUNT(*) AS n FROM cases ${w.sql}`).bind(...w.args).first(),
     catCounts(env, false),
   ]);
@@ -258,7 +263,7 @@ function caseFields(form) {
     if (!m) throw new UserError('날짜는 2023-05 또는 2023-05-17 처럼 적어주세요.');
     date = `${m[1]}-${m[2]}-${m[3] || '01'}`;
   }
-  return { title, cat: CATS[c] ? c : inferCat(title), site: clean(form.get('site'), 80), body: clean(form.get('body'), 5000), date, hidden: form.get('visible') === '0' };
+  return { title, cat: CATS[c] ? c : inferCat(title), site: clean(form.get('site'), 80), body: clean(form.get('body'), 5000), note: clean(form.get('note'), 300), date, hidden: form.get('visible') === '0' };
 }
 
 // 새 글 또는 수정: 사진 순서(order)대로 저장
@@ -294,12 +299,12 @@ async function saveCase(request, env, id) {
     const keys = order.map((t) => (t[0] === 'n' ? newKeys[Number(t.slice(2))] : existingById[Number(t.slice(2))].photo_key));
 
     if (!id) {
-      const r = await env.DB.prepare('INSERT INTO cases (created_at, title, sub, site, body, category, photo_key, taken_at, visible) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
-        .bind(kst(), f.title, '', f.site, f.body, f.cat, keys[0], f.date, f.hidden ? 0 : 1).run();
+      const r = await env.DB.prepare('INSERT INTO cases (created_at, title, sub, site, body, note, category, photo_key, taken_at, visible) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+        .bind(kst(), f.title, '', f.site, f.body, f.note, f.cat, keys[0], f.date, f.hidden ? 0 : 1).run();
       id = r.meta.last_row_id;
     } else {
-      await env.DB.prepare('UPDATE cases SET title = ?, site = ?, body = ?, category = ?, photo_key = ?, taken_at = ?, updated_at = ? WHERE id = ?')
-        .bind(f.title, f.site, f.body, f.cat, keys[0], f.date, kst(), id).run();
+      await env.DB.prepare('UPDATE cases SET title = ?, site = ?, body = ?, note = ?, category = ?, photo_key = ?, taken_at = ?, updated_at = ? WHERE id = ?')
+        .bind(f.title, f.site, f.body, f.note, f.cat, keys[0], f.date, kst(), id).run();
     }
     const stmts = [env.DB.prepare('DELETE FROM case_photos WHERE case_id = ?').bind(id)];
     keys.forEach((k, i) => stmts.push(env.DB.prepare('INSERT INTO case_photos (case_id, photo_key, sort) VALUES (?, ?, ?)').bind(id, k, i)));
@@ -313,6 +318,28 @@ async function saveCase(request, env, id) {
     if (e instanceof UserError) return json({ ok: false, error: e.message }, 400);
     throw e;
   }
+}
+
+// 내부 메모 한꺼번에 넣기: 한 줄에 "글번호 = 메모" 또는 "가져오기묶음#순서 = 메모"
+async function saveCaseNotes(request, env) {
+  let body = {};
+  try { body = await request.json(); } catch {}
+  const lines = String(body.text || '').split(/\r?\n/).map((s) => s.trim()).filter(Boolean).slice(0, 500);
+  let done = 0;
+  const miss = [];
+  for (const line of lines) {
+    const m = /^([\w-]{3,60}#\d{1,3}|\d{1,7})\s*=\s*(.+)$/.exec(line);
+    if (!m) { miss.push(line.slice(0, 40)); continue; }
+    let id = null;
+    if (m[1].includes('#')) {
+      const [b, i] = m[1].split('#');
+      const got = await env.DB.prepare('SELECT value FROM settings WHERE key = ?').bind(`import:${b}:${Number(i)}`).first();
+      try { const v = JSON.parse(got ? got.value : '{}'); if (v.state === 'done') id = v.id; } catch {}
+    } else id = Number(m[1]);
+    const r = id ? await env.DB.prepare('UPDATE cases SET note = ? WHERE id = ?').bind(clean(m[2], 300), id).run() : null;
+    if (r && r.meta && r.meta.changes) done++; else miss.push(line.slice(0, 40));
+  }
+  return json({ ok: true, done, miss });
 }
 
 async function setCaseVisible(request, env, id) {
@@ -586,6 +613,7 @@ export async function handleAdmin(request, env, path) {
 
   if (path === '/api/admin/cases' && method === 'GET') return listCasesAdmin(request, env);
   if (path === '/api/admin/cases' && method === 'POST') return saveCase(request, env, null);
+  if (path === '/api/admin/case-notes' && method === 'POST') return saveCaseNotes(request, env);
   m = /^\/api\/admin\/cases\/(\d+)(\/visible|\/pin)?$/.exec(path);
   if (m && m[2] === '/visible' && method === 'POST') return setCaseVisible(request, env, Number(m[1]));
   if (m && m[2] === '/pin' && method === 'POST') return setCasePinned(request, env, Number(m[1]));

@@ -110,8 +110,8 @@ async function importCase(env, origin, c) {
   if (!keys.length) throw new Error('no photos');
   const cat = CATS[c.category] ? c.category : 'fl';
   const date = /^\d{4}-\d{2}$/.test(c.date || '') ? c.date + '-01' : null;
-  const row = await env.DB.prepare('INSERT INTO cases (created_at, title, sub, site, body, category, photo_key, taken_at, visible) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
-    .bind(kst(), String(c.title).slice(0, 120), '', String(c.site || '').slice(0, 80), String(c.body || '').slice(0, 5000), cat, keys[0], date, c.visible === false ? 0 : 1).run();
+  const row = await env.DB.prepare('INSERT INTO cases (created_at, title, sub, site, body, note, category, photo_key, taken_at, visible) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+    .bind(kst(), String(c.title).slice(0, 120), '', String(c.site || '').slice(0, 80), String(c.body || '').slice(0, 5000), c.note ? String(c.note).slice(0, 300) : null, cat, keys[0], date, c.visible === false ? 0 : 1).run();
   const id = row.meta.last_row_id;
   await env.DB.batch(keys.map((k, i) => env.DB.prepare('INSERT INTO case_photos (case_id, photo_key, sort) VALUES (?, ?, ?)').bind(id, k, i)));
   return id;

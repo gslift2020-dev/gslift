@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex, nofollow">
 <title>관리자 | 거산리프트</title>
 <link rel="icon" href="/favicon.png">
-<link rel="stylesheet" href="/admin/admin.css?v=cde5ae45">
+<link rel="stylesheet" href="/admin/admin.css?v=87ae1d71">
 </head>
 <body>
 
@@ -129,10 +129,11 @@
 
 <label class="field"><span class="lbl">제목 <span class="req">*</span></span><input type="text" name="title" maxlength="120" placeholder="예) 화물용 리프트 · 1톤 · 2STOP · 양방향"></label>
 <div class="row2">
-<label class="field"><span class="lbl">현장명</span><input type="text" name="site" maxlength="80" placeholder="예) 김포 ○○물류센터"></label>
+<label class="field"><span class="lbl">현장 표기 <small>(홈페이지에 보임 · 업체명 대신 지역·업종)</small></span><input type="text" name="site" maxlength="80" placeholder="예) 경기 김포 · 물류센터"></label>
 <label class="field"><span class="lbl">설치 날짜 <small>(비우면 오늘 · 목록이 이 날짜 순서로 정렬)</small></span><input type="month" name="date" placeholder="2024-05" pattern="\d{4}-\d{2}"></label>
 </div>
 <label class="field"><span class="lbl">내용</span><textarea name="body" rows="5" maxlength="5000" placeholder="현장 특징, 설치 기간, 고객 요청사항 등 자유롭게 적어주세요."></textarea></label>
+<label class="field note-f"><span class="lbl">🔒 내부 메모 <small>(관리자만 봄 · 홈페이지에 안 보임 · 원래 폴더명, 업체명, 현장코드 등)</small></span><input type="text" name="note" maxlength="300" placeholder="예) 2026년/6월/피에스아이"></label>
 
 <button type="submit" class="btn" id="caseSave">홈페이지에 올리기</button>
 <p class="msg" id="caseMsg" role="status" aria-live="polite"></p>
@@ -144,6 +145,11 @@
 </div>
 <div class="bar"><p class="hint" style="margin:0">📌 <b>맨 앞 고정</b>을 누르면 홈페이지 설치사례 맨 앞에 나옵니다. 나머지는 설치 날짜 최신순입니다.</p>
 <label class="check" style="font-weight:500;font-size:14px"><input type="checkbox" id="hideSamples"> 홈페이지의 기본 예시 사례 12개 숨기기</label></div>
+<details class="notes-bulk"><summary>🔒 내부 메모 한꺼번에 넣기 <small>(Claude가 드린 목록을 붙여넣기)</small></summary>
+<p class="hint">한 줄에 하나씩 <code>글번호 = 메모</code> 또는 <code>가져오기묶음#순서 = 메모</code> 형식입니다. 내부 메모는 관리자 화면에서만 보이고 홈페이지에는 나오지 않습니다.</p>
+<textarea id="notesText" rows="6" placeholder="2026-06-a#4 = 현장사진/2026년/6월/○○○"></textarea>
+<div class="row-inline"><button type="button" class="btn small" id="notesGo">메모 넣기</button><span class="msg" id="notesMsg"></span></div>
+</details>
 <div id="caseList" class="posts"><p class="empty">불러오는 중…</p></div>
 <div class="more-row"><button type="button" class="btn small ghost" id="caseMore" hidden>더 보기</button></div>
 </section>
@@ -280,6 +286,6 @@
 </section>
 </main>
 
-<script src="/admin/admin.js?v=b0888485" defer></script>
+<script src="/admin/admin.js?v=6368483d" defer></script>
 </body>
 </html>

@@ -86,6 +86,7 @@ const MIGRATIONS = [
   'ALTER TABLE inquiries ADD COLUMN memo TEXT',
   'ALTER TABLE cases ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0',
   'ALTER TABLE cases ADD COLUMN taken_at TEXT',
+  'ALTER TABLE cases ADD COLUMN note TEXT', // 내부 메모(원래 폴더·현장명) — 관리자만 봄
 ];
 
 // 설치사례 분류 (제품소개 4종과 같음)
