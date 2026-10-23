@@ -12,6 +12,7 @@ import { handleContact } from './contact.js';
 import { handleAdmin, publicCases, publicCase, publicSite, servePhoto } from './admin.js';
 import { recordHit } from './stats.js';
 import { isPage, servePage } from './pages.js';
+import { runImports } from './imports.js';
 
 const OTHER_HOSTS = ['gslift.co.kr', 'www.gslift.co.kr'];
 // 예전 홈페이지 주소를 새 주소로 (설치사례 게시판 → 설치사례 목록, 나머지 → 첫 화면)
@@ -30,6 +31,10 @@ export default {
     // 예전 주소 정리: gslift.co.kr·www → gslift.kr, 예전 홈페이지 주소(/default/…, /bbs/…) → 새 페이지
     if (OTHER_HOSTS.includes(url.hostname)) return Response.redirect('https://gslift.kr' + oldPath(path) + url.search, 301);
     if (/^\/(default|bbs)(\/|$)/i.test(path)) return Response.redirect(url.origin + oldPath(path), 301);
+    // Claude가 정리해 둔 설치사례가 있으면 뒤에서 가져오기 (방문자는 기다리지 않음)
+    if (request.method === 'GET' && (path === '/' || path === '/api/cases' || path === '/api/admin/cases') && ctx && ctx.waitUntil) {
+      ctx.waitUntil(runImports(request, env).catch((e) => console.error('import', e)));
+    }
     try {
       if (path === '/api/contact') return await handleContact(request, env, ctx);
       if (path === '/api/cases') return await publicCases(request, env);

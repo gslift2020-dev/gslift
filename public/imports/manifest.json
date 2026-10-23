@@ -1,0 +1,40 @@
+{
+ "batches": [
+  {
+   "id": "2026-10-23-pignet",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 2,000kg · 유압식 · 양개 도어",
+     "category": "fl",
+     "site": "피그넷",
+     "date": "2026-08",
+     "body": "공장 실내에 적재용량 2,000kg 유압식 화물용 리프트를 설치했습니다.\n\n승강장 출입구는 철망 양개 도어로 마감하고, 바닥에는 노란 안전 표시를 했습니다. 리프트 옆에 제어반과 유압 유닛을 함께 설치했고, 설치 후 안전검사를 거쳐 인도했습니다.",
+     "photos": [
+      "imports/pignet/01.webp",
+      "imports/pignet/02.webp",
+      "imports/pignet/03.webp",
+      "imports/pignet/04.webp",
+      "imports/pignet/05.webp",
+      "imports/pignet/06.webp",
+      "imports/pignet/07.webp",
+      "imports/pignet/08.webp",
+      "imports/pignet/09.webp",
+      "imports/pignet/10.webp"
+     ]
+    },
+    {
+     "title": "화물용 리프트(F/L) · 실내 설치 · 양개 도어",
+     "category": "fl",
+     "site": "피그넷",
+     "date": "2026-07",
+     "body": "같은 공장 안에 설치한 화물용 리프트입니다. 철망 양개 도어로 마감했습니다.",
+     "photos": [
+      "imports/pignet/11.webp",
+      "imports/pignet/12.webp",
+      "imports/pignet/13.webp"
+     ]
+    }
+   ]
+  }
+ ]
+}

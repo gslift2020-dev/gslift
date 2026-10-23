@@ -33,6 +33,8 @@
       else if (/STOP|층/i.test(p)) label = '정지층';
       else if (/방향/.test(p)) label = '출입방향';
       else if (/실내|외부|실외/.test(p)) label = '설치위치';
+      else if (/유압|체인|와이어|전동/.test(p)) label = '구동 방식';
+      else if (/도어|셔터|문/.test(p)) label = '출입문';
       rows.push({ label: label, value: p });
     });
     return rows;

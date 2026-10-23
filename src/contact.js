@@ -33,6 +33,15 @@ function toBase64(bytes) {
   return btoa(bin);
 }
 
+function normPhone(v) {
+  const d = String(v || '').replace(/[^0-9]/g, '');
+  if (/^02/.test(d) && (d.length === 9 || d.length === 10)) return d.length === 9 ? `02-${d.slice(2, 5)}-${d.slice(5)}` : `02-${d.slice(2, 6)}-${d.slice(6)}`;
+  if (/^1[5-9]/.test(d) && d.length === 8) return `${d.slice(0, 4)}-${d.slice(4)}`;
+  if (/^050/.test(d) && (d.length === 11 || d.length === 12)) return d.length === 11 ? `${d.slice(0, 4)}-${d.slice(4, 7)}-${d.slice(7)}` : `${d.slice(0, 4)}-${d.slice(4, 8)}-${d.slice(8)}`;
+  if (/^0/.test(d) && (d.length === 10 || d.length === 11)) return d.length === 10 ? `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}` : `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}`;
+  return String(v || '').trim();
+}
+
 export function specRows(spec) {
   const rows = [];
   for (const [k, label] of SPEC_FIELDS) if (spec[k]) rows.push([label, spec[k]]);
@@ -114,7 +123,9 @@ export async function handleContact(request, env, ctx) {
     message: clean(body.message, LIMITS.message),
   };
   if (!row.name) return json({ ok: false, field: 'name', error: '담당자명을 입력해 주세요.' }, 400);
-  if (!/^[0-9+\-() ]{8,20}$/.test(row.phone)) return json({ ok: false, field: 'phone', error: '연락처를 정확히 입력해 주세요.' }, 400);
+  // 숫자만 뽑아 010-1234-5678 모양으로 정리 (홈페이지가 자동으로 맞춰 보내지만 한 번 더 확인)
+  row.phone = normPhone(row.phone);
+  if (!/^(0\d{1,3}-\d{3,4}-\d{4}|1[5-9]\d{2}-\d{4})$/.test(row.phone)) return json({ ok: false, field: 'phone', error: '연락처를 정확히 입력해 주세요.' }, 400);
   if (body.agree !== true) return json({ ok: false, field: 'agree', error: '개인정보 수집·이용에 동의해 주세요.' }, 400);
 
   const spec = {};

@@ -29,7 +29,6 @@
     var ph = document.createElement('div'); ph.className = 'ph';
     var im = document.createElement('img'); im.src = c.cover; im.alt = c.title; im.loading = 'lazy'; im.width = 900; im.height = 1200;
     ph.appendChild(im);
-    if (c.count > 1) { var n = document.createElement('span'); n.className = 'cnt'; n.textContent = '사진 ' + c.count; ph.appendChild(n); }
     var b = document.createElement('b'); b.textContent = c.title;
     var sm = document.createElement('small'); sm.textContent = [c.site || CATS[c.cat], c.date].filter(Boolean).join(' · ');
     a.appendChild(ph); a.appendChild(b); a.appendChild(sm);

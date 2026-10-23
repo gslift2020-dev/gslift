@@ -191,7 +191,6 @@
     var z = document.createElement('div'); z.className = 'zoom';
     var im = document.createElement('img'); im.src = c.photos[0]; im.alt = c.alt || c.title; im.loading = 'lazy'; im.width = 900; im.height = 1200;
     z.appendChild(im);
-    if (c.photos.length > 1) { var n = document.createElement('span'); n.className = 'cnt'; n.textContent = '사진 ' + c.photos.length + '장'; z.appendChild(n); }
     z.insertAdjacentHTML('beforeend', '<span class="exp">' + EXPAND + '</span>');
     var t = document.createElement('b'); t.textContent = c.title;
     var sm = document.createElement('small'); sm.textContent = [CATS[c.cat], c.site].filter(Boolean).join(' · ');
@@ -553,6 +552,18 @@
       ['dragleave', 'drop'].forEach(function (t) { upDrop.addEventListener(t, function (e) { e.preventDefault(); upDrop.classList.remove('over'); }); });
       upDrop.addEventListener('drop', function (e) { addShots(e.dataTransfer.files); });
     }
+    // 연락처: 숫자만 받아서 010-1234-5678 모양으로 자동 하이픈
+    function fmtPhone(v) {
+      var d = v.replace(/[^0-9]/g, '');
+      if (/^02/.test(d)) { d = d.slice(0, 10); return d.length < 3 ? d : d.length < 6 ? d.slice(0, 2) + '-' + d.slice(2) : d.length < 10 ? d.slice(0, 2) + '-' + d.slice(2, 5) + '-' + d.slice(5) : d.slice(0, 2) + '-' + d.slice(2, 6) + '-' + d.slice(6); }
+      if (/^1[5-9]/.test(d)) { d = d.slice(0, 8); return d.length < 5 ? d : d.slice(0, 4) + '-' + d.slice(4); }
+      if (/^050/.test(d)) { d = d.slice(0, 12); return d.length < 5 ? d : d.length < 8 ? d.slice(0, 4) + '-' + d.slice(4) : d.length < 12 ? d.slice(0, 4) + '-' + d.slice(4, 7) + '-' + d.slice(7) : d.slice(0, 4) + '-' + d.slice(4, 8) + '-' + d.slice(8); }
+      d = d.slice(0, 11);
+      return d.length < 4 ? d : d.length < 7 ? d.slice(0, 3) + '-' + d.slice(3) : d.length < 11 ? d.slice(0, 3) + '-' + d.slice(3, 6) + '-' + d.slice(6) : d.slice(0, 3) + '-' + d.slice(3, 7) + '-' + d.slice(7);
+    }
+    var PHONE_OK = /^(0\d{1,3}-\d{3,4}-\d{4}|1[5-9]\d{2}-\d{4})$/;
+    var phoneIn = form.elements.phone;
+    phoneIn.addEventListener('input', function () { var v = fmtPhone(phoneIn.value); if (v !== phoneIn.value) phoneIn.value = v; });
     $$('input[name=w], input[name=d], input[name=h]', form).forEach(function (i) {
       i.addEventListener('input', function () { i.value = i.value.replace(/[^0-9]/g, ''); });
     });
@@ -560,7 +571,7 @@
       e.preventDefault();
       var f = form.elements;
       if (!f.name.value.trim()) { mark('name'); return say('담당자명을 입력해 주세요.', 'err'); }
-      if (!/^[0-9+\-() ]{8,20}$/.test(f.phone.value.trim())) { mark('phone'); return say('연락처를 정확히 입력해 주세요. 예) 010-1234-5678', 'err'); }
+      if (!PHONE_OK.test(f.phone.value.trim())) { mark('phone'); return say('연락처를 정확히 입력해 주세요. 예) 010-1234-5678', 'err'); }
       if (!f.agree.checked) { mark('agree'); return say('개인정보 수집·이용에 동의해 주세요.', 'err'); }
       mark(null);
       var fd = new FormData();
