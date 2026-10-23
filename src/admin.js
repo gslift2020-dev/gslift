@@ -133,7 +133,22 @@ function parseOrder(raw, max) {
 
 /* ---------- 문의 ---------- */
 
+// 개인정보 보유 기간(3년)이 지난 문의는 첨부 사진과 함께 자동 삭제
+const KEEP_INQUIRY_MS = 3 * 365 * 24 * 3600 * 1000;
+async function purgeOldInquiries(env) {
+  const cutoff = kst(-KEEP_INQUIRY_MS);
+  const { results } = await env.DB.prepare('SELECT id, photos FROM inquiries WHERE created_at < ? LIMIT 200').bind(cutoff).all();
+  if (!results.length) return;
+  for (const r of results) {
+    let keys = [];
+    try { keys = JSON.parse(r.photos || '[]') || []; } catch {}
+    if (env.PHOTOS) for (const k of keys) await env.PHOTOS.delete(k);
+  }
+  await env.DB.batch(results.map((r) => env.DB.prepare('DELETE FROM inquiries WHERE id = ?').bind(r.id)));
+}
+
 async function listInquiries(env) {
+  await purgeOldInquiries(env);
   const { results } = await env.DB.prepare(
     'SELECT id, created_at, company, name, phone, product, message, spec, photos, memo, status, email_sent, email_error FROM inquiries ORDER BY id DESC LIMIT 1000'
   ).all();
