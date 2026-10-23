@@ -8,7 +8,7 @@ let checkedAt = 0;
 
 export async function runImports(request, env) {
   if (!env.DB || !env.PHOTOS || !env.ASSETS) return;
-  if (Date.now() - checkedAt < 60000) return; // 1분에 한 번만 확인
+  if (Date.now() - checkedAt < 10000) return; // 10초에 한 번만 확인
   checkedAt = Date.now();
   const origin = new URL(request.url).origin;
   const r = await env.ASSETS.fetch(new Request(origin + '/imports/manifest.json'));
@@ -55,8 +55,8 @@ export async function runImports(request, env) {
         let v = {};
         try { v = JSON.parse(got.value); } catch {}
         if (v.state === 'done') continue;
-        // 3분 넘게 "진행 중"이면 중간에 끊긴 것 → 다시 시도
-        if (v.state === 'running' && Date.now() - (v.t || 0) < 180000) return;
+        // 2분 넘게 "진행 중"이면 중간에 끊긴 것 → 다시 시도
+        if (v.state === 'running' && Date.now() - (v.t || 0) < 120000) return;
         const took = await env.DB.prepare('UPDATE settings SET value = ? WHERE key = ? AND value = ?').bind(JSON.stringify({ state: 'running', t: Date.now() }), key, got.value).run();
         if (!took.meta || !took.meta.changes) return;
       } else {
