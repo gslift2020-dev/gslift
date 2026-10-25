@@ -99,9 +99,21 @@ export function inferCat(title) {
   return 'fl';
 }
 
+// 검색용 색인 — 없으면 목록·사진을 꺼낼 때마다 표 전체를 훑어 D1 무료 읽기 한도를 금방 씀
+const INDEXES = [
+  'CREATE INDEX IF NOT EXISTS idx_case_photos_case ON case_photos (case_id, sort)',
+  'CREATE INDEX IF NOT EXISTS idx_cases_visible ON cases (visible, category)',
+];
+// 표 구조를 바꿀 때만 이 값을 올림 → 같으면 서버가 새로 뜰 때마다 점검을 반복하지 않음
+const SCHEMA_VERSION = '2026-10-25a';
+
 let schemaReady = false;
 export async function ensureSchema(env) {
   if (schemaReady) return;
+  try {
+    const v = await env.DB.prepare("SELECT value FROM settings WHERE key = 'schemaVersion'").first();
+    if (v && v.value === SCHEMA_VERSION) { schemaReady = true; return; }
+  } catch (e) { /* 표가 아직 없음 → 아래에서 만듦 */ }
   await env.DB.batch(SCHEMA.map((s) => env.DB.prepare(s)));
   for (const m of MIGRATIONS) {
     try { await env.DB.prepare(m).run(); } catch (e) { /* duplicate column */ }
@@ -113,5 +125,7 @@ export async function ensureSchema(env) {
   // 분류가 비어 있는 예전 글은 제목으로 분류를 채움 (목록을 분류별로 바로 꺼낼 수 있게)
   const { results } = await env.DB.prepare("SELECT id, title FROM cases WHERE category IS NULL OR category = ''").all();
   if (results.length) await env.DB.batch(results.map((r) => env.DB.prepare('UPDATE cases SET category = ? WHERE id = ?').bind(inferCat(r.title), r.id)));
+  for (const q of INDEXES) await env.DB.prepare(q).run();
+  await env.DB.prepare("INSERT INTO settings (key, value) VALUES ('schemaVersion', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(SCHEMA_VERSION).run();
   schemaReady = true;
 }

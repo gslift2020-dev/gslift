@@ -5,6 +5,7 @@
 import { kst, ensureSchema, CATS } from './util.js';
 
 let checkedAt = 0;
+let doneSig = ''; // 이 서버에서 이미 '전부 끝남'을 확인한 manifest
 
 export async function runImports(request, env) {
   if (!env.DB || !env.PHOTOS || !env.ASSETS) return;
@@ -16,7 +17,13 @@ export async function runImports(request, env) {
   if (!r.ok) return;
   let manifest;
   try { manifest = await r.json(); } catch { return; }
+  // manifest 내용이 같고 전부 끝났으면 DB를 전혀 읽지 않음 (읽기 한도 절약)
+  const sig = (manifest.batches || []).map((b) => `${b.id}:${(b.cases || []).length}:${(b.remove || []).length}`).join('|');
+  if (sig === doneSig) return;
   await ensureSchema(env);
+  const fin = await env.DB.prepare("SELECT value FROM settings WHERE key = 'import:all'").first();
+  if (fin && fin.value === sig) { doneSig = sig; return; }
+  let pending = false;
   // 8초 안에서 여러 건을 차례로 올림 (Cloudflare 무료 요금제의 뒤처리 시간 제한 안에 끝나도록)
   for (const batch of manifest.batches || []) {
     if (!/^[\w-]{3,60}$/.test(batch.id || '')) continue;
@@ -76,27 +83,33 @@ export async function runImports(request, env) {
         try { v = JSON.parse(got.value); } catch {}
         if (v.state === 'done' || v.state === 'failed') continue;
         // 2분 안의 "진행 중"은 다른 처리가 맡은 것 → 건너뛰고 다음 건으로
-        if (v.state === 'running' && Date.now() - (v.t || 0) < 120000) continue;
+        if (v.state === 'running' && Date.now() - (v.t || 0) < 120000) { pending = true; continue; }
         // 세 번 넘게 끊긴 건은 포기하고 다음 건으로 (관리자 화면에서 직접 올릴 수 있음)
         const tries = (v.tries || 0) + 1;
         if (tries > 3) { await env.DB.prepare('UPDATE settings SET value = ? WHERE key = ?').bind(JSON.stringify({ state: 'failed', at: kst() }), key).run(); continue; }
         const took = await env.DB.prepare('UPDATE settings SET value = ? WHERE key = ? AND value = ?').bind(JSON.stringify({ state: 'running', t: Date.now(), tries }), key, got.value).run();
-        if (!took.meta || !took.meta.changes) continue;
+        if (!took.meta || !took.meta.changes) { pending = true; continue; }
       } else {
         const lock = await env.DB.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)').bind(key, JSON.stringify({ state: 'running', t: Date.now() })).run();
-        if (!lock.meta || !lock.meta.changes) continue;
+        if (!lock.meta || !lock.meta.changes) { pending = true; continue; }
       }
       try {
         const id = await importCase(env, origin, cases[i]);
         await env.DB.prepare('UPDATE settings SET value = ? WHERE key = ?').bind(JSON.stringify({ state: 'done', id, at: kst() }), key).run();
       } catch (e) {
         console.error('import failed', key, e);
+        pending = true;
         await env.DB.prepare('DELETE FROM settings WHERE key = ?').bind(key).run();
       }
       checkedAt = 0; // 남은 건은 다음 방문 때 바로 이어서
       if (Date.now() - started > 8000) return; // 시간이 남으면 한 건 더
 
     }
+  }
+  // 한 바퀴 돌았는데 남은 일이 없으면 '전부 끝남' 표시 → 다음부터는 한 줄만 읽고 끝
+  if (!pending) {
+    await env.DB.prepare("INSERT INTO settings (key, value) VALUES ('import:all', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(sig).run();
+    doneSig = sig;
   }
 }
 
