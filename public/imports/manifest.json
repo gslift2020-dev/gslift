@@ -4463,6 +4463,70 @@
      ]
     }
    ]
+  },
+  {
+   "id": "2017-05-pc",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 자동 도어 · 2대 나란히",
+     "site": "물류센터",
+     "body": "물류센터 안에 나란히 설치한 화물용 리프트 2대입니다.\n\n승강장 출입구마다 자동 도어를 달았습니다.",
+     "photos": [
+      "imports/2017-05/iy-01.webp",
+      "imports/2017-05/iy-02.webp"
+     ],
+     "category": "fl",
+     "date": "2017-05",
+     "tags": [
+      "in",
+      "twin",
+      "logis",
+      "auto"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2017-12-pc",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 자동 도어 · 복층 연결",
+     "site": "물류센터",
+     "body": "물류센터 랙 사이에 설치한 화물용 리프트입니다.\n\n파란색 승강로에 복층 승강장과 노란색 안전난간을 설치하고 승강장에는 자동 도어를 달았습니다.",
+     "photos": [
+      "imports/2017-12/sb-01.webp",
+      "imports/2017-12/sb-02.webp",
+      "imports/2017-12/sb-03.webp",
+      "imports/2017-12/sb-04.webp"
+     ],
+     "category": "fl",
+     "date": "2017-12",
+     "tags": [
+      "in",
+      "mezz",
+      "rail",
+      "logis",
+      "auto"
+     ]
+    },
+    {
+     "title": "화물용 리프트(F/L) · 자동 도어 · 철골 승강로",
+     "site": "신축 공장",
+     "body": "신축 공장 안에 철골 승강로로 세운 화물용 리프트입니다.\n\n카 앞면을 스테인리스로 마감하고 승강장에는 자동 도어를 달았습니다.",
+     "photos": [
+      "imports/2017-12/nw-01.webp",
+      "imports/2017-12/nw-02.webp",
+      "imports/2017-12/nw-03.webp"
+     ],
+     "category": "fl",
+     "date": "2017-12",
+     "tags": [
+      "in",
+      "steel",
+      "auto"
+     ]
+    }
+   ]
   }
  ]
 }
