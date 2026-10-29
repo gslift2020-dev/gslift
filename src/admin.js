@@ -4,6 +4,7 @@ import { specRows } from './contact.js';
 import { cleanCompany, cleanFaq, dropSiteCache, DEFAULT_COMPANY, DEFAULT_FAQ } from './site.js';
 import { statsAdmin } from './stats.js';
 import { runImportsNow, importStatus } from './imports.js';
+import { TAG_GROUPS, TAGS, normTags, packTags, unpackTags, inferTags } from './tags.js';
 
 export { CATS, inferCat };
 
@@ -216,6 +217,8 @@ function caseWhere(url, onlyVisible) {
   if (onlyVisible) where.push('visible = 1');
   const cat = url.searchParams.get('cat');
   if (CATS[cat]) { where.push('category = ?'); args.push(cat); }
+  // 꼬리표: tag=ext,shutter → 모두 가진 글만
+  for (const t of normTags(url.searchParams.get('tag')).slice(0, 6)) { where.push('tags LIKE ?'); args.push('%,' + t + ',%'); }
   const q = clean(url.searchParams.get('q'), 40);
   if (q) {
     const like = '%' + q.replace(/[%_]/g, '') + '%';
@@ -230,6 +233,23 @@ function pageArgs(url, def, max) {
   const offset = Math.max(parseInt(url.searchParams.get('offset'), 10) || 0, 0);
   return { limit, offset };
 }
+// 홈페이지 목록용 개수: 분류별 개수 + 지금 분류·꼬리표 조건에서 꼬리표별 개수
+// (글 표를 한 번만 읽어 둘 다 계산 → 예전 catCounts와 읽는 양이 같음)
+async function facetCounts(env, url) {
+  const { results } = await env.DB.prepare('SELECT category, tags FROM cases WHERE visible = 1').all();
+  const counts = { all: 0, fl: 0, tl: 0, st: 0, tr: 0 }, tagCounts = {};
+  const cat = CATS[url.searchParams.get('cat')] ? url.searchParams.get('cat') : '';
+  const sel = normTags(url.searchParams.get('tag'));
+  for (const r of results) {
+    const c = CATS[r.category] ? r.category : 'fl';
+    counts[c]++; counts.all++;
+    if (cat && c !== cat) continue;
+    const mine = unpackTags(r.tags);
+    if (!sel.every((t) => mine.includes(t))) continue;
+    for (const t of mine) tagCounts[t] = (tagCounts[t] || 0) + 1;
+  }
+  return { counts, tagCounts };
+}
 async function catCounts(env, onlyVisible) {
   const { results } = await env.DB.prepare(`SELECT category, COUNT(*) AS n FROM cases ${onlyVisible ? 'WHERE visible = 1' : ''} GROUP BY category`).all();
   const counts = { all: 0, fl: 0, tl: 0, st: 0, tr: 0 };
@@ -241,14 +261,14 @@ async function listCasesAdmin(request, env) {
   const url = new URL(request.url);
   const w = caseWhere(url, false), { limit, offset } = pageArgs(url, 60, 200);
   const [{ results }, total, counts] = await Promise.all([
-    env.DB.prepare(`SELECT id, created_at, updated_at, taken_at, title, sub, site, body, note, category, visible, pinned FROM cases ${w.sql} ${CASE_ORDER} LIMIT ? OFFSET ?`).bind(...w.args, limit, offset).all(),
+    env.DB.prepare(`SELECT id, created_at, updated_at, taken_at, title, sub, site, body, note, category, visible, pinned, tags FROM cases ${w.sql} ${CASE_ORDER} LIMIT ? OFFSET ?`).bind(...w.args, limit, offset).all(),
     env.DB.prepare(`SELECT COUNT(*) AS n FROM cases ${w.sql}`).bind(...w.args).first(),
     catCounts(env, false),
   ]);
   const photos = await casePhotos(env, results.map((r) => r.id));
   return json({
-    ok: true, total: total.n, counts,
-    items: results.map((r) => ({ ...r, pinned: r.pinned ? 1 : 0, cat: CATS[r.category] ? r.category : inferCat(r.title), site: r.site ?? r.sub ?? '', photos: photos[r.id] || [] })),
+    ok: true, total: total.n, counts, tagGroups: TAG_GROUPS,
+    items: results.map((r) => ({ ...r, tags: unpackTags(r.tags), pinned: r.pinned ? 1 : 0, cat: CATS[r.category] ? r.category : inferCat(r.title), site: r.site ?? r.sub ?? '', photos: photos[r.id] || [] })),
   });
 }
 
@@ -264,7 +284,9 @@ function caseFields(form) {
     if (!m) throw new UserError('날짜는 2023-05 또는 2023-05-17 처럼 적어주세요.');
     date = `${m[1]}-${m[2]}-${m[3] || '01'}`;
   }
-  return { title, cat: CATS[c] ? c : inferCat(title), site: clean(form.get('site'), 80), body: clean(form.get('body'), 5000), note: clean(form.get('note'), 300), date, hidden: form.get('visible') === '0' };
+  // 꼬리표: 관리자 화면이 보낸 값만 (안 보내면 null → 기존 꼬리표 유지)
+  const tags = form.has('tags') ? packTags(String(form.get('tags'))) : null;
+  return { tags, title, cat: CATS[c] ? c : inferCat(title), site: clean(form.get('site'), 80), body: clean(form.get('body'), 5000), note: clean(form.get('note'), 300), date, hidden: form.get('visible') === '0' };
 }
 
 // 새 글 또는 수정: 사진 순서(order)대로 저장
@@ -300,12 +322,14 @@ async function saveCase(request, env, id) {
     const keys = order.map((t) => (t[0] === 'n' ? newKeys[Number(t.slice(2))] : existingById[Number(t.slice(2))].photo_key));
 
     if (!id) {
-      const r = await env.DB.prepare('INSERT INTO cases (created_at, title, sub, site, body, note, category, photo_key, taken_at, visible) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-        .bind(kst(), f.title, '', f.site, f.body, f.note, f.cat, keys[0], f.date, f.hidden ? 0 : 1).run();
+      // 새 글인데 꼬리표를 하나도 안 골랐으면 제목·현장·내용으로 자동으로 붙임 (나중에 수정 화면에서 고칠 수 있음)
+      if (f.tags == null || f.tags === ',') f.tags = packTags(inferTags([f.title, f.site, f.body].join(' '), f.cat));
+      const r = await env.DB.prepare('INSERT INTO cases (created_at, title, sub, site, body, note, category, photo_key, taken_at, visible, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+        .bind(kst(), f.title, '', f.site, f.body, f.note, f.cat, keys[0], f.date, f.hidden ? 0 : 1, f.tags).run();
       id = r.meta.last_row_id;
     } else {
-      await env.DB.prepare('UPDATE cases SET title = ?, site = ?, body = ?, note = ?, category = ?, photo_key = ?, taken_at = ?, updated_at = ? WHERE id = ?')
-        .bind(f.title, f.site, f.body, f.note, f.cat, keys[0], f.date, kst(), id).run();
+      await env.DB.prepare('UPDATE cases SET title = ?, site = ?, body = ?, note = ?, category = ?, photo_key = ?, taken_at = ?, updated_at = ?, tags = COALESCE(?, tags) WHERE id = ?')
+        .bind(f.title, f.site, f.body, f.note, f.cat, keys[0], f.date, kst(), f.tags, id).run();
     }
     const stmts = [env.DB.prepare('DELETE FROM case_photos WHERE case_id = ?').bind(id)];
     keys.forEach((k, i) => stmts.push(env.DB.prepare('INSERT INTO case_photos (case_id, photo_key, sort) VALUES (?, ?, ?)').bind(id, k, i)));
@@ -507,7 +531,7 @@ async function deleteNotice(env, id) {
 
 /* ---------- 홈페이지용 공개 정보 ---------- */
 
-const PUB_COLS = 'id, created_at, taken_at, title, sub, site, body, category';
+const PUB_COLS = 'id, created_at, taken_at, title, sub, site, body, category, tags';
 
 // 홈페이지 설치사례
 //  - /api/cases?home=1            : 분류마다 최신 12개(사진 전부) + 분류별 개수 → 첫 화면 가로 목록
@@ -527,15 +551,19 @@ export async function publicCases(request, env) {
     return json({ ok: true, items, counts: await catCounts(env, true) }, 200, hdr);
   }
   const w = caseWhere(url, true), { limit, offset } = pageArgs(url, 24, 60);
-  const [{ results }, total] = await Promise.all([
+  // facet=1: 목록 페이지가 꼬리표 버튼 개수도 함께 받음 (첫 화면 '같은 분류 다른 사례'는 안 받음)
+  const wantFacet = url.searchParams.get('facet') === '1';
+  const [{ results }, total, facet] = await Promise.all([
     env.DB.prepare(`SELECT ${PUB_COLS} FROM cases ${w.sql} ${CASE_ORDER} LIMIT ? OFFSET ?`).bind(...w.args, limit, offset).all(),
     env.DB.prepare(`SELECT COUNT(*) AS n FROM cases ${w.sql}`).bind(...w.args).first(),
+    wantFacet ? facetCounts(env, url) : null,
   ]);
   const photos = await casePhotos(env, results.map((r) => r.id));
   const items = results.map((r) => {
     const row = publicRow(r, photos[r.id]);
-    return { id: row.id, title: row.title, site: row.site, cat: row.cat, date: row.date, cover: row.photos[0] || '', count: row.photos.length };
+    return { id: row.id, title: row.title, site: row.site, cat: row.cat, date: row.date, cover: row.photos[0] || '', count: row.photos.length, tags: row.tags };
   }).filter((r) => r.cover);
+  if (facet) return json({ ok: true, items, total: total.n, counts: facet.counts, tagCounts: facet.tagCounts, tagGroups: TAG_GROUPS }, 200, hdr);
   return json({ ok: true, items, total: total.n, counts: await catCounts(env, true) }, 200, hdr);
 }
 
@@ -545,6 +573,7 @@ function publicRow(r, photos) {
     cat: CATS[r.category] ? r.category : inferCat(r.title),
     date: String(r.taken_at || r.created_at || '').slice(0, 7).replace('-', '.'),
     photos: (photos || []).map((p) => p.img),
+    tags: unpackTags(r.tags),
   };
 }
 
@@ -569,7 +598,9 @@ export async function publicCase(env, id) {
   const r = await env.DB.prepare(`SELECT ${PUB_COLS} FROM cases WHERE id = ? AND visible = 1`).bind(id).first();
   if (!r) return json({ ok: false, error: '없는 사례입니다.' }, 404);
   const photos = await casePhotos(env, [r.id]);
-  return json({ ok: true, item: publicRow(r, photos[r.id]) }, 200, { 'cache-control': 'no-cache' });
+  const item = publicRow(r, photos[r.id]);
+  item.tagList = item.tags.map((k) => ({ k, n: TAGS[k] }));
+  return json({ ok: true, item }, 200, { 'cache-control': 'no-cache' });
 }
 
 export async function publicSite(env) {

@@ -93,6 +93,16 @@
       info.appendChild(sg);
     }
     if (c.body) info.appendChild(el('p', 'cd-text', c.body));
+    // 꼬리표: 누르면 같은 조건의 다른 사례 목록으로
+    if (c.tagList && c.tagList.length) {
+      var tg = el('div', 'cd-tags');
+      tg.appendChild(el('span', 'cd-tags-t', '이런 조건의 사례 더 보기'));
+      c.tagList.forEach(function (t) {
+        var a = el('a', null, '#' + t.n); a.href = '/cases.html?cat=' + c.cat + '&tag=' + t.k;
+        tg.appendChild(a);
+      });
+      info.appendChild(tg);
+    }
 
     var cta = el('div', 'cd-cta');
     cta.appendChild(el('strong', null, '이 사례와 비슷한 리프트가 필요하신가요?'));
@@ -138,7 +148,7 @@
 
   Promise.all([oneP, siteP]).then(function (r) {
     var cur = null;
-    if (id && r[0] && r[0].ok) { var it = r[0].item; cur = { key: 'd' + it.id, cat: it.cat, title: it.title, site: it.site, body: it.body, date: it.date, photos: it.photos }; }
+    if (id && r[0] && r[0].ok) { var it = r[0].item; cur = { key: 'd' + it.id, cat: it.cat, title: it.title, site: it.site, body: it.body, date: it.date, photos: it.photos, tagList: it.tagList || [] }; }
     if (sid) { var s = (window.GS_SAMPLE || []).filter(function (x) { return x.id === sid; })[0]; if (s) cur = sampleToCase(s); }
     if (!cur || !cur.photos.length) return notFound();
     render(cur);

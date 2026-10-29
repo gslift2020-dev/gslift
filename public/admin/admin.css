@@ -294,3 +294,6 @@ input[type=month],input[type=email],input[type=search]{height:46px;padding:0 14p
 
 .hb .inq{display:inline-block;margin-left:8px;padding:1px 7px;border-radius:10px;background:#FCE9E2;color:#B5401A;font-size:12px;font-weight:700;white-space:nowrap}
 .srchelp{margin-top:14px;font-size:13px;color:#4A5A78}.srchelp summary{cursor:pointer;font-weight:600}.srchelp ul{margin:6px 0 0;padding-left:18px;line-height:1.8}.srchelp code{background:#F2F5FB;padding:1px 5px;border-radius:4px}
+
+/* 설치사례 목록의 꼬리표 */
+.post .s.tags{color:var(--blue);font-size:12px;line-height:1.5}

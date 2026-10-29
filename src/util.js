@@ -1,4 +1,5 @@
 // 공통 도구
+import { inferTags, packTags } from './tags.js';
 
 export function json(data, status = 200, headers = {}) {
   return new Response(JSON.stringify(data), {
@@ -87,6 +88,7 @@ const MIGRATIONS = [
   'ALTER TABLE cases ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0',
   'ALTER TABLE cases ADD COLUMN taken_at TEXT',
   'ALTER TABLE cases ADD COLUMN note TEXT', // 내부 메모(원래 폴더·현장명) — 관리자만 봄
+  'ALTER TABLE cases ADD COLUMN tags TEXT', // 상황별 꼬리표 ",in,mesh," (src/tags.js)
 ];
 
 // 설치사례 분류 (제품소개 4종과 같음)
@@ -105,7 +107,7 @@ const INDEXES = [
   'CREATE INDEX IF NOT EXISTS idx_cases_visible ON cases (visible, category)',
 ];
 // 표 구조를 바꿀 때만 이 값을 올림 → 같으면 서버가 새로 뜰 때마다 점검을 반복하지 않음
-const SCHEMA_VERSION = '2026-10-25a';
+const SCHEMA_VERSION = '2026-10-29a';
 
 let schemaReady = false;
 export async function ensureSchema(env) {
@@ -125,6 +127,12 @@ export async function ensureSchema(env) {
   // 분류가 비어 있는 예전 글은 제목으로 분류를 채움 (목록을 분류별로 바로 꺼낼 수 있게)
   const { results } = await env.DB.prepare("SELECT id, title FROM cases WHERE category IS NULL OR category = ''").all();
   if (results.length) await env.DB.batch(results.map((r) => env.DB.prepare('UPDATE cases SET category = ? WHERE id = ?').bind(inferCat(r.title), r.id)));
+  // 꼬리표가 없는 글은 제목·현장·설명으로 꼬리표를 붙임 (표 구조가 바뀔 때 한 번만)
+  const untagged = (await env.DB.prepare('SELECT id, title, site, body, category FROM cases WHERE tags IS NULL').all()).results;
+  for (let i = 0; i < untagged.length; i += 50) {
+    await env.DB.batch(untagged.slice(i, i + 50).map((r) => env.DB.prepare('UPDATE cases SET tags = ? WHERE id = ?')
+      .bind(packTags(inferTags([r.title, r.site, r.body].join(' '), r.category || inferCat(r.title))), r.id)));
+  }
   for (const q of INDEXES) await env.DB.prepare(q).run();
   await env.DB.prepare("INSERT INTO settings (key, value) VALUES ('schemaVersion', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(SCHEMA_VERSION).run();
   schemaReady = true;

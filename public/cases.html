@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css?v=8730784f">
-<link rel="stylesheet" href="/assets/case.css?v=1b8d35ad">
+<link rel="stylesheet" href="/assets/case.css?v=54ff638c">
 </head>
 <body>
 <header class="header">
@@ -49,9 +49,15 @@
 </div>
 <label class="cl-search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><span class="sr">설치사례 검색</span><input type="search" id="clQ" placeholder="현장명·사양으로 찾기 (예: 2톤, 물류센터)" maxlength="40"></label>
 </div>
+<section class="cl-tags" id="clTags" aria-label="상황별로 찾기" hidden>
+<button type="button" class="cl-tags-head" id="clTagToggle" aria-expanded="false" aria-controls="clTagGroups"><span><b>상황별로 찾기</b><small>외부 설치·셔터·승강로 등 우리 현장과 비슷한 조건을 골라 보세요</small></span><em id="clTagCount"></em><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+<div class="cl-tag-groups" id="clTagGroups"></div>
+<div class="cl-tag-sel" id="clTagSel"></div>
+</section>
+<div class="cl-info"><span id="clPageInfo"></span><span id="clLoading" class="cl-loading" hidden>불러오는 중…</span></div>
 <div class="cl-grid" id="clGrid" aria-live="polite"></div>
 <p class="case-empty" id="clEmpty" hidden></p>
-<div class="cl-more"><button type="button" class="btn btn-blue" id="clMore" hidden>더 보기</button><span id="clLoading" class="cl-loading" hidden>불러오는 중…</span></div>
+<nav class="cl-pager" id="clPager" aria-label="설치사례 페이지" hidden></nav>
 <div class="cl-cta">
 <div><strong>비슷한 현장이 있으신가요?</strong><p>설치할 자리 사진과 필요한 하중·층수를 알려주시면 현장에 맞춰 견적을 드립니다.</p></div>
 <a href="/?to=contact" class="btn btn-white">견적 문의하기</a>
@@ -79,6 +85,6 @@
 <button type="button" class="to-top" id="toTop" aria-label="맨 위로"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
 <script src="/assets/track.js?v=3d4701d5" defer></script>
 <script src="/assets/cases-static.js?v=571b6cc9"></script>
-<script src="/assets/cases.js?v=d34065f8" defer></script>
+<script src="/assets/cases.js?v=9ce422d7" defer></script>
 </body>
 </html>

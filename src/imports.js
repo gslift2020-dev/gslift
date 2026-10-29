@@ -3,6 +3,7 @@
 // - 사진은 저장소(R2)로 옮기고, 글은 DB에 넣음 → 관리자 화면에서 평소처럼 수정·삭제 가능
 // - 누가 홈페이지를 처음 열 때 뒤에서 자동 실행 (방문자는 기다리지 않음)
 import { kst, ensureSchema, CATS } from './util.js';
+import { inferTags, packTags } from './tags.js';
 
 let checkedAt = 0;
 let doneSig = ''; // 이 서버에서 이미 '전부 끝남'을 확인한 manifest
@@ -13,7 +14,16 @@ async function loadManifest(request, env) {
   if (!r.ok) return null;
   try { return await r.json(); } catch { return null; }
 }
-const sigOf = (manifest) => (manifest.batches || []).map((b) => `${b.id}:${(b.cases || []).length}:${(b.remove || []).length}`).join('|');
+const sigOf = (manifest) => (manifest.batches || []).map((b) => `${b.id}:${(b.cases || []).length}:${(b.remove || []).length}:${(b.retag || []).length}`).join('|');
+
+// 묶음#순서(예: 2024-05-a#0) 또는 글 번호 → 글 번호
+async function caseIdOf(env, ref) {
+  if (/^\d{1,7}$/.test(String(ref))) return Number(ref);
+  const m = /^([\w-]{3,60})#(\d{1,3})$/.exec(String(ref || ''));
+  if (!m) return null;
+  const got = await env.DB.prepare('SELECT value FROM settings WHERE key = ?').bind(`import:${m[1]}:${Number(m[2])}`).first();
+  try { const v = JSON.parse(got ? got.value : '{}'); return v.state === 'done' ? v.id : null; } catch { return null; }
+}
 
 // force: 관리자 화면 "가져오기" 버튼 — 10초 제한·'전부 끝남' 표시를 무시하고 바로 실행
 export async function runImports(request, env, force = false) {
@@ -51,6 +61,20 @@ export async function runImports(request, env, force = false) {
           for (const p of gone) await env.PHOTOS.delete(p.photo_key);
           if (gone.length) await env.DB.batch(gone.map((p) => env.DB.prepare('DELETE FROM case_photos WHERE id = ?').bind(p.id)));
         }
+      }
+      continue;
+    }
+    // 이미 올린 글의 꼬리표 다시 붙이기 (한 번만): { ref: "2024-05-a#0" 또는 글번호, tags: [...] }
+    if (batch.retag) {
+      const key = `import:${batch.id}:retag`;
+      const lock = await env.DB.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)').bind(key, JSON.stringify({ at: kst() })).run();
+      if (lock.meta && lock.meta.changes) {
+        const stmts = [];
+        for (const t of batch.retag) {
+          const id = await caseIdOf(env, t.ref);
+          if (id && Array.isArray(t.tags)) stmts.push(env.DB.prepare('UPDATE cases SET tags = ? WHERE id = ?').bind(packTags(t.tags), id));
+        }
+        for (let i = 0; i < stmts.length; i += 50) await env.DB.batch(stmts.slice(i, i + 50));
       }
       continue;
     }
@@ -138,8 +162,10 @@ async function importCase(env, origin, c) {
   if (!keys.length) throw new Error('no photos');
   const cat = CATS[c.category] ? c.category : 'fl';
   const date = /^\d{4}-\d{2}$/.test(c.date || '') ? c.date + '-01' : null;
-  const row = await env.DB.prepare('INSERT INTO cases (created_at, title, sub, site, body, note, category, photo_key, taken_at, visible) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-    .bind(kst(), String(c.title).slice(0, 120), '', String(c.site || '').slice(0, 80), String(c.body || '').slice(0, 5000), c.note ? String(c.note).slice(0, 300) : null, cat, keys[0], date, c.visible === false ? 0 : 1).run();
+  // 꼬리표: manifest에 tags가 있으면 그대로, 없으면 글로 추측
+  const tags = packTags(Array.isArray(c.tags) ? c.tags : inferTags([c.title, c.site, c.body].join(' '), cat));
+  const row = await env.DB.prepare('INSERT INTO cases (created_at, title, sub, site, body, note, category, photo_key, taken_at, visible, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+    .bind(kst(), String(c.title).slice(0, 120), '', String(c.site || '').slice(0, 80), String(c.body || '').slice(0, 5000), c.note ? String(c.note).slice(0, 300) : null, cat, keys[0], date, c.visible === false ? 0 : 1, tags).run();
   const id = row.meta.last_row_id;
   await env.DB.batch(keys.map((k, i) => env.DB.prepare('INSERT INTO case_photos (case_id, photo_key, sort) VALUES (?, ?, ?)').bind(id, k, i)));
   return id;

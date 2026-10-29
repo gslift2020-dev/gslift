@@ -301,7 +301,7 @@
   });
 
   function openEditor(post) {
-    editing = { id: post ? post.id : null, items: [], sel: -1, chipSel: {}, cat: post ? post.cat : (CATS[caseFilter] ? caseFilter : '') };
+    editing = { id: post ? post.id : null, items: [], sel: -1, chipSel: {}, cat: post ? post.cat : (CATS[caseFilter] ? caseFilter : ''), tags: post && post.tags ? post.tags.slice() : [], tagsTouched: false };
     var f = $('#caseForm');
     f.hidden = false; f.reset(); say($('#caseMsg'), '');
     $('#caseFormTitle').textContent = post ? '설치사례 수정' : '새 설치사례';
@@ -315,7 +315,7 @@
       chips.forEach(function (g) { g.items.forEach(function (v) { if (parts.indexOf(v) >= 0) editing.chipSel[g.name] = v; }); });
     }
     if (!post && editing.cat) setTitleCat(editing.cat);
-    renderChips(); renderThumbs(); caseAdj.show(null); renderCat();
+    renderChips(); renderTagPick(); renderThumbs(); caseAdj.show(null); renderCat();
     f.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
   function closeEditor() { $('#caseForm').hidden = true; editing = null; }
@@ -455,6 +455,8 @@
     btn.disabled = true;
     var fd = new FormData(), order = [], news = editing.items.filter(function (x) { return x.kind === 'new'; }), done = 0;
     fd.append('title', f.title.value.trim()); fd.append('category', editing.cat); fd.append('site', f.site.value.trim()); fd.append('body', f.body.value.trim()); fd.append('note', f.note.value.trim());
+    // 수정: 언제나 보냄 (모두 빼면 꼬리표 없음) / 새 글: 고른 게 있을 때만 (없으면 서버가 자동으로)
+    if (editing.id || editing.tags.length) fd.append('tags', editing.tags.join(','));
     if (f.date.value && !/^\d{4}-\d{2}$/.test(f.date.value.trim())) { btn.disabled = false; f.date.focus(); return say(msg, '설치 날짜는 2024-05 처럼 적어주세요.', 'err'); }
     fd.append('date', f.date.value.trim());
     var chain = Promise.resolve();
@@ -485,6 +487,27 @@
 
   /* ---- 글 목록 ---- */
   var caseTotal = 0, caseQ = '', caseReq = 0;
+  var tagGroups = [], tagLabel = {};
+  // 상황 꼬리표 고르기 (여러 개)
+  function renderTagPick() {
+    var box = $('#caseTagPick'); box.innerHTML = '';
+    if (!editing) return;
+    tagGroups.forEach(function (g) {
+      var row = el('div', 'cgroup');
+      row.appendChild(el('span', 'gname', esc(g.name)));
+      g.tags.forEach(function (t) {
+        var on = editing.tags.indexOf(t.k) >= 0;
+        var b = el('button', 'chip' + (on ? ' on' : ''), esc(t.n)); b.type = 'button'; b.setAttribute('aria-pressed', on);
+        b.addEventListener('click', function () {
+          var i = editing.tags.indexOf(t.k);
+          if (i >= 0) editing.tags.splice(i, 1); else editing.tags.push(t.k);
+          editing.tagsTouched = true; renderTagPick();
+        });
+        row.appendChild(b);
+      });
+      box.appendChild(row);
+    });
+  }
   function loadCases(reset) {
     var off = reset ? 0 : cases.length, my = ++caseReq;
     var url = '/api/admin/cases?limit=60&offset=' + off + (CATS[caseFilter] ? '&cat=' + caseFilter : '') + (caseQ ? '&q=' + encodeURIComponent(caseQ) : '');
@@ -492,6 +515,7 @@
       if (my !== caseReq) return;
       if (!d.ok) { $('#caseList').innerHTML = '<p class="empty">' + esc(d.error) + '</p>'; return; }
       cases = reset ? d.items : cases.concat(d.items); caseTotal = d.total;
+      if (d.tagGroups) { tagGroups = d.tagGroups; tagGroups.forEach(function (g) { g.tags.forEach(function (t) { tagLabel[t.k] = t.n; }); }); if (editing) renderTagPick(); }
       $$('#caseFilters button').forEach(function (b) { $('i', b).textContent = d.counts[b.dataset.f] || 0; });
       renderCaseList();
     });
@@ -550,6 +574,7 @@
         var cover = c.photos[0] ? c.photos[0].img : '';
         return '<article class="post' + (c.visible ? '' : ' hidden') + (c.pinned ? ' pinned' : '') + '"><div class="ph"><img src="' + esc(cover) + '" alt="" loading="lazy"><span class="cnt">사진 ' + c.photos.length + '장</span>' + (c.pinned ? '<span class="pin">📌 맨 앞 고정</span>' : '') + '</div>' +
           '<span class="pcat">' + esc(CATS[c.cat] || '') + '</span><div class="t">' + esc(c.title) + (c.visible ? '' : ' (숨김)') + '</div><div class="s">' + esc([c.site, c.taken_at ? '설치 ' + c.taken_at.slice(0, 7) : '등록 ' + (c.created_at || '').slice(0, 10)].filter(Boolean).join(' · ')) + '</div>' + (c.note ? '<div class="s note">🔒 ' + esc(c.note) + '</div>' : '') +
+          '<div class="s tags">' + ((c.tags || []).length ? c.tags.map(function (k) { return '#' + esc(tagLabel[k] || k); }).join(' ') : '꼬리표 없음') + '</div>' +
           '<div class="a"><button type="button" class="link" data-act="edit" data-id="' + c.id + '">수정</button>' +
           '<button type="button" class="link" data-act="pin" data-id="' + c.id + '" data-v="' + c.pinned + '">' + (c.pinned ? '고정 풀기' : '맨 앞 고정') + '</button>' +
           '<a class="link" href="/case.html?id=' + c.id + '" target="_blank" rel="noopener">보기</a>' +
