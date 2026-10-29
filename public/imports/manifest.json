@@ -4979,6 +4979,167 @@
      ]
     }
    ]
+  },
+  {
+   "id": "2014-10-b",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 철골 승강로 · 셔터 도어",
+     "site": "공장",
+     "body": "공장 실내에 설치한 화물용 리프트입니다.\n\n철골 승강로에 셔터 문을 달아 높은 층고를 활용했습니다.",
+     "photos": [
+      "imports/2014-10/d0-01.webp",
+      "imports/2014-10/d0-02.webp",
+      "imports/2014-10/d0-03.webp"
+     ],
+     "category": "fl",
+     "date": "2014-10",
+     "tags": [
+      "in",
+      "steel",
+      "shutter"
+     ]
+    },
+    {
+     "title": "화물용 리프트(F/L) · 청회색 메쉬 승강로",
+     "site": "공장",
+     "body": "공장 실내에 설치한 화물용 리프트입니다.\n\n청회색 메쉬 승강로에 여닫이 문을 달았습니다.",
+     "photos": [
+      "imports/2014-10/d6-01.webp",
+      "imports/2014-10/d6-02.webp",
+      "imports/2014-10/d6-03.webp",
+      "imports/2014-10/d6-04.webp"
+     ],
+     "category": "fl",
+     "date": "2014-10",
+     "tags": [
+      "in",
+      "mesh",
+      "swing"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2014-05-b",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 외부 철골 승강로 · 패널 승강실",
+     "site": "공장",
+     "body": "공장 건물 밖에 세운 화물용 리프트입니다.\n\n철골 승강로 위쪽은 패널로 마감하고 승강장은 양문 여닫이 문입니다.",
+     "photos": [
+      "imports/2014-05/d1-01.webp",
+      "imports/2014-05/d1-02.webp",
+      "imports/2014-05/d1-03.webp",
+      "imports/2014-05/d1-04.webp"
+     ],
+     "category": "fl",
+     "date": "2014-05",
+     "tags": [
+      "ext",
+      "steel",
+      "swing"
+     ]
+    },
+    {
+     "title": "화물용 리프트(F/L) · 건물 외부 · 피트 설치형",
+     "site": "공장",
+     "body": "건물 외부에 설치한 화물용 리프트입니다.\n\n지하층과 지상층을 잇는 승강로이며 바닥 덮개를 열고 닫습니다.",
+     "photos": [
+      "imports/2014-05/d7-01.webp",
+      "imports/2014-05/d7-02.webp",
+      "imports/2014-05/d7-03.webp"
+     ],
+     "category": "fl",
+     "date": "2014-05",
+     "tags": [
+      "ext",
+      "pit"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2014-07-b",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 하부 안전 펜스 · 실내 승강로",
+     "site": "공장",
+     "body": "공장 실내에 설치한 화물용 리프트입니다.\n\n바닥층에는 노란색 안전 펜스를 둘러 사람이 승강로에 들어가지 못하게 했습니다.",
+     "photos": [
+      "imports/2014-07/d2-01.webp",
+      "imports/2014-07/d2-02.webp",
+      "imports/2014-07/d2-03.webp"
+     ],
+     "category": "fl",
+     "date": "2014-07",
+     "tags": [
+      "in"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2014-06-b",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 연두색 메쉬 승강로",
+     "site": "공장",
+     "body": "공장 실내에 설치한 화물용 리프트입니다.\n\n연두색 메쉬(철망) 승강로로 작업장 분위기에 맞춰 도장했습니다.",
+     "photos": [
+      "imports/2014-06/d3-01.webp",
+      "imports/2014-06/d3-02.webp",
+      "imports/2014-06/d3-03.webp",
+      "imports/2014-06/d3-04.webp"
+     ],
+     "category": "fl",
+     "date": "2014-06",
+     "tags": [
+      "in",
+      "mesh"
+     ]
+    },
+    {
+     "title": "화물용 리프트(F/L) · 철골 승강로 · 패널 승강실",
+     "site": "공장",
+     "body": "공장 건물 옆에 세운 대형 화물용 리프트입니다.\n\n굵은 철골 승강로에 패널 승강실을 달았습니다.",
+     "photos": [
+      "imports/2014-06/d8-01.webp",
+      "imports/2014-06/d8-02.webp",
+      "imports/2014-06/d8-03.webp",
+      "imports/2014-06/d8-04.webp"
+     ],
+     "category": "fl",
+     "date": "2014-06",
+     "tags": [
+      "ext",
+      "steel",
+      "large"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2014-11-b",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 양문 여닫이 도어 · 대형 승강실",
+     "site": "공장",
+     "body": "공장 실내에 설치한 대형 화물용 리프트입니다.\n\n회색 양문 여닫이 문으로 팔레트 적재 화물을 실어 나릅니다.",
+     "photos": [
+      "imports/2014-11/d5-01.webp",
+      "imports/2014-11/d5-02.webp",
+      "imports/2014-11/d5-03.webp"
+     ],
+     "category": "fl",
+     "date": "2014-11",
+     "tags": [
+      "in",
+      "swing",
+      "large"
+     ]
+    }
+   ]
   }
  ]
 }
