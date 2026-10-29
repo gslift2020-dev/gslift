@@ -51,7 +51,7 @@
   function openTab(tab) {
     $$('.tabs button').forEach(function (x) { var on = x.dataset.tab === tab; x.classList.toggle('on', on); x.setAttribute('aria-selected', on); });
     ['dash', 'inq', 'cases', 'bulk', 'notice', 'hero', 'yt', 'faq', 'co'].forEach(function (t) { $('#tab-' + t).hidden = tab !== t; });
-    if (tab === 'cases' && !loaded.cases) { loaded.cases = 1; loadCases(true); }
+    if (tab === 'cases' && !loaded.cases) { loaded.cases = 1; loadCases(true); impCheck(); }
     if (tab === 'notice' && !loaded.notice) { loaded.notice = 1; loadNotices(); }
     if (tab === 'dash') loadDash();
   }
@@ -503,6 +503,24 @@
   var caseQt;
   $('#caseSearch').addEventListener('input', function () { var v = this.value.trim(); clearTimeout(caseQt); caseQt = setTimeout(function () { caseQ = v; loadCases(true); }, 300); });
   $('#caseMore').addEventListener('click', function () { loadCases(false); });
+  // Claude가 준비한 설치사례 가져오기 (남은 게 없을 때까지 반복)
+  function impText(d) { return '전체 ' + d.total + '건 중 ' + d.done + '건 올라감' + (d.waiting ? ' · 남은 ' + d.waiting + '건' : '') + (d.failed ? ' · 실패 ' + d.failed + '건' : ''); }
+  function impCheck() { api('/api/admin/imports').then(function (d) { if (d.ok) say($('#impMsg'), d.waiting ? impText(d) : impText(d) + ' ✓', d.waiting ? '' : 'ok'); }); }
+  $('#impGo').addEventListener('click', function () {
+    var btn = this, msg = $('#impMsg'), last = -1, same = 0;
+    btn.disabled = true; say(msg, '올리는 중…');
+    (function step() {
+      api('/api/admin/imports', { method: 'POST' }).then(function (d) {
+        if (!d.ok) { btn.disabled = false; return say(msg, d.error || '실패했습니다.', 'err'); }
+        say(msg, impText(d) + (d.waiting ? ' … 계속 올리는 중' : ''));
+        if (!d.waiting) { btn.disabled = false; say(msg, impText(d) + ' ✓ 끝', 'ok'); return loadCases(true); }
+        // 진척이 없으면(다른 처리가 맡은 중) 잠시 기다렸다 다시, 10번 연속 그대로면 멈춤
+        same = d.done === last ? same + 1 : 0; last = d.done;
+        if (same >= 10) { btn.disabled = false; return say(msg, impText(d) + ' · 진행이 멈췄습니다. 몇 분 뒤 다시 눌러 주세요.', 'err'); }
+        setTimeout(step, same ? 15000 : 500);
+      });
+    })();
+  });
   // 내부 메모 한꺼번에 넣기
   $('#notesGo').addEventListener('click', function () {
     var t = $('#notesText').value.trim(), msg = $('#notesMsg'), btn = this;

@@ -3,6 +3,7 @@ import { json, clean, kst, ensureSchema, CATS, inferCat } from './util.js';
 import { specRows } from './contact.js';
 import { cleanCompany, cleanFaq, dropSiteCache, DEFAULT_COMPANY, DEFAULT_FAQ } from './site.js';
 import { statsAdmin } from './stats.js';
+import { runImportsNow, importStatus } from './imports.js';
 
 export { CATS, inferCat };
 
@@ -614,6 +615,8 @@ export async function handleAdmin(request, env, path) {
   if (path === '/api/admin/cases' && method === 'GET') return listCasesAdmin(request, env);
   if (path === '/api/admin/cases' && method === 'POST') return saveCase(request, env, null);
   if (path === '/api/admin/case-notes' && method === 'POST') return saveCaseNotes(request, env);
+  if (path === '/api/admin/imports' && method === 'GET') return json({ ok: true, ...(await importStatus(request, env)) });
+  if (path === '/api/admin/imports' && method === 'POST') return json({ ok: true, ...(await runImportsNow(request, env)) });
   m = /^\/api\/admin\/cases\/(\d+)(\/visible|\/pin)?$/.exec(path);
   if (m && m[2] === '/visible' && method === 'POST') return setCaseVisible(request, env, Number(m[1]));
   if (m && m[2] === '/pin' && method === 'POST') return setCasePinned(request, env, Number(m[1]));

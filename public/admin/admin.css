@@ -290,3 +290,4 @@ input[type=month],input[type=email],input[type=search]{height:46px;padding:0 14p
 .notes-bulk{background:#fffaf0;border:1px solid #f0d9a8;border-radius:10px;padding:10px 14px;margin:0 0 14px}
 .notes-bulk summary{cursor:pointer;font-weight:600}
 .notes-bulk textarea{width:100%;box-sizing:border-box;margin:8px 0;font-family:inherit;font-size:14px;padding:8px;border:1px solid #e3cf9e;border-radius:8px}
+.imp-box{background:#f0f7ff;border-color:#b9d5f5}

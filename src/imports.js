@@ -7,19 +7,26 @@ import { kst, ensureSchema, CATS } from './util.js';
 let checkedAt = 0;
 let doneSig = ''; // 이 서버에서 이미 '전부 끝남'을 확인한 manifest
 
-export async function runImports(request, env) {
+async function loadManifest(request, env) {
+  const origin = new URL(request.url).origin;
+  const r = await env.ASSETS.fetch(new Request(origin + '/imports/manifest.json'));
+  if (!r.ok) return null;
+  try { return await r.json(); } catch { return null; }
+}
+const sigOf = (manifest) => (manifest.batches || []).map((b) => `${b.id}:${(b.cases || []).length}:${(b.remove || []).length}`).join('|');
+
+// force: 관리자 화면 "가져오기" 버튼 — 10초 제한·'전부 끝남' 표시를 무시하고 바로 실행
+export async function runImports(request, env, force = false) {
   if (!env.DB || !env.PHOTOS || !env.ASSETS) return;
-  if (Date.now() - checkedAt < 10000) return; // 10초에 한 번만 확인
+  if (!force && Date.now() - checkedAt < 10000) return; // 10초에 한 번만 확인
   checkedAt = Date.now();
   const started = Date.now();
   const origin = new URL(request.url).origin;
-  const r = await env.ASSETS.fetch(new Request(origin + '/imports/manifest.json'));
-  if (!r.ok) return;
-  let manifest;
-  try { manifest = await r.json(); } catch { return; }
+  const manifest = await loadManifest(request, env);
+  if (!manifest) return;
   // manifest 내용이 같고 전부 끝났으면 DB를 전혀 읽지 않음 (읽기 한도 절약)
-  const sig = (manifest.batches || []).map((b) => `${b.id}:${(b.cases || []).length}:${(b.remove || []).length}`).join('|');
-  if (sig === doneSig) return;
+  const sig = sigOf(manifest);
+  if (!force && sig === doneSig) return;
   await ensureSchema(env);
   const fin = await env.DB.prepare("SELECT value FROM settings WHERE key = 'import:all'").first();
   if (fin && fin.value === sig) { doneSig = sig; return; }
@@ -136,4 +143,36 @@ async function importCase(env, origin, c) {
   const id = row.meta.last_row_id;
   await env.DB.batch(keys.map((k, i) => env.DB.prepare('INSERT INTO case_photos (case_id, photo_key, sort) VALUES (?, ?, ?)').bind(id, k, i)));
   return id;
+}
+
+// 관리자 화면용: 준비된 설치사례가 몇 건 올라갔는지
+export async function importStatus(request, env) {
+  const manifest = await loadManifest(request, env);
+  const st = { total: 0, done: 0, failed: 0, waiting: 0, batches: [] };
+  if (!manifest) return st;
+  await ensureSchema(env);
+  const { results } = await env.DB.prepare("SELECT key, value FROM settings WHERE key LIKE 'import:%'").all();
+  const map = {};
+  for (const r of results) map[r.key] = r.value;
+  for (const b of manifest.batches || []) {
+    const n = (b.cases || []).length;
+    if (!n) continue;
+    let left = 0;
+    for (let i = 0; i < n; i++) {
+      let v = {};
+      try { v = JSON.parse(map[`import:${b.id}:${i}`] || '{}'); } catch {}
+      st.total++;
+      if (v.state === 'done') st.done++;
+      else if (v.state === 'failed') st.failed++;
+      else { st.waiting++; left++; }
+    }
+    if (left) st.batches.push(b.id + ' (' + left + '건)');
+  }
+  return st;
+}
+
+// 관리자 버튼: 약 8초 동안 올릴 수 있는 만큼 올리고 현황을 돌려줌 (화면이 남은 게 없을 때까지 반복 호출)
+export async function runImportsNow(request, env) {
+  await runImports(request, env, true);
+  return importStatus(request, env);
 }

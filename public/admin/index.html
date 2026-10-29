@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex, nofollow">
 <title>관리자 | 거산리프트</title>
 <link rel="icon" href="/favicon.png">
-<link rel="stylesheet" href="/admin/admin.css?v=87ae1d71">
+<link rel="stylesheet" href="/admin/admin.css?v=88e07ec8">
 </head>
 <body>
 
@@ -145,6 +145,9 @@
 </div>
 <div class="bar"><p class="hint" style="margin:0">📌 <b>맨 앞 고정</b>을 누르면 홈페이지 설치사례 맨 앞에 나옵니다. 나머지는 설치 날짜 최신순입니다.</p>
 <label class="check" style="font-weight:500;font-size:14px"><input type="checkbox" id="hideSamples"> 홈페이지의 기본 예시 사례 12개 숨기기</label></div>
+<div class="notes-bulk imp-box"><div class="row-inline"><b>📥 Claude가 준비한 설치사례 가져오기</b> <span class="msg" id="impMsg"></span></div>
+<p class="hint" style="margin:6px 0">Claude가 정리해 둔 설치사례를 홈페이지에 올립니다. 누르면 끝날 때까지 자동으로 이어서 올리니 창을 닫지 마세요.</p>
+<button type="button" class="btn small" id="impGo">가져오기 실행</button></div>
 <details class="notes-bulk"><summary>🔒 내부 메모 한꺼번에 넣기 <small>(Claude가 드린 목록을 붙여넣기)</small></summary>
 <p class="hint">한 줄에 하나씩 <code>글번호 = 메모</code> 또는 <code>가져오기묶음#순서 = 메모</code> 형식입니다. 내부 메모는 관리자 화면에서만 보이고 홈페이지에는 나오지 않습니다.</p>
 <textarea id="notesText" rows="6" placeholder="2026-06-a#4 = 현장사진/2026년/6월/○○○"></textarea>
@@ -286,6 +289,6 @@
 </section>
 </main>
 
-<script src="/admin/admin.js?v=6368483d" defer></script>
+<script src="/admin/admin.js?v=5fd6629f" defer></script>
 </body>
 </html>
