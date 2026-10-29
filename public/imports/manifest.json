@@ -5902,6 +5902,232 @@
      ]
     }
    ]
+  },
+  {
+   "id": "2017-01-c",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 오렌지 메쉬 승강실 · 공장 중층",
+     "site": "공장",
+     "body": "공장 중층으로 화물을 옮기는 리프트입니다.\n\n오렌지색 메쉬 승강실로 감싸 작업 중에도 안전합니다.",
+     "photos": [
+      "imports/2017-01/j0-01.webp",
+      "imports/2017-01/j0-02.webp",
+      "imports/2017-01/j0-03.webp",
+      "imports/2017-01/j0-04.webp"
+     ],
+     "category": "fl",
+     "date": "2017-01",
+     "tags": [
+      "in",
+      "mesh",
+      "mezz"
+     ]
+    },
+    {
+     "title": "화물용 리프트(F/L) · 랙 창고 중층 연결 · 메쉬 승강실",
+     "site": "물류창고",
+     "body": "랙 창고 중층 작업장으로 화물을 옮기는 리프트입니다.\n\n오렌지색 메쉬 승강실과 계단·안전 가드를 함께 설치했습니다.",
+     "photos": [
+      "imports/2017-01/j4-01.webp",
+      "imports/2017-01/j4-02.webp",
+      "imports/2017-01/j4-03.webp",
+      "imports/2017-01/j4-04.webp"
+     ],
+     "category": "fl",
+     "date": "2017-01",
+     "tags": [
+      "in",
+      "mesh",
+      "mezz",
+      "logis"
+     ]
+    },
+    {
+     "title": "화물용 리프트(F/L) · 철골 승강로 · 메쉬 도어",
+     "site": "공장",
+     "body": "공장 실내에 설치한 화물용 리프트입니다.\n\n철골 승강로에 메쉬 문을 달았습니다.",
+     "photos": [
+      "imports/2017-01/j5-01.webp",
+      "imports/2017-01/j5-02.webp"
+     ],
+     "category": "fl",
+     "date": "2017-01",
+     "tags": [
+      "in",
+      "steel",
+      "mesh"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2016-08-c",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 철골 승강로 · 셔터 도어",
+     "site": "공장",
+     "body": "공장 실내에 설치한 화물용 리프트입니다.\n\n철골 승강로에 셔터 문을 달았습니다.",
+     "photos": [
+      "imports/2016-08/j1-01.webp",
+      "imports/2016-08/j1-02.webp",
+      "imports/2016-08/j1-03.webp"
+     ],
+     "category": "fl",
+     "date": "2016-08",
+     "tags": [
+      "in",
+      "steel",
+      "shutter"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2016-07-c",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 외부 철골 승강로",
+     "site": "공장",
+     "body": "건물 외부에 세운 화물용 리프트입니다.\n\n철골 승강로를 세워 층간 화물을 옮깁니다.",
+     "photos": [
+      "imports/2016-07/j1b-01.webp",
+      "imports/2016-07/j1b-02.webp",
+      "imports/2016-07/j1b-03.webp",
+      "imports/2016-07/j1b-04.webp"
+     ],
+     "category": "fl",
+     "date": "2016-07",
+     "tags": [
+      "ext",
+      "steel"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2016-12-c",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 메쉬 승강실 · 실내 설치",
+     "site": "공장",
+     "body": "공장 실내에 설치한 화물용 리프트입니다.\n\n회색 메쉬 승강실에 중층 작업장과 연결됩니다.",
+     "photos": [
+      "imports/2016-12/j2-01.webp",
+      "imports/2016-12/j2-02.webp",
+      "imports/2016-12/j2-03.webp"
+     ],
+     "category": "fl",
+     "date": "2016-12",
+     "tags": [
+      "in",
+      "mesh",
+      "mezz"
+     ]
+    },
+    {
+     "title": "화물용 리프트(F/L) · 랙 창고 중층 연결 · 셔터 도어",
+     "site": "물류창고",
+     "body": "랙 창고 안에 설치한 화물용 리프트입니다.\n\n하부는 오렌지색 메쉬 승강실, 중층 승강장은 셔터 문으로 마감했습니다.",
+     "photos": [
+      "imports/2016-12/j3-01.webp",
+      "imports/2016-12/j3-02.webp",
+      "imports/2016-12/j3-03.webp",
+      "imports/2016-12/j3-04.webp"
+     ],
+     "category": "fl",
+     "date": "2016-12",
+     "tags": [
+      "in",
+      "mesh",
+      "shutter",
+      "logis"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2016-11-c",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 하부 메쉬 승강실 · 중층 셔터",
+     "site": "공장",
+     "body": "공장 중층 작업장으로 오르는 화물용 리프트입니다.\n\n하부는 오렌지색 메쉬 승강실, 중층은 셔터 문으로 마감했습니다.",
+     "photos": [
+      "imports/2016-11/j6-01.webp",
+      "imports/2016-11/j6-02.webp",
+      "imports/2016-11/j6-03.webp",
+      "imports/2016-11/j6-04.webp"
+     ],
+     "category": "fl",
+     "date": "2016-11",
+     "tags": [
+      "in",
+      "mesh",
+      "shutter",
+      "mezz"
+     ]
+    },
+    {
+     "title": "화물용 리프트(F/L) · 외부 패널 승강로 · 양문 도어",
+     "site": "공장",
+     "body": "건물 외벽에 붙여 설치한 화물용 리프트입니다.\n\n외벽과 어울리는 패널로 마감하고 승강장은 양문 도어로 달았습니다.",
+     "photos": [
+      "imports/2016-11/j8-01.webp",
+      "imports/2016-11/j8-02.webp"
+     ],
+     "category": "fl",
+     "date": "2016-11",
+     "tags": [
+      "ext",
+      "panel",
+      "swing"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2016-03-c",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 오렌지 메쉬 승강실",
+     "site": "공장",
+     "body": "공장 실내에 설치한 화물용 리프트입니다.\n\n오렌지색 메쉬 승강실에 안전 수칙 안내판을 함께 부착했습니다.",
+     "photos": [
+      "imports/2016-03/j7-01.webp",
+      "imports/2016-03/j7-02.webp",
+      "imports/2016-03/j7-03.webp"
+     ],
+     "category": "fl",
+     "date": "2016-03",
+     "tags": [
+      "in",
+      "mesh"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2016-02-c",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 패널 승강실 · 양문 여닫이",
+     "site": "공장",
+     "body": "공장 실내에 설치한 화물용 리프트입니다.\n\n패널로 승강실을 만들고 창이 있는 양문 여닫이 문을 달았습니다.",
+     "photos": [
+      "imports/2016-02/j9-01.webp",
+      "imports/2016-02/j9-02.webp",
+      "imports/2016-02/j9-03.webp"
+     ],
+     "category": "fl",
+     "date": "2016-02",
+     "tags": [
+      "in",
+      "panel",
+      "swing"
+     ]
+    }
+   ]
   }
  ]
 }
