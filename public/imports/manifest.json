@@ -6239,6 +6239,368 @@
      ]
     }
    ]
+  },
+  {
+   "id": "2015-05-d",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 파란 셔터 도어 · 식품 공장",
+     "site": "식품 공장",
+     "body": "식품 공장에 설치한 화물용 리프트입니다.\n\n파란색 셔터 문을 달았습니다.",
+     "photos": [
+      "imports/2015-05/k1-01.webp",
+      "imports/2015-05/k1-02.webp",
+      "imports/2015-05/k1-03.webp"
+     ],
+     "category": "fl",
+     "date": "2015-05",
+     "tags": [
+      "shutter",
+      "auto",
+      "food"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2014-03-d",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 외부 철골 승강로 · 패널 마감",
+     "site": "공장",
+     "body": "건물 외벽에 붙여 세운 화물용 리프트입니다.\n\n철골 승강로를 패널로 마감했습니다.",
+     "photos": [
+      "imports/2014-03/k3-01.webp",
+      "imports/2014-03/k3-02.webp"
+     ],
+     "category": "fl",
+     "date": "2014-03",
+     "tags": [
+      "ext",
+      "steel",
+      "panel",
+      "auto"
+     ]
+    },
+    {
+     "title": "화물용 리프트(F/L) · 실내 승강장 · 패널 도어",
+     "site": "공장",
+     "body": "공장 실내에 설치한 화물용 리프트입니다.\n\n패널 도어와 넓은 승강실을 갖췄습니다.",
+     "photos": [
+      "imports/2014-03/k18-01.webp",
+      "imports/2014-03/k18-02.webp",
+      "imports/2014-03/k18-03.webp",
+      "imports/2014-03/k18-04.webp"
+     ],
+     "category": "fl",
+     "date": "2014-03",
+     "tags": [
+      "in",
+      "factory",
+      "auto"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2005-12-d",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 외부 승강로 · 녹색 도어",
+     "site": "공장",
+     "body": "건물 외부에 설치한 화물용 리프트입니다.\n\n녹색 도어와 패널 마감 승강로를 함께 보여 줍니다.",
+     "photos": [
+      "imports/2005-12/k4-01.webp",
+      "imports/2005-12/k4-02.webp",
+      "imports/2005-12/k4-03.webp",
+      "imports/2005-12/k4-04.webp"
+     ],
+     "category": "fl",
+     "date": "2005-12",
+     "tags": [
+      "ext",
+      "steel",
+      "panel",
+      "auto"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2015-12-d",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 실내 승강장 · 넓은 승강실",
+     "site": "공장",
+     "body": "공장 실내에 설치한 화물용 리프트입니다.\n\n넓은 승강실에 화물을 실어 나릅니다.",
+     "photos": [
+      "imports/2015-12/k5-01.webp",
+      "imports/2015-12/k5-02.webp",
+      "imports/2015-12/k5-03.webp",
+      "imports/2015-12/k5-04.webp"
+     ],
+     "category": "fl",
+     "date": "2015-12",
+     "tags": [
+      "in",
+      "auto"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2007-07-d",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 실내 승강로 · 화물용",
+     "site": "공장",
+     "body": "공장 실내에 설치한 화물용 리프트입니다.",
+     "photos": [
+      "imports/2007-07/k8-01.webp",
+      "imports/2007-07/k8-02.webp"
+     ],
+     "category": "fl",
+     "date": "2007-07",
+     "tags": [
+      "in",
+      "factory",
+      "auto"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2016-02-d",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 공장 실내 설치 · 패널 도어",
+     "site": "공장",
+     "body": "공장 실내에 설치한 화물용 리프트입니다.\n\n패널 도어로 승강장을 마감했습니다.",
+     "photos": [
+      "imports/2016-02/k10-01.webp",
+      "imports/2016-02/k10-02.webp",
+      "imports/2016-02/k10-03.webp",
+      "imports/2016-02/k10-04.webp"
+     ],
+     "category": "fl",
+     "date": "2016-02",
+     "tags": [
+      "in",
+      "factory",
+      "auto"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2014-10-d",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 외부 철골 승강로 · 파란 셔터",
+     "site": "공장",
+     "body": "건물 외벽에 세운 화물용 리프트입니다.\n\n철골 승강로를 패널로 마감하고 파란 셔터 문을 달았습니다.",
+     "photos": [
+      "imports/2014-10/k11-01.webp",
+      "imports/2014-10/k11-02.webp",
+      "imports/2014-10/k11-03.webp",
+      "imports/2014-10/k11-04.webp"
+     ],
+     "category": "fl",
+     "date": "2014-10",
+     "tags": [
+      "ext",
+      "steel",
+      "panel",
+      "shutter",
+      "factory",
+      "auto"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2015-08-d",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 녹색 승강장 도어",
+     "site": "공장",
+     "body": "녹색 승강장 도어를 단 화물용 리프트입니다.",
+     "photos": [
+      "imports/2015-08/k12-01.webp",
+      "imports/2015-08/k12-02.webp",
+      "imports/2015-08/k12-03.webp"
+     ],
+     "category": "fl",
+     "date": "2015-08",
+     "tags": [
+      "auto"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2012-08-d",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 메쉬 승강로 · 실내 설치",
+     "site": "공장",
+     "body": "공장 실내에 설치한 화물용 리프트입니다.\n\n메쉬로 승강로를 둘러 안전하게 만들었습니다.",
+     "photos": [
+      "imports/2012-08/k14-01.webp",
+      "imports/2012-08/k14-02.webp",
+      "imports/2012-08/k14-03.webp",
+      "imports/2012-08/k14-04.webp",
+      "imports/2012-08/k14-05.webp"
+     ],
+     "category": "fl",
+     "date": "2012-08",
+     "tags": [
+      "in",
+      "mesh",
+      "factory",
+      "auto"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2016-11-d",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 대형 승강실 · 셔터 도어",
+     "site": "물류",
+     "body": "대형 승강실을 갖춘 화물용 리프트입니다.\n\n셔터 문과 넓은 승강장으로 화물 출입이 편합니다.",
+     "photos": [
+      "imports/2016-11/k15-01.webp",
+      "imports/2016-11/k15-02.webp",
+      "imports/2016-11/k15-03.webp",
+      "imports/2016-11/k15-04.webp"
+     ],
+     "category": "fl",
+     "date": "2016-11",
+     "tags": [
+      "shutter",
+      "large",
+      "auto"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2013-12-d",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 외부 패널 승강로 · 파란 셔터",
+     "site": "공장",
+     "body": "건물 외벽에 붙여 설치한 화물용 리프트입니다.\n\n패널 승강로에 파란 셔터 문을 달았습니다.",
+     "photos": [
+      "imports/2013-12/k17-01.webp",
+      "imports/2013-12/k17-02.webp",
+      "imports/2013-12/k17-03.webp",
+      "imports/2013-12/k17-04.webp"
+     ],
+     "category": "fl",
+     "date": "2013-12",
+     "tags": [
+      "ext",
+      "panel",
+      "shutter",
+      "auto"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2015-10-d",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 공장 실내 설치 · 패널 도어",
+     "site": "공장",
+     "body": "공장 실내에 설치한 화물용 리프트입니다.\n\n패널 도어로 마감했습니다.",
+     "photos": [
+      "imports/2015-10/k20-01.webp",
+      "imports/2015-10/k20-02.webp",
+      "imports/2015-10/k20-03.webp",
+      "imports/2015-10/k20-04.webp"
+     ],
+     "category": "fl",
+     "date": "2015-10",
+     "tags": [
+      "in",
+      "factory",
+      "auto"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2014-07-d",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 공장 실내 설치 · 대형 패널 도어",
+     "site": "공장",
+     "body": "넓은 공장 안에 설치한 화물용 리프트입니다.\n\n대형 패널 도어와 철골 승강로를 보여 줍니다.",
+     "photos": [
+      "imports/2014-07/k21-01.webp",
+      "imports/2014-07/k21-02.webp",
+      "imports/2014-07/k21-03.webp",
+      "imports/2014-07/k21-04.webp",
+      "imports/2014-07/k21-05.webp"
+     ],
+     "category": "fl",
+     "date": "2014-07",
+     "tags": [
+      "in",
+      "factory",
+      "steel",
+      "auto"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2015-03-d",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 실내 중층 연결 · 패널 도어",
+     "site": "공장",
+     "body": "공장 실내 중층으로 화물을 옮기는 리프트입니다.",
+     "photos": [
+      "imports/2015-03/k24-01.webp",
+      "imports/2015-03/k24-02.webp"
+     ],
+     "category": "fl",
+     "date": "2015-03",
+     "tags": [
+      "in",
+      "mezz",
+      "factory",
+      "auto"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2015-11-d",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 파란 셔터 도어 · 실내 설치",
+     "site": "공장",
+     "body": "공장 실내에 설치한 화물용 리프트입니다.\n\n파란색 셔터 문을 달았습니다.",
+     "photos": [
+      "imports/2015-11/k25-01.webp",
+      "imports/2015-11/k25-02.webp"
+     ],
+     "category": "fl",
+     "date": "2015-11",
+     "tags": [
+      "in",
+      "shutter",
+      "factory",
+      "auto"
+     ]
+    }
+   ]
   }
  ]
 }
