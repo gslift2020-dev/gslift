@@ -710,9 +710,10 @@
   });
   function drawSources(list) {
     if (!list.length) { $('#dSources').innerHTML = '<p class="empty">아직 기록이 없습니다.</p>'; return; }
-    var tot = list.reduce(function (a, x) { return a + x.n; }, 0), max = list[0].n;
+    var tot = list.reduce(function (a, x) { return a + x.n; }, 0) || 1, max = Math.max.apply(null, list.map(function (x) { return x.n; })) || 1;
     $('#dSources').innerHTML = list.map(function (x) {
-      return '<div class="hb"><span class="l">' + esc(x.src) + '</span><span class="tr"><i style="width:' + (x.n / max * 100) + '%"></i></span><span class="v">' + x.n + '<small> · ' + Math.round(x.n / tot * 100) + '%</small></span></div>';
+      var inq = x.inq ? '<b class="inq">문의 ' + x.inq + (x.n ? ' (' + Math.round(x.inq / x.n * 100) + '%)' : '') + '</b>' : '';
+      return '<div class="hb"><span class="l">' + esc(x.src) + '</span><span class="tr"><i style="width:' + (x.n / max * 100) + '%"></i></span><span class="v">' + x.n + '<small> · ' + Math.round(x.n / tot * 100) + '%</small>' + inq + '</span></div>';
     }).join('');
   }
   function drawPages(list) {

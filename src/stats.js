@@ -6,17 +6,47 @@ import { json, kst, ensureSchema } from './util.js';
 
 const BOT = /bot|spider|crawl|slurp|headless|preview|facebookexternalhit|kakaotalk-scrap|yeti|daumoa|lighthouse|uptime/i;
 
-function sourceOf(ref, host) {
-  let h = '';
-  try { h = new URL(ref).hostname.replace(/^www\./, ''); } catch { return '직접 방문'; }
-  if (!h || h === host.replace(/^www\./, '')) return '직접 방문';
-  if (/naver\./.test(h)) return '네이버';
-  if (/google\./.test(h)) return '구글';
+// 유입 경로: 홍보물·광고 주소의 ?utm_source= 이름표 → 광고 자동 표시 → 이전 페이지 → 앱 종류 순으로 판단
+// (홈페이지 track.js 도 같은 순서로 판단해서 문의에 붙여 보냄)
+const UTM = {
+  naver: '네이버 광고', kakao: '카카오 광고', daum: '카카오 광고', google: '구글 광고',
+  kakaotalk: '카카오톡', 'naver-app': '네이버 앱', qr: 'QR코드', card: '명함', quote: '견적서', catalog: '카탈로그',
+  blog: '블로그', youtube: '유튜브', instagram: '인스타그램', band: '밴드', direct: '직접 방문',
+};
+const ALIAS = { '네이버': '네이버 검색', '구글': '구글 검색' }; // 예전 이름으로 쌓인 기록
+
+function hostLabel(h) {
+  h = h.replace(/^www\./, '');
+  if (/naver\./.test(h)) return '네이버 검색';
+  if (/google\./.test(h)) return '구글 검색';
   if (/daum\.|kakao\./.test(h)) return '다음·카카오';
   if (/bing\./.test(h)) return 'Bing';
+  if (/yahoo\./.test(h)) return 'Yahoo';
   if (/youtube\.|youtu\.be/.test(h)) return '유튜브';
   if (/instagram\.|facebook\.|band\.us|blog\./.test(h)) return 'SNS·블로그';
   return h.slice(0, 60);
+}
+
+export function srcLabel(raw) {
+  const s = String(raw || '').toLowerCase().trim();
+  if (!s) return '직접 방문';
+  if (UTM[s]) return UTM[s];
+  if (s.includes('.')) return hostLabel(s);
+  return '홍보: ' + s.slice(0, 20);
+}
+
+export function rawSource(p, ref, ua, host) {
+  let q;
+  try { q = new URL(String(p || '/'), 'https://x').searchParams; } catch { q = new URLSearchParams(); }
+  const u = q.get('utm_source');
+  if (u) return u.slice(0, 40);
+  if (q.get('n_media')) return 'naver';
+  let h = '';
+  try { h = new URL(String(ref || '')).hostname.replace(/^www\./, ''); } catch {}
+  if (h && h !== host.replace(/^www\./, '')) return h;
+  if (/KAKAOTALK/i.test(ua)) return 'kakaotalk';
+  if (/NAVER\(inapp/i.test(ua)) return 'naver-app';
+  return 'direct';
 }
 
 function cleanPath(p) {
@@ -56,10 +86,19 @@ export async function recordHit(request, env) {
   const stmts = [env.DB.prepare('INSERT INTO visit_pages (day, path, n) VALUES (?, ?, 1) ON CONFLICT(day, path) DO UPDATE SET n = n + 1').bind(day, path)];
   // 유입 경로는 그날 첫 방문 때만 셈
   if (first.meta && first.meta.changes) {
-    stmts.push(env.DB.prepare('INSERT INTO visit_refs (day, src, n) VALUES (?, ?, 1) ON CONFLICT(day, src) DO UPDATE SET n = n + 1').bind(day, sourceOf(String(b.r || ''), url.hostname)));
+    stmts.push(env.DB.prepare('INSERT INTO visit_refs (day, src, n) VALUES (?, ?, 1) ON CONFLICT(day, src) DO UPDATE SET n = n + 1').bind(day, srcLabel(rawSource(b.p, b.r, ua, url.hostname))));
   }
   await env.DB.batch(stmts);
   return ok;
+}
+
+// 경로별 방문 수 + 문의 수를 한 줄로 합침 (경로별 효과 비교용)
+function mergeSources(visits, inquiries) {
+  const m = new Map();
+  const row = (k) => m.get(k) || m.set(k, { src: k, n: 0, inq: 0 }).get(k);
+  for (const r of visits) row(ALIAS[r.src] || r.src).n += r.n;
+  for (const r of inquiries) row(r.src == null ? '경로 기록 전' : srcLabel(r.src)).inq += r.n;
+  return [...m.values()].sort((a, b) => b.n - a.n || b.inq - a.inq);
 }
 
 export async function statsAdmin(env) {
@@ -70,13 +109,14 @@ export async function statsAdmin(env) {
   const old = dayAgo(400);
   await env.DB.batch(['visit_uniq', 'visit_pages', 'visit_refs'].map((t) => env.DB.prepare(`DELETE FROM ${t} WHERE day < ?`).bind(old)));
 
-  const [uv, pv, refs, pages, mob, inq] = await Promise.all([
+  const [uv, pv, refs, pages, mob, inq, inqSrc] = await Promise.all([
     env.DB.prepare('SELECT day, COUNT(*) AS n FROM visit_uniq WHERE day >= ? GROUP BY day').bind(from).all(),
     env.DB.prepare('SELECT day, SUM(n) AS n FROM visit_pages WHERE day >= ? GROUP BY day').bind(from).all(),
-    env.DB.prepare('SELECT src, SUM(n) AS n FROM visit_refs WHERE day >= ? GROUP BY src ORDER BY n DESC LIMIT 8').bind(from).all(),
+    env.DB.prepare('SELECT src, SUM(n) AS n FROM visit_refs WHERE day >= ? GROUP BY src ORDER BY n DESC LIMIT 15').bind(from).all(),
     env.DB.prepare('SELECT path, SUM(n) AS n FROM visit_pages WHERE day >= ? GROUP BY path ORDER BY n DESC LIMIT 10').bind(from).all(),
     env.DB.prepare('SELECT SUM(mobile) AS m, COUNT(*) AS n FROM visit_uniq WHERE day >= ?').bind(from).first(),
     env.DB.prepare('SELECT substr(created_at, 1, 10) AS day, COUNT(*) AS n FROM inquiries WHERE created_at >= ? GROUP BY day').bind(from).all(),
+    env.DB.prepare("SELECT json_extract(spec, '$.src') AS src, COUNT(*) AS n FROM inquiries WHERE created_at >= ? GROUP BY src").bind(from).all(),
   ]);
   const map = (rows) => Object.fromEntries(rows.results.map((r) => [r.day, r.n]));
   const U = map(uv), P = map(pv), I = map(inq);
@@ -109,7 +149,7 @@ export async function statsAdmin(env) {
     month: sum(30),
     mobileShare: mob && mob.n ? Math.round((mob.m / mob.n) * 100) : null,
     days,
-    sources: refs.results,
+    sources: mergeSources(refs.results, inqSrc.results),
     pages: pages.results.map((r) => ({ path: r.path, label: label(r.path), n: r.n })),
   });
 }

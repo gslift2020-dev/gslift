@@ -15,9 +15,11 @@
       var src = q.get('utm_source') || (q.get('n_media') ? 'naver' : '');
       if (!src && document.referrer) {
         var h = new URL(document.referrer).hostname.replace(/^www\./, '');
-        if (h !== location.hostname) src = h;
+        if (h !== location.hostname.replace(/^www\./, '')) src = h;
       }
-      if (src) sessionStorage.setItem('gs_src', src.slice(0, 40));
+      if (!src && /KAKAOTALK/i.test(navigator.userAgent)) src = 'kakaotalk';
+      if (!src && /NAVER\(inapp/i.test(navigator.userAgent)) src = 'naver-app';
+      sessionStorage.setItem('gs_src', (src || 'direct').slice(0, 40));
     }
   } catch (e) {}
 
