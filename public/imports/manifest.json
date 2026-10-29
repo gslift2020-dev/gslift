@@ -6128,6 +6128,117 @@
      ]
     }
    ]
+  },
+  {
+   "id": "2007-04-a",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 외부 철골 승강로 · 패널 문",
+     "site": "공장",
+     "body": "공장 건물 외벽에 설치한 화물용 리프트입니다.\n\n철골 승강로에 격자무늬 패널 문을 달았습니다.",
+     "photos": [
+      "imports/2007-04/k0-01.webp",
+      "imports/2007-04/k0-02.webp",
+      "imports/2007-04/k0-03.webp",
+      "imports/2007-04/k0-04.webp"
+     ],
+     "category": "fl",
+     "date": "2007-04",
+     "tags": [
+      "ext",
+      "steel",
+      "panel"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2005-12-a",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 녹색 철골 승강로 · 실내 설치",
+     "site": "공장",
+     "body": "공장 실내에 설치한 화물용 리프트입니다.\n\n녹색 철골 승강로와 난간 구조로 만들었습니다.",
+     "photos": [
+      "imports/2005-12/k2-01.webp",
+      "imports/2005-12/k2-02.webp",
+      "imports/2005-12/k2-03.webp",
+      "imports/2005-12/k2-04.webp"
+     ],
+     "category": "fl",
+     "date": "2005-12",
+     "tags": [
+      "in",
+      "steel"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2006-07-a",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 메쉬 승강로 · 실내 설치",
+     "site": "공장",
+     "body": "실내에 설치한 화물용 리프트입니다.\n\n메쉬(철망) 승강로에 여닫이 문을 달았습니다.",
+     "photos": [
+      "imports/2006-07/k3-01.webp",
+      "imports/2006-07/k3-02.webp"
+     ],
+     "category": "fl",
+     "date": "2006-07",
+     "tags": [
+      "in",
+      "mesh",
+      "swing"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2006-10-a",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 녹색 승강실 · 철골 승강로",
+     "site": "공장",
+     "body": "공장 건물에 설치한 화물용 리프트입니다.\n\n녹색 도장 승강실과 철골 승강로로 만들었습니다.",
+     "photos": [
+      "imports/2006-10/k4-01.webp",
+      "imports/2006-10/k4-02.webp",
+      "imports/2006-10/k4-03.webp",
+      "imports/2006-10/k4-04.webp"
+     ],
+     "category": "fl",
+     "date": "2006-10",
+     "tags": [
+      "in",
+      "steel"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2006-08-a",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 메쉬 승강로 · 중층 연결",
+     "site": "공장",
+     "body": "공장 중층으로 화물을 옮기는 리프트입니다.\n\n메쉬(철망) 승강로로 안전하게 감쌌습니다.",
+     "photos": [
+      "imports/2006-08/k5-01.webp",
+      "imports/2006-08/k5-02.webp",
+      "imports/2006-08/k5-03.webp",
+      "imports/2006-08/k5-04.webp"
+     ],
+     "category": "fl",
+     "date": "2006-08",
+     "tags": [
+      "in",
+      "mesh",
+      "mezz"
+     ]
+    }
+   ]
   }
  ]
 }
