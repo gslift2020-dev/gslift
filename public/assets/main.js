@@ -577,12 +577,14 @@
       var fd = new FormData();
       ['company', 'name', 'phone', 'product', 'loc', 'message', 'website', 'dir', 'load', 'stops', 'place', 'cargo', 'w', 'd', 'h'].forEach(function (k) { if (f[k]) fd.append(k, f[k].value); });
       fd.append('agree', f.agree.checked ? 'true' : 'false');
+      if (window.GSTrack) fd.append('src', window.GSTrack.src());
       shots.forEach(function (sh, i) { fd.append('photos', sh.blob, 'photo' + (i + 1) + '.jpg'); });
       btn.disabled = true; btn.textContent = shots.length ? '사진과 함께 보내는 중…' : '보내는 중…'; say('');
       fetch('/api/contact', { method: 'POST', body: fd })
         .then(function (r) { return r.json().catch(function () { return { ok: false }; }); })
         .then(function (d) {
           if (d.ok) {
+            if (window.GSTrack) window.GSTrack.lead();
             form.reset(); shots.forEach(function (sh) { URL.revokeObjectURL(sh.url); }); shots = []; drawShots();
             say('문의가 접수되었습니다. 담당자가 확인 후 연락드리겠습니다. 급하신 경우 ' + TEL + '로 전화 주세요.', 'ok');
           } else {

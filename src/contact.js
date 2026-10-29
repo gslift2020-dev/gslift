@@ -62,6 +62,7 @@ async function sendMail(env, row, spec, photos) {
     ['연락처', row.phone],
     ['관심 제품', row.product || '-'],
   ];
+  if (spec.src) lines.push(['유입 경로', spec.src]);
   const sr = specRows(spec);
   const table = (rows) => `<table style="border-collapse:collapse">${rows
     .map(([k, v]) => `<tr><td style="padding:6px 14px 6px 0;color:#4A5A78;white-space:nowrap">${k}</td><td style="padding:6px 0"><b>${esc(v)}</b></td></tr>`)
@@ -134,6 +135,10 @@ export async function handleContact(request, env, ctx) {
     if (['w', 'd', 'h'].includes(k)) v = v.replace(/[^0-9]/g, '');
     if (v && v !== '모름') spec[k] = v;
   }
+
+  // 광고 유입 경로 (홈페이지가 자동으로 붙여 보냄: naver, kakao, search.naver.com 등)
+  const src = clean(body.src, 40).replace(/[^\w.\-]/g, '');
+  if (src) spec.src = src;
 
   if (files.length > MAX_PHOTOS) return json({ ok: false, field: 'photos', error: `사진은 ${MAX_PHOTOS}장까지 보낼 수 있습니다.` }, 400);
   const photos = [];

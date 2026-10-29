@@ -158,7 +158,7 @@ async function listInquiries(env) {
     ok: true,
     items: results.map((r) => ({
       ...r,
-      spec: specRows(parse(r.spec, {})),
+      spec: ((s) => specRows(s).concat(s.src ? [['유입 경로', s.src]] : []))(parse(r.spec, {})),
       photos: parse(r.photos, []).map((k) => '/api/admin/inq-photo/' + encodeURIComponent(k)),
     })),
   });
