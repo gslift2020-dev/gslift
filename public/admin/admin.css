@@ -297,3 +297,52 @@ input[type=month],input[type=email],input[type=search]{height:46px;padding:0 14p
 
 /* 설치사례 목록의 꼬리표 */
 .post .s.tags{color:var(--blue);font-size:12px;line-height:1.5}
+
+/* 최근 방문 */
+.ph-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.vfilter{display:flex;flex-wrap:wrap;align-items:center;gap:12px;font-size:14px}
+.vfilter label{display:flex;flex-direction:row;align-items:center;gap:6px;font-weight:600}
+.vfilter select{min-height:40px;border:1px solid #C6D1E4;border-radius:8px;padding:0 10px;font:inherit;font-size:14px;max-width:260px}
+.vsum{color:var(--muted)}
+.vlist{display:flex;flex-direction:column}
+.vtbl{width:100%;border-collapse:collapse;font-size:14px}
+.vtbl th{font-size:12px;color:var(--muted);font-weight:700;text-align:left;padding:6px 8px;border-bottom:2px solid var(--line);white-space:nowrap}
+.vtbl td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.vtbl td.vnw{white-space:nowrap}
+.vtbl tr.has-inq td{background:#FFF7ED}
+.vt{white-space:nowrap;font-variant-numeric:tabular-nums}
+.vt small{display:block;color:var(--muted);font-size:12px}
+.vsrc{display:inline-block;font-weight:700;color:var(--navy)}
+.vsrc.ad{color:#B45309}
+.vref{display:block;color:var(--muted);font-size:12px;word-break:break-all}
+.vkw{font-weight:600}
+.vad{display:block;color:var(--muted);font-size:12px;word-break:break-all}
+.vpg a{color:var(--ink)}
+.vpages summary{cursor:pointer;color:var(--blue);font-weight:600;white-space:nowrap}
+.vpages ol{margin:6px 0 0;padding-left:20px;font-size:13px;display:flex;flex-direction:column;gap:3px}
+.vinq{border:0;background:var(--warn);color:#fff;border-radius:999px;padding:4px 10px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.vno{color:#9AA6BC}
+.inq.flash{outline:3px solid var(--warn);outline-offset:2px}
+@media (max-width:760px){
+  .vtbl thead{display:none}
+  .vtbl,.vtbl tbody,.vtbl tr,.vtbl td{display:block;width:100%}
+  .vtbl tr{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:10px}
+  .vtbl td{border:0;padding:3px 0}
+  .vtbl td[data-l]::before{content:attr(data-l);display:inline-block;width:64px;color:var(--muted);font-size:12px;font-weight:700}
+  .vt small{display:inline;margin-left:6px}
+}
+/* 회사 사람 빼기 */
+.staff-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.staff-box{border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;font-size:14px}
+.staff-box h3{margin:0}
+.staff-box .btn{align-self:flex-start}
+.staff-state{font-weight:700;color:var(--navy)}
+.staff-state.on{color:#15803D}
+.staff-add{display:flex;flex-wrap:wrap;gap:8px}
+.staff-add input{flex:1 1 180px;min-height:40px;border:1px solid #C6D1E4;border-radius:8px;padding:0 10px;font:inherit}
+.iplist{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+.iplist li{display:flex;flex-wrap:wrap;align-items:center;gap:8px;background:var(--soft);border-radius:8px;padding:8px 10px}
+.iplist code{font-size:13px}
+.iplist small{color:var(--muted)}
+.iplist .link{margin-left:auto}
+@media (max-width:760px){.staff-grid{grid-template-columns:1fr}}

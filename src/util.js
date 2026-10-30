@@ -74,6 +74,16 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS visit_uniq (day TEXT NOT NULL, h TEXT NOT NULL, mobile INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (day, h))`,
   `CREATE TABLE IF NOT EXISTS visit_pages (day TEXT NOT NULL, path TEXT NOT NULL, n INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (day, path))`,
   `CREATE TABLE IF NOT EXISTS visit_refs (day TEXT NOT NULL, src TEXT NOT NULL, n INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (day, src))`,
+  // 방문 1건(30분 안에 이어 본 페이지 묶음) = 1줄. IP는 저장하지 않음. 90일 뒤 삭제 (src/stats.js)
+  `CREATE TABLE IF NOT EXISTS visits (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    vid TEXT NOT NULL,
+    day TEXT NOT NULL, at TEXT NOT NULL, last_at TEXT,
+    src TEXT, kw TEXT, ad TEXT, ref TEXT,
+    landing TEXT, pages INTEGER NOT NULL DEFAULT 1, plist TEXT,
+    mobile INTEGER NOT NULL DEFAULT 0, region TEXT,
+    inquiry_id INTEGER
+  )`,
 ];
 
 // 예전 표에 새 칸 추가 (이미 있으면 무시)
@@ -105,9 +115,11 @@ export function inferCat(title) {
 const INDEXES = [
   'CREATE INDEX IF NOT EXISTS idx_case_photos_case ON case_photos (case_id, sort)',
   'CREATE INDEX IF NOT EXISTS idx_cases_visible ON cases (visible, category)',
+  'CREATE UNIQUE INDEX IF NOT EXISTS idx_visits_vid ON visits (vid)',
+  'CREATE INDEX IF NOT EXISTS idx_visits_day ON visits (day, at)',
 ];
 // 표 구조를 바꿀 때만 이 값을 올림 → 같으면 서버가 새로 뜰 때마다 점검을 반복하지 않음
-const SCHEMA_VERSION = '2026-10-29a';
+const SCHEMA_VERSION = '2026-10-30a';
 
 let schemaReady = false;
 export async function ensureSchema(env) {

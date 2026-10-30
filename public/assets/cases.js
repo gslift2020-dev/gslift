@@ -9,10 +9,7 @@
   var CATS = window.GS_CATS || {};
   var PAGE = 20; // 한 줄 2·4·5칸 어느 화면에서도 마지막 줄이 꽉 차게
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  try {
-    var hitData = JSON.stringify({ p: location.pathname + location.search, r: document.referrer });
-    if (navigator.sendBeacon) navigator.sendBeacon('/api/hit', new Blob([hitData], { type: 'text/plain' }));
-  } catch (e) {}
+  // 방문 통계 신호는 track.js 가 보냄
 
   /* 메뉴·맨 위로 */
   var nav = $('#nav'), menuBtn = $('#menuBtn');

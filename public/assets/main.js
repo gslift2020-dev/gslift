@@ -10,12 +10,7 @@
      다른 페이지에서 특정 위치로 보낼 때는 ?to=cases&cat=fl 처럼 보냄 */
   var params = new URLSearchParams(location.search);
   var TEL = window.GS_TEL || '031-986-5345';
-  // 방문 통계 (주소를 정리하기 전에 보냄)
-  try {
-    var hitData = JSON.stringify({ p: location.pathname + location.search, r: document.referrer });
-    if (navigator.sendBeacon) navigator.sendBeacon('/api/hit', new Blob([hitData], { type: 'text/plain' }));
-    else fetch('/api/hit', { method: 'POST', body: hitData, keepalive: true });
-  } catch (e) {}
+  // 방문 통계 신호는 track.js 가 보냄
   if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
   if (location.hash || location.search) history.replaceState(null, '', location.pathname);
   window.scrollTo(0, 0);
@@ -577,7 +572,7 @@
       var fd = new FormData();
       ['company', 'name', 'phone', 'product', 'loc', 'message', 'website', 'dir', 'load', 'stops', 'place', 'cargo', 'w', 'd', 'h'].forEach(function (k) { if (f[k]) fd.append(k, f[k].value); });
       fd.append('agree', f.agree.checked ? 'true' : 'false');
-      if (window.GSTrack) fd.append('src', window.GSTrack.src());
+      if (window.GSTrack) { fd.append('src', window.GSTrack.src()); fd.append('vid', window.GSTrack.vid()); }
       shots.forEach(function (sh, i) { fd.append('photos', sh.blob, 'photo' + (i + 1) + '.jpg'); });
       btn.disabled = true; btn.textContent = shots.length ? '사진과 함께 보내는 중…' : '보내는 중…'; say('');
       fetch('/api/contact', { method: 'POST', body: fd })

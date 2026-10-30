@@ -6,10 +6,7 @@
   var params = new URLSearchParams(location.search);
   var id = params.get('id'), sid = params.get('s');
   var TEL = window.GS_TEL || '031-986-5345';
-  try {
-    var hitData = JSON.stringify({ p: location.pathname + location.search, r: document.referrer });
-    if (navigator.sendBeacon) navigator.sendBeacon('/api/hit', new Blob([hitData], { type: 'text/plain' }));
-  } catch (e) {}
+  // 방문 통계 신호는 track.js 가 보냄
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var ARROW_L = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>';
   var ARROW_R = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>';

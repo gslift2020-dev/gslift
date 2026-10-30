@@ -87,7 +87,7 @@
       var opts = Object.keys(STATUS).map(function (k) { return '<option value="' + k + '"' + (k === x.status ? ' selected' : '') + '>' + STATUS[k] + '</option>'; }).join('');
       var spec = (x.spec || []).map(function (r) { return '<div><small>' + esc(r[0]) + '</small><b>' + esc(r[1]) + '</b></div>'; }).join('');
       var photos = (x.photos || []).map(function (u, i) { return '<a href="' + esc(u) + '" target="_blank" rel="noopener" aria-label="현장 사진 ' + (i + 1) + ' 크게 보기"><img src="' + esc(u) + '" alt="" loading="lazy"></a>'; }).join('');
-      return '<article class="inq ' + esc(x.status) + '">' +
+      return '<article class="inq ' + esc(x.status) + '" id="inq-' + x.id + '">' +
         '<div><div class="who">#' + x.id + ' ' + esc(x.company || '(회사명 없음)') + ' · ' + esc(x.name) + '</div>' +
         '<div class="meta">' + esc(x.created_at) + ' · ' + esc(x.product || '-') + (x.photos && x.photos.length ? ' · 사진 ' + x.photos.length + '장' : '') + '</div></div>' +
         '<span class="st st-' + esc(x.status) + '">' + STATUS[x.status] + '</span>' +
@@ -702,6 +702,7 @@
       $('#dMobile').textContent = d.mobileShare == null ? '' : '휴대폰 ' + d.mobileShare + '% · PC ' + (100 - d.mobileShare) + '%';
       drawChart(d.days); drawSources(d.sources); drawPages(d.pages);
     });
+    loadVisits(); loadStaff();
   }
   function md(day) { return (+day.slice(5, 7)) + '/' + (+day.slice(8, 10)); }
   function niceMax(v) { if (v <= 4) return 4; var p = Math.pow(10, Math.floor(Math.log10(v))), n = v / p; return (n <= 2 ? 2 : n <= 5 ? 5 : 10) * p; }
@@ -747,6 +748,106 @@
       return '<li><a href="' + esc(x.path) + '" target="_blank" rel="noopener">' + esc(x.label) + '</a><span>' + x.n + '회</span></li>';
     }).join('');
   }
+  /* ---- 최근 방문 (방문 1건씩) ---- */
+  var vRange = 'today', vItems = [], vReq = 0;
+  function loadVisits() {
+    var my = ++vReq;
+    $('#vList').innerHTML = '<p class="empty">불러오는 중…</p>';
+    api('/api/admin/visits?range=' + vRange).then(function (d) {
+      if (my !== vReq) return;
+      if (!d.ok) { $('#vList').innerHTML = '<p class="empty">' + esc(d.error || '불러오지 못했습니다.') + '</p>'; return; }
+      vItems = d.items;
+      // 경로 고르기 칸: 이 기간에 있는 경로만, 많은 순
+      var cnt = {};
+      vItems.forEach(function (v) { cnt[v.src] = (cnt[v.src] || 0) + 1; });
+      var sel = $('#vSrc'), cur = sel.value;
+      sel.innerHTML = '<option value="">전체 (' + vItems.length + ')</option>' + Object.keys(cnt).sort(function (a, b) { return cnt[b] - cnt[a]; })
+        .map(function (k) { return '<option value="' + esc(k) + '"' + (k === cur ? ' selected' : '') + '>' + esc(k) + ' (' + cnt[k] + ')</option>'; }).join('');
+      if (cur && !cnt[cur]) sel.value = '';
+      drawVisits(d.more);
+    });
+  }
+  function isAd(src) { return /광고$/.test(src); }
+  function drawVisits(more) {
+    var f = $('#vSrc').value, list = vItems.filter(function (v) { return !f || v.src === f; });
+    var inq = list.filter(function (v) { return v.inquiry; }).length, mob = list.filter(function (v) { return v.mobile; }).length;
+    $('#vSum').textContent = list.length ? '방문 ' + list.length + '건 · 휴대폰 ' + mob + ' · PC ' + (list.length - mob) + (inq ? ' · 문의 ' + inq + '건' : '') + (more ? ' · 최근 500건만 표시' : '') : '';
+    if (!list.length) { $('#vList').innerHTML = '<p class="empty">' + (vItems.length ? '이 경로의 방문이 없습니다.' : '이 기간의 방문 기록이 없습니다. (2026-10-30 업데이트 이후부터 쌓입니다)') + '</p>'; return; }
+    var many = vRange === '7d';
+    $('#vList').innerHTML = '<table class="vtbl"><thead><tr><th>시각</th><th>경로</th><th>검색어 · 광고 이름표</th><th>첫 페이지</th><th>본 페이지</th><th>기기</th><th>지역</th><th>문의</th></tr></thead><tbody>' +
+      list.map(function (v) {
+        var t = v.at.slice(11, 16), dd = (+v.at.slice(5, 7)) + '/' + (+v.at.slice(8, 10));
+        var src = '<span class="vsrc' + (isAd(v.src) ? ' ad' : '') + '">' + esc(v.src) + '</span>' + (v.ref && v.src.indexOf(v.ref) < 0 ? '<span class="vref">' + esc(v.ref) + '</span>' : '');
+        var kw = (v.kw ? '<span class="vkw">' + esc(v.kw) + '</span>' : '') + (v.ad ? '<span class="vad">' + esc(v.ad) + '</span>' : '');
+        var pg = v.pages > 1
+          ? '<details class="vpages"><summary>' + v.pages + '쪽</summary><ol>' + v.plist.map(function (p) { return '<li><a href="' + esc(p.path) + '" target="_blank" rel="noopener">' + esc(p.label) + '</a></li>'; }).join('') + (v.pages > v.plist.length ? '<li>… 외 ' + (v.pages - v.plist.length) + '쪽</li>' : '') + '</ol></details>'
+          : '1쪽';
+        return '<tr' + (v.inquiry ? ' class="has-inq"' : '') + '>' +
+          '<td class="vt" data-l="시각">' + t + (many ? '<small>' + dd + '</small>' : '') + '</td>' +
+          '<td data-l="경로">' + src + '</td>' +
+          '<td data-l="검색어">' + (kw || '<span class="vno">-</span>') + '</td>' +
+          '<td class="vpg" data-l="첫 페이지"><a href="' + esc(v.landing.path || '/') + '" target="_blank" rel="noopener">' + esc(v.landing.label) + '</a></td>' +
+          '<td data-l="본 페이지">' + pg + '</td>' +
+          '<td class="vnw" data-l="기기">' + (v.mobile ? '휴대폰' : 'PC') + '</td>' +
+          '<td class="vnw" data-l="지역">' + (esc(v.region) || '<span class="vno">-</span>') + '</td>' +
+          '<td data-l="문의">' + (v.inquiry ? '<button type="button" class="vinq" data-inq="' + v.inquiry + '">문의 #' + v.inquiry + '</button>' : '<span class="vno">-</span>') + '</td></tr>';
+      }).join('') + '</tbody></table>';
+  }
+  $$('#vRange button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      vRange = b.dataset.r; $$('#vRange button').forEach(function (x) { x.classList.toggle('on', x === b); }); loadVisits();
+    });
+  });
+  $('#vSrc').addEventListener('change', function () { drawVisits(false); });
+  // '문의 #12' → 문의 탭에서 그 문의로
+  $('#vList').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-inq]'); if (!b) return;
+    openTab('inq'); filter = 'all'; inqQuery = '';
+    $$('#filters button').forEach(function (x) { x.classList.toggle('on', x.dataset.f === 'all'); });
+    var go = function () {
+      renderInquiries();
+      var el = document.getElementById('inq-' + b.dataset.inq);
+      if (!el) return;
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('flash');
+      setTimeout(function () { el.classList.remove('flash'); }, 2500);
+    };
+    if (inquiries.length) go(); else api('/api/admin/inquiries').then(function (d) { if (d.ok) { inquiries = d.items; go(); } });
+  });
+
+  /* ---- 회사 사람 빼기 ---- */
+  function staffOn() { try { return localStorage.getItem('gs_staff') === '1'; } catch (e) { return null; } }
+  function drawStaff() {
+    var on = staffOn();
+    $('#staffState').textContent = on == null ? '이 브라우저는 설정을 저장할 수 없습니다 (비공개 창 등).' : on ? '✔ 이 기기는 통계에서 빠져 있습니다.' : '이 기기는 아직 통계에 들어갑니다.';
+    $('#staffState').classList.toggle('on', !!on);
+    $('#staffBtn').textContent = on ? '이 기기를 다시 통계에 넣기' : '이 기기는 통계에서 빼기';
+    $('#staffBtn').disabled = on == null;
+  }
+  $('#staffBtn').addEventListener('click', function () {
+    try { if (staffOn()) localStorage.removeItem('gs_staff'); else localStorage.setItem('gs_staff', '1'); } catch (e) {}
+    drawStaff();
+  });
+  function drawIps(d) {
+    $('#ipState').textContent = d.meListed ? '✔ 지금 이 화면을 연 인터넷은 등록되어 있습니다.' : '지금 이 화면을 연 인터넷 주소: ' + (d.me || '알 수 없음') + ' (등록 안 됨)';
+    $('#ipState').classList.toggle('on', !!d.meListed);
+    $('#ipAdd').disabled = !!d.meListed || !d.me;
+    $('#ipList').innerHTML = d.list.map(function (x) {
+      return '<li><b>' + esc(x.name) + '</b><code>' + esc(x.ip) + '</code><small>' + esc(x.at) + ' 등록</small><button type="button" class="link del" data-ip="' + esc(x.ip) + '">삭제</button></li>';
+    }).join('') || '<li><small>등록한 회사 인터넷이 없습니다.</small></li>';
+  }
+  function loadStaff() {
+    drawStaff();
+    api('/api/admin/stats-exclude').then(function (d) { if (d.ok) drawIps(d); });
+  }
+  $('#ipAdd').addEventListener('click', function () {
+    var btn = this; btn.disabled = true;
+    api('/api/admin/stats-exclude', { method: 'POST', json: { add: 'me', name: $('#ipName').value.trim() } }).then(function (d) { if (d.ok) { $('#ipName').value = ''; drawIps(d); } else btn.disabled = false; });
+  });
+  $('#ipList').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-ip]'); if (!b || !confirm('이 인터넷 주소를 목록에서 뺄까요? 이후 이 주소의 방문은 다시 통계에 들어갑니다.')) return;
+    api('/api/admin/stats-exclude', { method: 'POST', json: { remove: b.dataset.ip } }).then(function (d) { if (d.ok) drawIps(d); });
+  });
+
   function dNewGo() { openTab('inq'); filter = 'new'; $$('#filters button').forEach(function (x) { x.classList.toggle('on', x.dataset.f === 'new'); }); renderInquiries(); }
   $('#dNewBox').addEventListener('click', dNewGo);
   $('#dNewBox').addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); dNewGo(); } });

@@ -2,7 +2,7 @@
 import { json, clean, kst, ensureSchema, CATS, inferCat } from './util.js';
 import { specRows } from './contact.js';
 import { cleanCompany, cleanFaq, dropSiteCache, DEFAULT_COMPANY, DEFAULT_FAQ } from './site.js';
-import { statsAdmin } from './stats.js';
+import { statsAdmin, visitsAdmin, statsExcludeAdmin } from './stats.js';
 import { runImportsNow, importStatus } from './imports.js';
 import { TAG_GROUPS, TAGS, normTags, packTags, unpackTags, inferTags } from './tags.js';
 
@@ -665,5 +665,7 @@ export async function handleAdmin(request, env, path) {
   if (m && method === 'DELETE') return deleteNotice(env, Number(m[1]));
 
   if (path === '/api/admin/stats' && method === 'GET') return statsAdmin(env);
+  if (path === '/api/admin/visits' && method === 'GET') return visitsAdmin(request, env);
+  if (path === '/api/admin/stats-exclude') return statsExcludeAdmin(request, env);
   return json({ ok: false, error: 'Not found' }, 404);
 }

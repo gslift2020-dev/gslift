@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex, nofollow">
 <title>관리자 | 거산리프트</title>
 <link rel="icon" href="/favicon.png">
-<link rel="stylesheet" href="/admin/admin.css?v=db4889fd">
+<link rel="stylesheet" href="/admin/admin.css?v=b4327d36">
 </head>
 <body>
 
@@ -63,10 +63,40 @@
 <li>명함 QR: <code>gslift.kr/?utm_source=qr</code> · 명함 글자: <code>?utm_source=card</code></li>
 <li>견적서·카탈로그: <code>?utm_source=quote</code> · <code>?utm_source=catalog</code></li>
 <li>카톡으로 보낼 때: <code>?utm_source=kakaotalk</code> · 블로그·유튜브: <code>?utm_source=blog</code> · <code>?utm_source=youtube</code></li>
-</ul><p>이름표가 없는 카카오톡 앱 안의 방문도 '카카오톡'으로 나눠 셉니다.</p></details></div>
+<li>같은 홍보물 안에서 더 나누려면: <code>&amp;utm_campaign=이름</code> (예: <code>?utm_source=card&amp;utm_campaign=2026명함</code>) → '최근 방문'의 광고 이름표에 보임</li>
+</ul><p>이름표가 없는 카카오톡 앱 안의 방문도 '카카오톡'으로 나눠 셉니다. 2026-10-30 전 '네이버 검색'에는 네이버 블로그·카페에서 온 방문도 섞여 있습니다.</p></details></div>
 <div class="panel"><h2>많이 본 페이지 <small>(최근 30일)</small></h2><ol id="dPages" class="toplist"><li class="empty">아직 기록이 없습니다.</li></ol></div>
 </div>
-<p class="hint">같은 날 같은 기기는 1명으로 셉니다. 관리자로 로그인한 상태의 방문과 검색엔진 로봇은 세지 않습니다. 더 자세한 통계는 Cloudflare → Web Analytics에서 볼 수 있습니다.</p>
+<div class="panel" id="visitPanel">
+<div class="ph-head"><h2>최근 방문 <small>(방문 1건씩 · 30분 안에 이어 본 페이지는 1건 · 90일 보관)</small></h2>
+<div class="seg" id="vRange" role="group" aria-label="기간"><button type="button" data-r="today" class="on">오늘</button><button type="button" data-r="yesterday">어제</button><button type="button" data-r="7d">최근 7일</button></div></div>
+<div class="vfilter"><label>경로 <select id="vSrc" aria-label="경로로 거르기"><option value="">전체</option></select></label><span id="vSum" class="vsum"></span></div>
+<div id="vList" class="vlist"><p class="empty">불러오는 중…</p></div>
+<p class="hint">검색어는 들어온 주소에 담겨 온 경우만 보입니다(네이버·다음은 대부분, 구글은 주지 않음 → 구글 서치 콘솔에서 확인). 지역은 접속 위치로 추정한 대략의 시·도이고, 휴대폰 데이터는 서울·경기로 나오는 경우가 많습니다.</p>
+</div>
+
+<div class="panel" id="staffPanel">
+<h2>회사 사람 방문 빼기</h2>
+<div class="staff-grid">
+<div class="staff-box">
+<h3>1. 이 기기 빼기 <small>(휴대폰·PC 브라우저마다)</small></h3>
+<p>이 기기·이 브라우저로 홈페이지를 볼 때 통계에 넣지 않습니다. 로그인하지 않아도 계속 빠집니다.</p>
+<p class="staff-state" id="staffState"></p>
+<button type="button" class="btn small" id="staffBtn">이 기기는 통계에서 빼기</button>
+<p class="hint">직원 휴대폰은 아래 주소를 <b>평소 홈페이지를 보는 브라우저</b>(크롬·삼성 인터넷·사파리)에서 한 번 열면 됩니다. 카카오톡으로 받은 링크는 카톡 안 브라우저에만 적용되므로, 카톡 안과 바깥 브라우저 둘 다 한 번씩 여는 것이 좋습니다.<br><code>gslift.kr/?gs_staff=1</code> · 다시 넣기: <code>gslift.kr/?gs_staff=0</code><br>브라우저 방문 기록·사이트 데이터를 지우면 풀리므로 다시 열어야 합니다.</p>
+</div>
+<div class="staff-box">
+<h3>2. 회사 인터넷 빼기 <small>(사무실·공장 와이파이)</small></h3>
+<p>회사 와이파이·유선 인터넷으로 들어온 방문은 기기와 상관없이 모두 뺍니다. 사무실·공장에서 이 화면을 열고 아래 버튼을 누르세요. 휴대폰 데이터(LTE·5G)로 볼 때는 이 방법으로 빠지지 않으니 1번도 함께 하세요.</p>
+<p class="staff-state" id="ipState"></p>
+<div class="staff-add"><input type="text" id="ipName" maxlength="30" placeholder="이름 (예: 김포 사무실 와이파이)" aria-label="인터넷 이름"><button type="button" class="btn small" id="ipAdd">지금 이 인터넷 주소 등록</button></div>
+<ul id="ipList" class="iplist"></ul>
+<p class="hint">통신사가 회사 인터넷 주소를 가끔 바꿉니다. 회사에서 본 방문이 다시 목록에 보이면 한 번 더 등록하세요. 등록 후 반영까지 최대 5분 걸립니다.</p>
+</div>
+</div>
+</div>
+
+<p class="hint">같은 날 같은 기기는 1명으로 셉니다. 관리자로 로그인한 상태의 방문, 검색엔진 로봇, 위에서 뺀 회사 기기·인터넷은 세지 않습니다. 더 자세한 통계는 Cloudflare → Web Analytics에서 볼 수 있습니다.</p>
 </section>
 
 <!-- ===== 문의 ===== -->
@@ -300,6 +330,6 @@
 </section>
 </main>
 
-<script src="/admin/admin.js?v=375cae41" defer></script>
+<script src="/admin/admin.js?v=8566bbf9" defer></script>
 </body>
 </html>
