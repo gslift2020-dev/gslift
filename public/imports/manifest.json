@@ -7138,6 +7138,178 @@
      ]
     }
    ]
+  },
+  {
+   "id": "promo-a",
+   "cases": [
+    {
+     "title": "테이블 리프트(T/L) · 이동식(바퀴형)",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "photos": [
+      "imports/promo/tl0-01.webp",
+      "imports/promo/tl0-02.webp",
+      "imports/promo/tl0-03.webp",
+      "imports/promo/tl0-04.webp",
+      "imports/promo/tl0-05.webp",
+      "imports/promo/tl0-06.webp",
+      "imports/promo/tl0-07.webp",
+      "imports/promo/tl0-08.webp"
+     ],
+     "category": "tl",
+     "tags": []
+    },
+    {
+     "title": "테이블 리프트(T/L) · 바닥 매립형",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "photos": [
+      "imports/promo/tl1-01.webp",
+      "imports/promo/tl1-02.webp",
+      "imports/promo/tl1-03.webp",
+      "imports/promo/tl1-04.webp",
+      "imports/promo/tl1-05.webp",
+      "imports/promo/tl1-06.webp",
+      "imports/promo/tl1-07.webp"
+     ],
+     "category": "tl",
+     "tags": [
+      "pit",
+      "low"
+     ]
+    },
+    {
+     "title": "테이블 리프트(T/L) · 고정형 가위 리프트(1)",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "photos": [
+      "imports/promo/tl2-01.webp",
+      "imports/promo/tl2-02.webp",
+      "imports/promo/tl2-03.webp",
+      "imports/promo/tl2-04.webp",
+      "imports/promo/tl2-05.webp",
+      "imports/promo/tl2-06.webp",
+      "imports/promo/tl2-07.webp",
+      "imports/promo/tl2-08.webp",
+      "imports/promo/tl2-09.webp"
+     ],
+     "category": "tl",
+     "tags": []
+    },
+    {
+     "title": "테이블 리프트(T/L) · 고정형 가위 리프트(2)",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "photos": [
+      "imports/promo/tl3-01.webp",
+      "imports/promo/tl3-02.webp",
+      "imports/promo/tl3-03.webp",
+      "imports/promo/tl3-04.webp",
+      "imports/promo/tl3-05.webp",
+      "imports/promo/tl3-06.webp",
+      "imports/promo/tl3-07.webp",
+      "imports/promo/tl3-08.webp",
+      "imports/promo/tl3-09.webp"
+     ],
+     "category": "tl",
+     "tags": []
+    },
+    {
+     "title": "테이블 리프트(T/L) · 2단·고행정형",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "photos": [
+      "imports/promo/tl4-01.webp",
+      "imports/promo/tl4-02.webp",
+      "imports/promo/tl4-03.webp",
+      "imports/promo/tl4-04.webp",
+      "imports/promo/tl4-05.webp",
+      "imports/promo/tl4-06.webp"
+     ],
+     "category": "tl",
+     "tags": [
+      "rail"
+     ]
+    },
+    {
+     "title": "테이블 리프트(T/L) · 벨로즈·롤러형",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "photos": [
+      "imports/promo/tl5-01.webp",
+      "imports/promo/tl5-02.webp",
+      "imports/promo/tl5-03.webp",
+      "imports/promo/tl5-04.webp",
+      "imports/promo/tl5-05.webp",
+      "imports/promo/tl5-06.webp"
+     ],
+     "category": "tl",
+     "tags": []
+    },
+    {
+     "title": "테이블 리프트(T/L) · 틸팅형",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "photos": [
+      "imports/promo/tl6-01.webp",
+      "imports/promo/tl6-02.webp",
+      "imports/promo/tl6-03.webp",
+      "imports/promo/tl6-04.webp",
+      "imports/promo/tl6-05.webp",
+      "imports/promo/tl6-06.webp"
+     ],
+     "category": "tl",
+     "tags": []
+    },
+    {
+     "title": "수동·자동 스태커 · 제작 사례",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "photos": [
+      "imports/promo/st7-01.webp",
+      "imports/promo/st7-02.webp",
+      "imports/promo/st7-03.webp",
+      "imports/promo/st7-04.webp",
+      "imports/promo/st7-05.webp",
+      "imports/promo/st7-06.webp",
+      "imports/promo/st7-07.webp"
+     ],
+     "category": "st",
+     "tags": []
+    },
+    {
+     "title": "운반기계 · 전동 대차(1)",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "photos": [
+      "imports/promo/tr8-01.webp",
+      "imports/promo/tr8-02.webp",
+      "imports/promo/tr8-03.webp",
+      "imports/promo/tr8-04.webp",
+      "imports/promo/tr8-05.webp",
+      "imports/promo/tr8-06.webp",
+      "imports/promo/tr8-07.webp"
+     ],
+     "category": "tr",
+     "tags": []
+    },
+    {
+     "title": "운반기계 · 전동 대차(2)",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "photos": [
+      "imports/promo/tr9-01.webp",
+      "imports/promo/tr9-02.webp",
+      "imports/promo/tr9-03.webp",
+      "imports/promo/tr9-04.webp",
+      "imports/promo/tr9-05.webp",
+      "imports/promo/tr9-06.webp",
+      "imports/promo/tr9-07.webp"
+     ],
+     "category": "tr",
+     "tags": []
+    }
+   ]
   }
  ]
 }
