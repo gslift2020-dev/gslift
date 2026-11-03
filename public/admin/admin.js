@@ -32,6 +32,8 @@
     $('#loginForm').password.focus();
   }
   function showApp() {
+    // 관리자에 로그인한 기기는 홈페이지 방문 통계에서 '직원'으로 표시 (이 브라우저에 표시값만 남김, 개인정보 없음)
+    try { if (localStorage.getItem('gs_staff') == null) localStorage.setItem('gs_staff', '1'); } catch (e) {}
     $('#loginView').hidden = true; $('#appView').hidden = false; $('#logoutBtn').hidden = false;
     loadInquiries(); loadSettings(); loadDash();
   }
@@ -768,13 +770,22 @@
     });
   }
   function isAd(src) { return /광고$/.test(src); }
+  function fmtDwell(sec) { if (!sec) return ''; if (sec < 60) return sec + '초'; var m = Math.floor(sec / 60), r = sec % 60; return m + '분' + (r ? ' ' + r + '초' : ''); }
+  var ACT = [[1, '사례'], [2, '전화'], [4, '견적 버튼'], [8, '견적 양식']];
+  var CLS = { human: '', bot: '로봇 의심', check: '확인 필요', staff: '직원' };
   function drawVisits(more) {
-    var f = $('#vSrc').value, list = vItems.filter(function (v) { return !f || v.src === f; });
-    var inq = list.filter(function (v) { return v.inquiry; }).length, mob = list.filter(function (v) { return v.mobile; }).length;
-    $('#vSum').textContent = list.length ? '방문 ' + list.length + '건 · 휴대폰 ' + mob + ' · PC ' + (list.length - mob) + (inq ? ' · 문의 ' + inq + '건' : '') + (more ? ' · 최근 500건만 표시' : '') : '';
-    if (!list.length) { $('#vList').innerHTML = '<p class="empty">' + (vItems.length ? '이 경로의 방문이 없습니다.' : '이 기간의 방문 기록이 없습니다. (2026-10-30 업데이트 이후부터 쌓입니다)') + '</p>'; return; }
+    var f = $('#vSrc').value, hideBot = $('#vHideBot').checked, hideStaff = $('#vHideStaff').checked;
+    var bySrc = vItems.filter(function (v) { return !f || v.src === f; });
+    var c = { human: 0, bot: 0, check: 0, staff: 0 };
+    bySrc.forEach(function (v) { c[v.cls]++; });
+    var list = bySrc.filter(function (v) { return !(hideBot && v.cls === 'bot') && !(hideStaff && v.cls === 'staff'); });
+    var ppl = bySrc.filter(function (v) { return v.cls === 'human' || v.cls === 'check'; });
+    var inq = ppl.filter(function (v) { return v.inquiry; }).length, mob = ppl.filter(function (v) { return v.mobile; }).length;
+    $('#vSum').innerHTML = bySrc.length ? '<b>사람 ' + ppl.length + '건</b>' + (c.check ? ' (확인 필요 ' + c.check + ')' : '') + ' · 휴대폰 ' + mob + ' · PC ' + (ppl.length - mob) + (inq ? ' · 문의 ' + inq + '건' : '') +
+      ' <span class="vx">· 로봇 의심 ' + c.bot + ' · 직원 ' + c.staff + (more ? ' · 최근 500건만' : '') + '</span>' : '';
+    if (!list.length) { $('#vList').innerHTML = '<p class="empty">' + (vItems.length ? '보여 줄 방문이 없습니다. (위 거르기·숨기기 설정 확인)' : '이 기간의 방문 기록이 없습니다.') + '</p>'; return; }
     var many = vRange === '7d';
-    $('#vList').innerHTML = '<table class="vtbl"><thead><tr><th>시각</th><th>경로</th><th>검색어 · 광고 이름표</th><th>첫 페이지</th><th>본 페이지</th><th>기기</th><th>지역</th><th>문의</th></tr></thead><tbody>' +
+    $('#vList').innerHTML = '<table class="vtbl"><thead><tr><th>시각</th><th>경로</th><th>검색어 · 광고 이름표</th><th>처음 들어온 페이지</th><th>본 페이지</th><th>행동</th><th>기기 · 접속망</th><th>지역</th><th>판정 · 문의</th></tr></thead><tbody>' +
       list.map(function (v) {
         var t = v.at.slice(11, 16), dd = (+v.at.slice(5, 7)) + '/' + (+v.at.slice(8, 10));
         var src = '<span class="vsrc' + (isAd(v.src) ? ' ad' : '') + '">' + esc(v.src) + '</span>' + (v.ref && v.src.indexOf(v.ref) < 0 ? '<span class="vref">' + esc(v.ref) + '</span>' : '');
@@ -782,15 +793,27 @@
         var pg = v.pages > 1
           ? '<details class="vpages"><summary>' + v.pages + '쪽</summary><ol>' + v.plist.map(function (p) { return '<li><a href="' + esc(p.path) + '" target="_blank" rel="noopener">' + esc(p.label) + '</a></li>'; }).join('') + (v.pages > v.plist.length ? '<li>… 외 ' + (v.pages - v.plist.length) + '쪽</li>' : '') + '</ol></details>'
           : '1쪽';
-        return '<tr' + (v.inquiry ? ' class="has-inq"' : '') + '>' +
+        var acts = ACT.filter(function (x) { return v.acts & x[0]; }).map(function (x) { return '<i class="vact' + (x[0] === 2 || x[0] === 8 ? ' hot' : '') + '">' + x[1] + '</i>'; }).join('');
+        var beh = v.net === null ? '<span class="vno">기록 전</span>' : (fmtDwell(v.dwell) ? '<span class="vdw">' + fmtDwell(v.dwell) + '</span>' : '<span class="vno">0초</span>') + (acts ? '<span class="vacts">' + acts + '</span>' : '');
+        var dev = (v.mobile ? '휴대폰' : 'PC') + (v.ua ? '<span class="vref">' + esc(v.ua) + '</span>' : '') + (v.net ? '<span class="vref">' + esc(v.net) + '</span>' : v.net === null ? '<span class="vref">(11/3 전 기록)</span>' : '');
+        var judge = (CLS[v.cls] ? '<span class="vbadge ' + v.cls + '">' + CLS[v.cls] + '</span>' : '') + (v.why ? '<span class="vref">' + esc(v.why) + '</span>' : '');
+        var btns = '';
+        if (v.cls === 'bot' || v.cls === 'check') {
+          if (v.mark !== 1 && v.cls === 'bot') btns += '<button type="button" class="link" data-mark="1" data-id="' + v.id + '">사람으로 표시</button>';
+          if (v.cls === 'check') btns += '<button type="button" class="link" data-mark="2" data-id="' + v.id + '">로봇으로 표시</button>';
+          if (v.net && !v.netListed) btns += '<button type="button" class="link" data-addnet="' + esc(v.net) + '">이 접속망은 로봇으로 처리</button>';
+        } else if (v.mark) btns += '<button type="button" class="link" data-mark="0" data-id="' + v.id + '">표시 취소</button>';
+        var inqB = v.inquiry ? '<button type="button" class="vinq" data-inq="' + v.inquiry + '">문의 #' + v.inquiry + '</button>' : '';
+        return '<tr class="c-' + v.cls + (v.inquiry ? ' has-inq' : '') + '">' +
           '<td class="vt" data-l="시각">' + t + (many ? '<small>' + dd + '</small>' : '') + '</td>' +
           '<td data-l="경로">' + src + '</td>' +
           '<td data-l="검색어">' + (kw || '<span class="vno">-</span>') + '</td>' +
-          '<td class="vpg" data-l="첫 페이지"><a href="' + esc(v.landing.path || '/') + '" target="_blank" rel="noopener">' + esc(v.landing.label) + '</a></td>' +
+          '<td class="vpg" data-l="처음 페이지"><a href="' + esc(v.landing.path || '/') + '" target="_blank" rel="noopener">' + esc(v.landing.label) + '</a>' + (v.net !== null ? '<span class="vref">스크롤 ' + v.scroll + '%</span>' : '') + '</td>' +
           '<td data-l="본 페이지">' + pg + '</td>' +
-          '<td class="vnw" data-l="기기">' + (v.mobile ? '휴대폰' : 'PC') + '</td>' +
+          '<td data-l="행동">' + beh + '</td>' +
+          '<td data-l="기기">' + dev + '</td>' +
           '<td class="vnw" data-l="지역">' + (esc(v.region) || '<span class="vno">-</span>') + '</td>' +
-          '<td data-l="문의">' + (v.inquiry ? '<button type="button" class="vinq" data-inq="' + v.inquiry + '">문의 #' + v.inquiry + '</button>' : '<span class="vno">-</span>') + '</td></tr>';
+          '<td data-l="판정">' + (judge || inqB || btns ? judge + inqB + (btns ? '<span class="vbtns">' + btns + '</span>' : '') : '<span class="vno">-</span>') + '</td></tr>';
       }).join('') + '</tbody></table>';
   }
   $$('#vRange button').forEach(function (b) {
@@ -799,6 +822,23 @@
     });
   });
   $('#vSrc').addEventListener('change', function () { drawVisits(false); });
+  $('#vHideBot').addEventListener('change', function () { drawVisits(false); });
+  $('#vHideStaff').addEventListener('change', function () { drawVisits(false); });
+  // 판정 고치기 · 접속망을 로봇으로 처리
+  $('#vList').addEventListener('click', function (e) {
+    var m = e.target.closest('[data-mark]'), n = e.target.closest('[data-addnet]');
+    if (m) api('/api/admin/visits/' + m.dataset.id + '/mark', { method: 'POST', json: { mark: +m.dataset.mark } }).then(function (d) { if (d.ok) loadVisits(); });
+    if (n && confirm('"' + n.dataset.addnet + '" 접속망에서 오는 방문을 앞으로 로봇으로 처리할까요?\n(지금 목록에서도 로봇 의심으로 바뀌고, 앞으로 이 접속망 방문은 합계에서 빠집니다. 전화·견적 문의를 하면 사람으로 봅니다)'))
+      api('/api/admin/stats-exclude', { method: 'POST', json: { addNet: n.dataset.addnet } }).then(function (d) { if (d.ok) { drawNets(d.nets); loadVisits(); } });
+  });
+  function drawNets(nets) {
+    $('#netCount').textContent = nets.length;
+    $('#netList').innerHTML = nets.map(function (x) { return '<li><b>' + esc(x.net) + '</b><small>' + esc(x.at) + ' 등록</small><button type="button" class="link del" data-rmnet="' + esc(x.net) + '">삭제</button></li>'; }).join('') || '<li><small>아직 없습니다. 최근 방문의 "이 접속망은 로봇으로 처리" 버튼으로 추가합니다.</small></li>';
+  }
+  $('#netList').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-rmnet]'); if (!b || !confirm('"' + b.dataset.rmnet + '"을(를) 목록에서 뺄까요?')) return;
+    api('/api/admin/stats-exclude', { method: 'POST', json: { removeNet: b.dataset.rmnet } }).then(function (d) { if (d.ok) { drawNets(d.nets); loadVisits(); } });
+  });
   // '문의 #12' → 문의 탭에서 그 문의로
   $('#vList').addEventListener('click', function (e) {
     var b = e.target.closest('[data-inq]'); if (!b) return;
@@ -818,13 +858,14 @@
   function staffOn() { try { return localStorage.getItem('gs_staff') === '1'; } catch (e) { return null; } }
   function drawStaff() {
     var on = staffOn();
-    $('#staffState').textContent = on == null ? '이 브라우저는 설정을 저장할 수 없습니다 (비공개 창 등).' : on ? '✔ 이 기기는 통계에서 빠져 있습니다.' : '이 기기는 아직 통계에 들어갑니다.';
+    $('#staffState').textContent = on == null ? '이 브라우저는 설정을 저장할 수 없습니다 (비공개 창 등).' : on ? '✔ 이 기기는 직원으로 표시되어 통계에서 빠집니다.' : '이 기기는 직원 표시가 없습니다.';
     $('#staffState').classList.toggle('on', !!on);
-    $('#staffBtn').textContent = on ? '이 기기를 다시 통계에 넣기' : '이 기기는 통계에서 빼기';
+    $('#staffBtn').textContent = on ? '직원 표시 지우기 (다시 통계에 넣기)' : '이 기기는 통계에서 빼기';
     $('#staffBtn').disabled = on == null;
   }
   $('#staffBtn').addEventListener('click', function () {
-    try { if (staffOn()) localStorage.removeItem('gs_staff'); else localStorage.setItem('gs_staff', '1'); } catch (e) {}
+    // 직접 지운 경우는 '0'으로 남겨 다음 로그인 때 다시 표시되지 않게 함
+    try { localStorage.setItem('gs_staff', staffOn() ? '0' : '1'); } catch (e) {}
     drawStaff();
   });
   function drawIps(d) {
@@ -837,7 +878,7 @@
   }
   function loadStaff() {
     drawStaff();
-    api('/api/admin/stats-exclude').then(function (d) { if (d.ok) drawIps(d); });
+    api('/api/admin/stats-exclude').then(function (d) { if (d.ok) { drawIps(d); drawNets(d.nets || []); } });
   }
   $('#ipAdd').addEventListener('click', function () {
     var btn = this; btn.disabled = true;

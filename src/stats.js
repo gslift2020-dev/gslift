@@ -3,11 +3,13 @@
 // - 날짜별 합계 (400일 보관): 같은 날 같은 기기는 방문자 1명 (IP는 저장하지 않고, 날짜가 섞인 암호화 값만 → 다음 날이면 연결 불가)
 // - 방문 1건 기록 (visits, 90일 보관): 시각·경로·검색어·광고 이름표·첫 페이지·본 페이지·기기·시도·문의 번호
 //   방문번호는 브라우저가 만든 무작위 값(30분 동안 아무 페이지도 안 보면 새 번호) → 사람을 알아볼 수 없음
-// - 빼는 방문: 검색 로봇, 관리자 로그인 상태, '이 기기 빼기'를 한 기기(track.js가 아예 안 보냄), 회사 인터넷 주소로 등록한 곳
-// - DB 사용 (방문 1번): 첫 페이지 = 읽기 없음(설정 기억이 5분 지났을 때만 1줄) · 쓰기 3~4줄 / 다음 페이지 = 방문 1줄 찾기 + 쓰기 2~3줄
+// - 직원(관리자 로그인 중·로그인한 적 있는 기기·?gs_staff=1·회사 인터넷)과 로봇 의심(데이터센터 접속망·자동 프로그램)은
+//   방문 1건 기록에는 남기되(관리자 화면에서 기본 숨김) 날짜별 합계에는 넣지 않음. 전화·견적 문의를 하면 사람으로 봄
+// - 페이지 안 행동(머문 시간·처음 페이지 스크롤·누른 것): 다음 페이지 신호에 실어 오고, 떠날 때 방문당 1번만 따로 옴
+// - DB 사용 (방문 1번): 첫 페이지 = 읽기 약 2 · 쓰기 약 6 / 다음 페이지 = 읽기 약 3 · 쓰기 약 3 / 떠날 때 = 읽기 1 · 쓰기 1
+//   (설정 기억이 5분 지났을 때만 +2줄 읽기)
 import { json, kst, ensureSchema, clean } from './util.js';
 
-const BOT = /bot|spider|crawl|slurp|headless|preview|facebookexternalhit|kakaotalk-scrap|yeti|daumoa|lighthouse|uptime|python|curl|wget|java\//i;
 export const VISIT_DAYS = 90; // 방문 1건 기록 보관 기간
 
 // 유입 경로: 홍보물·광고 주소의 ?utm_source= 이름표 → 네이버 광고 자동 표시 → 이전 페이지 → 앱 종류 순으로 판단
@@ -130,11 +132,52 @@ async function hashHex(s) {
   return Array.from(new Uint8Array(d).slice(0, 10), (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-/* ---------- 회사 인터넷 주소 빼기 ----------
-   사무실·공장 와이파이처럼 회사가 쓰는 인터넷 주소를 관리자 화면에서 등록 → 그 주소의 방문은 기록하지 않음
-   방문 때마다 DB를 읽지 않도록 5분 동안 기억 (서버 1대당 5분에 1줄 읽기) */
-let exCache = { at: 0, list: [] };
-export function dropExcludeCache() { exCache = { at: 0, list: [] }; }
+/* ---------- 브라우저 요약 · 로봇 판정 ----------
+   브라우저 원문(User-Agent)은 저장하지 않고 "Chrome 130 · Android" 같은 요약만 저장 */
+export function uaSummary(ua) {
+  ua = String(ua || '');
+  const auto = /HeadlessChrome|PhantomJS|Puppeteer|Playwright|Selenium|python|curl|wget|Go-http|okhttp|axios|node-fetch|java\//i.exec(ua);
+  if (auto) return '자동 프로그램 (' + auto[0] + ')';
+  const named = /(Googlebot|bingbot|Yeti|Daumoa|AdsBot[-\w]*|Google-InspectionTool|Applebot|YandexBot|Baiduspider|Bytespider|GPTBot|ClaudeBot|PetalBot|AhrefsBot|SemrushBot|MJ12bot|DotBot|facebookexternalhit|kakaotalk-scrap|[\w-]*(?:bot|spider|crawler))/i.exec(ua);
+  if (named) return '로봇 (' + named[1].slice(0, 30) + ')';
+  const os = /iPhone|iPad/.test(ua) ? 'iPhone' : /Android/.test(ua) ? 'Android' : /Windows/.test(ua) ? 'Windows' : /Mac OS X|Macintosh/.test(ua) ? 'Mac' : /CrOS/.test(ua) ? 'ChromeOS' : /Linux/.test(ua) ? 'Linux' : '기타';
+  const v = (re) => { const m = re.exec(ua); return m ? m[1] : ''; };
+  let br;
+  if (/KAKAOTALK/i.test(ua)) br = '카카오톡 앱';
+  else if (/NAVER\(inapp/i.test(ua)) br = '네이버 앱';
+  else if (/Whale\//.test(ua)) br = '웨일 ' + v(/Whale\/(\d+)/);
+  else if (/SamsungBrowser\//.test(ua)) br = '삼성 인터넷 ' + v(/SamsungBrowser\/(\d+)/);
+  else if (/Edg\//.test(ua)) br = 'Edge ' + v(/Edg\/(\d+)/);
+  else if (/Firefox\//.test(ua)) br = 'Firefox ' + v(/Firefox\/(\d+)/);
+  else if (/CriOS\//.test(ua)) br = 'Chrome ' + v(/CriOS\/(\d+)/);
+  else if (/Chrome\//.test(ua)) br = 'Chrome ' + v(/Chrome\/(\d+)/);
+  else if (/Safari\//.test(ua)) br = 'Safari';
+  else br = '알 수 없음';
+  return (br + ' · ' + os).slice(0, 40);
+}
+
+// 데이터센터(서버 회사) 접속망 — 사람이 집·회사·휴대폰에서 들어올 때는 보통 통신사(KT·SK브로드밴드·LG유플러스 등)로 보임
+const DATACENTER = /google|amazon|aws|microsoft|azure|tencent|alibaba|aliyun|huawei|baidu|bytedance|digitalocean|ovh|hetzner|linode|oracle|vultr|choopa|contabo|leaseweb|m247|scaleway|datacamp|hostinger|kamatera|ionos|godaddy|zenlayer|ucloud|kingsoft|hostwinds|colocrossing|psychz|quadranet|servers\.com|g-core|gcore|constant company|hostroyale|selectel|timeweb|cloudflare|akamai|fastly|naver cloud|nhn cloud|kt cloud|gabia|cafe24|meta platforms|facebook|apple inc/i;
+// 아이폰 'iCloud 비공개 릴레이'를 쓰는 사람은 Cloudflare·Akamai·Fastly(애플 협력사) 접속망으로 보임 → 사파리면 사람으로 봄
+const RELAY = /cloudflare|akamai|fastly|apple inc/i;
+
+// 기록 때의 판정 (합계에 넣을지 결정). 관리자 화면에서는 문의·전화·관리자 표시까지 더해 다시 판정함
+export function botCheck(uaRaw, uaSum, net, userNets) {
+  if (/^자동 프로그램|^로봇/.test(uaSum)) return uaSum;
+  const ch = /Chrome\/(\d+)/.exec(uaRaw);
+  if (ch && +ch[1] < 100 && !/SamsungBrowser|Whale|KAKAOTALK|NAVER/i.test(uaRaw)) return '아주 오래된 크롬 (' + ch[1] + ')';
+  if (net && userNets.some((n) => net.toLowerCase() === n.toLowerCase())) return '로봇으로 등록한 접속망';
+  if (net && DATACENTER.test(net)) {
+    if (RELAY.test(net) && /Safari/.test(uaSum)) return '';
+    return '데이터센터 접속망';
+  }
+  return '';
+}
+
+/* ---------- 설정 기억: 회사 인터넷 주소 · 로봇으로 등록한 접속망 ----------
+   관리자 화면에서 등록 → 방문 때마다 DB를 읽지 않도록 5분 동안 기억 (서버 1대당 5분에 2줄 읽기) */
+let exCache = { at: 0, ips: [], nets: [] };
+export function dropExcludeCache() { exCache = { at: 0, ips: [], nets: [] }; }
 // IPv6는 앞 4마디(같은 회선)로 비교 — 기기마다 뒷부분이 바뀌기 때문
 export function ipKey(ip) {
   ip = String(ip || '').trim().toLowerCase();
@@ -145,62 +188,112 @@ export function ipKey(ip) {
   const parts = full.length > 1 ? head.concat(Array(8 - head.length - tail.length).fill('0'), tail) : head;
   return parts.slice(0, 4).map((x) => x.replace(/^0+(?=.)/, '')).join(':') + '::/64';
 }
-export async function excludeList(env) {
+async function readLists(env) {
+  const out = { statsExclude: [], statsBotNets: [] };
   try {
-    const r = await env.DB.prepare("SELECT value FROM settings WHERE key = 'statsExclude'").first();
-    const v = r ? JSON.parse(r.value) : null;
-    return Array.isArray(v) ? v : [];
-  } catch { return []; }
+    const { results } = await env.DB.prepare("SELECT key, value FROM settings WHERE key IN ('statsExclude', 'statsBotNets')").all();
+    for (const r of results) { try { const v = JSON.parse(r.value); if (Array.isArray(v)) out[r.key] = v; } catch {} }
+  } catch {}
+  return out;
 }
-async function excluded(env, ip) {
-  if (!ip) return false;
-  if (Date.now() - exCache.at > 300000) exCache = { at: Date.now(), list: (await excludeList(env)).map((x) => x.ip) };
-  return exCache.list.includes(ipKey(ip));
+export async function excludeList(env) { return (await readLists(env)).statsExclude; }
+async function lists(env) {
+  if (Date.now() - exCache.at > 300000) {
+    const l = await readLists(env);
+    exCache = { at: Date.now(), ips: l.statsExclude.map((x) => x.ip), nets: l.statsBotNets.map((x) => x.net) };
+  }
+  return exCache;
+}
+
+// 페이지 안 행동 (track.js가 다음 페이지 신호에 싣거나, 떠날 때 한 번 보냄)
+function behavior(b) {
+  const x = b && typeof b === 'object' ? b : {};
+  const d = Math.min(Math.max(parseInt(x.d, 10) || 0, 0), 3600);
+  const s = [0, 25, 50, 75, 100].includes(+x.s) ? +x.s : 0;
+  const a = (parseInt(x.a, 10) || 0) & 15;
+  return { d, s, a };
+}
+
+// 날짜별 합계에 넣기 (사람 방문만)
+function sumStmts(env, day, h, mobile, path, label, firstOfDay) {
+  const st = [env.DB.prepare('INSERT INTO visit_pages (day, path, n) VALUES (?, ?, 1) ON CONFLICT(day, path) DO UPDATE SET n = n + 1').bind(day, sumPath(path))];
+  if (firstOfDay) st.push(env.DB.prepare('INSERT INTO visit_refs (day, src, n) VALUES (?, ?, 1) ON CONFLICT(day, src) DO UPDATE SET n = n + 1').bind(day, label));
+  return st;
+}
+
+// 로봇 의심으로 합계에서 빠졌던 방문이 전화·견적 문의를 하면 → 사람으로 보고 그때 합계에 넣음
+async function promote(env, request, vid) {
+  const row = await env.DB.prepare("UPDATE visits SET counted = 1 WHERE vid = ? AND counted = 0 AND who = '' RETURNING day, src, landing, mobile").bind(vid).first();
+  if (!row) return;
+  const ip = request.headers.get('cf-connecting-ip') || '', ua = request.headers.get('user-agent') || '';
+  const h = await hashHex(row.day + '|' + ip + '|' + ua + '|' + (env.ADMIN_PASSWORD || 'gslift'));
+  const first = await env.DB.prepare('INSERT OR IGNORE INTO visit_uniq (day, h, mobile) VALUES (?, ?, ?)').bind(row.day, h, row.mobile).run();
+  await env.DB.batch(sumStmts(env, row.day, h, row.mobile, row.landing || '/', row.src, first.meta && first.meta.changes));
 }
 
 export async function recordHit(request, env) {
   const ok = new Response(null, { status: 204 });
   if (request.method !== 'POST' || !env.DB) return ok;
   const ua = request.headers.get('user-agent') || '';
-  if (!ua || BOT.test(ua)) return ok;
-  if (/(?:^|;\s*)gs_admin=/.test(request.headers.get('cookie') || '')) return ok;
+  if (!ua) return ok;
   let b = {};
   try { b = JSON.parse((await request.text()).slice(0, 3000)); } catch { return ok; }
+  const vid = /^[a-z0-9]{8,32}$/.test(String(b.v || '')) ? String(b.v) : '';
   await ensureSchema(env);
+  const bh = behavior(b.b);
+
+  // 떠날 때 신호: 행동만 더함 (방문당 최대 1번 — track.js가 지킴)
+  if (b.e) {
+    if (!vid) return ok;
+    await env.DB.prepare('UPDATE visits SET dwell = MAX(dwell, ?), scroll = MAX(scroll, ?), acts = acts | ? WHERE vid = ?').bind(bh.d, bh.s, bh.a, vid).run();
+    if (bh.a & 2) await promote(env, request, vid);
+    return ok;
+  }
+
   const ip = request.headers.get('cf-connecting-ip') || '';
-  if (await excluded(env, ip)) return ok;
+  const L = await lists(env);
+  const cf = request.cf || {};
+  const net = String(cf.asOrganization || '').slice(0, 60);
+  const uaSum = uaSummary(ua);
+  // 직원: 관리자 로그인 중 > 회사 인터넷 > 기기 표시(관리자 로그인한 적 있는 기기, ?gs_staff=1)
+  const who = /(?:^|;\s*)gs_admin=/.test(request.headers.get('cookie') || '') ? 'admin'
+    : ip && L.ips.includes(ipKey(ip)) ? 'office' : b.s ? 'staff' : '';
+  const why = who ? '' : botCheck(ua, uaSum, net, L.nets);
+  const human = !who && !why;
+
   const url = new URL(request.url);
   const now = kst(), day = now.slice(0, 10);
-  const h = await hashHex(day + '|' + ip + '|' + ua + '|' + (env.ADMIN_PASSWORD || 'gslift'));
   const mobile = /Mobi|Android|iPhone|iPad/i.test(ua) ? 1 : 0;
   const path = cleanPath(String(b.p || '/'));
-  const raw = rawSource(b.p, b.r, ua, url.hostname);
-  const label = srcLabel(raw);
-  const vid = /^[a-z0-9]{8,32}$/.test(String(b.v || '')) ? String(b.v) : '';
+  const label = srcLabel(rawSource(b.p, b.r, ua, url.hostname));
 
-  const first = await env.DB.prepare('INSERT OR IGNORE INTO visit_uniq (day, h, mobile) VALUES (?, ?, ?)').bind(day, h, mobile).run();
-  const stmts = [env.DB.prepare('INSERT INTO visit_pages (day, path, n) VALUES (?, ?, 1) ON CONFLICT(day, path) DO UPDATE SET n = n + 1').bind(day, sumPath(path))];
-  // 날짜별 경로 합계는 그날 첫 방문 때만 셈
-  if (first.meta && first.meta.changes) {
-    stmts.push(env.DB.prepare('INSERT INTO visit_refs (day, src, n) VALUES (?, ?, 1) ON CONFLICT(day, src) DO UPDATE SET n = n + 1').bind(day, label));
+  const stmts = [];
+  // 날짜별 합계는 사람 방문만 (직원·로봇 의심은 빼고 방문 1건 기록에만 남김)
+  if (human) {
+    const h = await hashHex(day + '|' + ip + '|' + ua + '|' + (env.ADMIN_PASSWORD || 'gslift'));
+    const first = await env.DB.prepare('INSERT OR IGNORE INTO visit_uniq (day, h, mobile) VALUES (?, ?, ?)').bind(day, h, mobile).run();
+    stmts.push(...sumStmts(env, day, h, mobile, path, label, first.meta && first.meta.changes));
   }
-  // 방문 1건 기록: 첫 페이지면 새 줄, 아니면 그 방문의 본 페이지에 더함 (20개까지 목록)
+  // 방문 1건 기록: 첫 페이지면 새 줄, 아니면 그 방문에 더함 (본 페이지 20개까지 + 지난 페이지까지의 행동)
   if (vid && b.f) {
     const r = refUrl(b.r);
     const refHost = r && r.hostname.replace(/^www\./, '') !== url.hostname.replace(/^www\./, '') ? r.hostname.replace(/^www\./, '').slice(0, 80) : '';
-    stmts.push(env.DB.prepare('INSERT OR IGNORE INTO visits (vid, day, at, last_at, src, kw, ad, ref, landing, pages, plist, mobile, region) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)')
-      .bind(vid, day, now, now, label, keywordOf(b.p, b.r, label), adTags(b.p), refHost, path, path, mobile, regionOf(request.cf)));
+    stmts.push(env.DB.prepare('INSERT OR IGNORE INTO visits (vid, day, at, last_at, src, kw, ad, ref, landing, pages, plist, mobile, region, net, ua, who, bot, why, counted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      .bind(vid, day, now, now, label, keywordOf(b.p, b.r, label), adTags(b.p), refHost, path, path, mobile, regionOf(cf), net, uaSum, who, why ? 1 : 0, why || null, human ? 1 : 0));
   } else if (vid) {
-    stmts.push(env.DB.prepare("UPDATE visits SET pages = pages + 1, last_at = ?, plist = CASE WHEN pages < 20 THEN plist || char(10) || ? ELSE plist END WHERE vid = ?").bind(now, path, vid));
+    stmts.push(env.DB.prepare('UPDATE visits SET pages = pages + 1, last_at = ?, plist = CASE WHEN pages < 20 THEN plist || char(10) || ? ELSE plist END, dwell = MAX(dwell, ?), scroll = MAX(scroll, ?), acts = acts | ? WHERE vid = ?')
+      .bind(now, path, bh.d, bh.s, bh.a, vid));
   }
-  await env.DB.batch(stmts);
+  if (stmts.length) await env.DB.batch(stmts);
+  if (vid && !b.f && (bh.a & 2)) await promote(env, request, vid);
   return ok;
 }
 
-// 견적문의가 들어오면 그 방문에 문의 번호를 붙임 (contact.js)
-export async function linkInquiry(env, vid, inquiryId) {
+// 견적문의가 들어오면 그 방문에 문의 번호를 붙이고, 로봇 의심이었으면 사람으로 보고 합계에 넣음 (contact.js)
+export async function linkInquiry(env, vid, inquiryId, request) {
   if (!/^[a-z0-9]{8,32}$/.test(String(vid || '')) || !inquiryId) return;
   await env.DB.prepare('UPDATE visits SET inquiry_id = ? WHERE vid = ? AND inquiry_id IS NULL').bind(inquiryId, vid).run();
+  if (request) await promote(env, request, vid);
 }
 
 // 경로별 방문 수 + 문의 수를 한 줄로 합침 (경로별 효과 비교용)
@@ -232,16 +325,24 @@ async function pageLabeler(env, paths) {
   };
 }
 
-export async function statsAdmin(env) {
-  const today = kst().slice(0, 10);
-  const dayAgo = (n) => kst(-n * 864e5).slice(0, 10);
-  const from = dayAgo(29);
-  // 합계는 400일, 방문 1건 기록은 90일 지나면 정리 (관리자 화면 열 때만 → 방문자 쪽 부담 없음)
+// 오래된 기록 정리: 날짜별 합계는 400일, 방문 1건 기록은 90일 지나면 삭제 (합계는 남음)
+// 관리자 화면을 열 때만, 서버 1대당 6시간에 한 번 → 방문자 쪽 부담 없음
+let cleanedAt = 0;
+async function cleanup(env, dayAgo) {
+  if (Date.now() - cleanedAt < 6 * 3600 * 1000) return;
+  cleanedAt = Date.now();
   const old = dayAgo(400);
   await env.DB.batch([
     ...['visit_uniq', 'visit_pages', 'visit_refs'].map((t) => env.DB.prepare(`DELETE FROM ${t} WHERE day < ?`).bind(old)),
     env.DB.prepare('DELETE FROM visits WHERE day < ?').bind(dayAgo(VISIT_DAYS)),
   ]);
+}
+
+export async function statsAdmin(env) {
+  const today = kst().slice(0, 10);
+  const dayAgo = (n) => kst(-n * 864e5).slice(0, 10);
+  const from = dayAgo(29);
+  await cleanup(env, dayAgo);
 
   const [uv, pv, refs, pages, mob, inq, inqSrc] = await Promise.all([
     env.DB.prepare('SELECT day, COUNT(*) AS n FROM visit_uniq WHERE day >= ? GROUP BY day').bind(from).all(),
@@ -272,45 +373,85 @@ export async function statsAdmin(env) {
   });
 }
 
+// 관리자 화면의 최종 판정: 직원 → 사람(문의·전화·관리자가 사람 표시) → 로봇 의심 → 확인 필요 → 사람
+export function classify(r, nets) {
+  if (r.who) return { cls: 'staff', why: { admin: '관리자 로그인 중', office: '회사 인터넷', staff: '직원 기기 표시' }[r.who] || '직원' };
+  if (r.inquiry_id) return { cls: 'human', why: r.bot ? '견적 문의함 (원래 로봇 의심)' : '' };
+  if (r.acts & 2) return { cls: 'human', why: r.bot ? '전화번호 누름 (원래 로봇 의심)' : '' };
+  if (r.mark === 1) return { cls: 'human', why: '관리자가 사람으로 표시' };
+  if (r.mark === 2) return { cls: 'bot', why: '관리자가 로봇으로 표시' };
+  if (r.bot) return { cls: 'bot', why: r.why || '로봇 의심' };
+  if (r.net && nets.some((n) => n.toLowerCase() === String(r.net).toLowerCase())) return { cls: 'bot', why: '로봇으로 등록한 접속망' };
+  if (r.net == null && r.ua == null) return { cls: 'human', why: '' }; // 2026-11-03 전 기록 (판정 정보 없음)
+  if (/^해외/.test(r.region || '') && /직접 입력/.test(r.src || '') && r.pages <= 1 && r.dwell < 3 && !r.acts) return { cls: 'check', why: '해외 · 직접 입력 · 1쪽 · 행동 없음' };
+  return { cls: 'human', why: '' };
+}
+
 // 관리자 '최근 방문' 목록: range = today | yesterday | 7d. 고른 기간의 줄만 읽음 (최대 500줄)
 export async function visitsAdmin(request, env) {
   await ensureSchema(env);
   const range = new URL(request.url).searchParams.get('range');
   const dayAgo = (n) => kst(-n * 864e5).slice(0, 10);
   const [a, b] = range === 'yesterday' ? [dayAgo(1), dayAgo(1)] : range === '7d' ? [dayAgo(6), dayAgo(0)] : [dayAgo(0), dayAgo(0)];
-  const { results } = await env.DB.prepare(
-    'SELECT at, src, kw, ad, ref, landing, pages, plist, mobile, region, inquiry_id FROM visits WHERE day >= ? AND day <= ? ORDER BY at DESC LIMIT 500'
-  ).bind(a, b).all();
+  const [{ results }, L] = await Promise.all([
+    env.DB.prepare(
+      'SELECT id, at, src, kw, ad, ref, landing, pages, plist, mobile, region, inquiry_id, net, ua, who, bot, why, mark, dwell, scroll, acts FROM visits WHERE day >= ? AND day <= ? ORDER BY at DESC LIMIT 500'
+    ).bind(a, b).all(),
+    readLists(env),
+  ]);
+  const nets = L.statsBotNets.map((x) => x.net);
   const label = await pageLabeler(env, results.flatMap((r) => String(r.plist || r.landing || '').split('\n')));
   const items = results.map((r) => {
     const plist = String(r.plist || r.landing || '').split('\n').filter(Boolean);
+    const c = classify(r, nets);
     return {
-      at: r.at, src: ALIAS[r.src] || r.src,
+      id: r.id, at: r.at, src: ALIAS[r.src] || r.src,
       kw: r.kw || (r.src === '구글 검색' ? '(구글: 검색어 비공개)' : ''),
       ad: r.ad || '', ref: r.ref || '',
       landing: { path: r.landing, label: label(r.landing || '/') },
       pages: r.pages, plist: plist.map((p) => ({ path: p, label: label(p) })),
       mobile: r.mobile, region: r.region || '', inquiry: r.inquiry_id || null,
+      net: r.net == null ? null : r.net, ua: r.ua || '', cls: c.cls, why: c.why, mark: r.mark || 0,
+      dwell: r.dwell || 0, scroll: r.scroll || 0, acts: r.acts || 0,
+      netListed: !!(r.net && nets.some((n) => n.toLowerCase() === r.net.toLowerCase())),
     };
   });
   return json({ ok: true, from: a, to: b, items, more: results.length >= 500 });
 }
 
-// 관리자: 회사 인터넷 주소 목록 보기·추가·삭제. 지금 관리자 화면을 연 곳의 주소도 알려 줌 (화면에서 '이 주소 추가')
+// 관리자: 한 방문을 사람/로봇으로 고침 (화면 표시만 바뀜 — 이미 지난 날짜별 합계는 그대로)
+export async function visitMarkAdmin(request, env, id) {
+  let body = {};
+  try { body = await request.json(); } catch {}
+  const mark = [0, 1, 2].includes(+body.mark) ? +body.mark : 0;
+  await env.DB.prepare('UPDATE visits SET mark = ? WHERE id = ?').bind(mark, id).run();
+  return json({ ok: true });
+}
+
+// 관리자: 회사 인터넷 주소 · 로봇으로 처리할 접속망 목록 보기·추가·삭제
 export async function statsExcludeAdmin(request, env) {
   await ensureSchema(env);
   const me = ipKey(request.headers.get('cf-connecting-ip') || '');
-  let list = await excludeList(env);
+  const L = await readLists(env);
+  let list = L.statsExclude, nets = L.statsBotNets;
   if (request.method === 'POST') {
     let body = {};
     try { body = await request.json(); } catch {}
-    if (body.add === 'me' && me && !list.some((x) => x.ip === me)) {
-      list.push({ ip: me, name: clean(body.name, 30) || '회사', at: kst().slice(0, 16) });
+    const save = async (key, v) => env.DB.prepare('INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value').bind(key, JSON.stringify(v)).run();
+    if (body.add === 'me' || body.remove) {
+      if (body.add === 'me' && me && !list.some((x) => x.ip === me)) list.push({ ip: me, name: clean(body.name, 30) || '회사', at: kst().slice(0, 16) });
+      if (body.remove) list = list.filter((x) => x.ip !== String(body.remove));
+      list = list.slice(0, 20);
+      await save('statsExclude', list);
     }
-    if (body.remove) list = list.filter((x) => x.ip !== String(body.remove));
-    list = list.slice(0, 20);
-    await env.DB.prepare("INSERT INTO settings (key, value) VALUES ('statsExclude', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(JSON.stringify(list)).run();
+    if (body.addNet || body.removeNet) {
+      const n = clean(body.addNet, 60);
+      if (n && !nets.some((x) => x.net.toLowerCase() === n.toLowerCase())) nets.push({ net: n, at: kst().slice(0, 16) });
+      if (body.removeNet) nets = nets.filter((x) => x.net !== String(body.removeNet));
+      nets = nets.slice(0, 100);
+      await save('statsBotNets', nets);
+    }
     dropExcludeCache();
   }
-  return json({ ok: true, list, me, meListed: list.some((x) => x.ip === me) });
+  return json({ ok: true, list, me, meListed: list.some((x) => x.ip === me), nets });
 }

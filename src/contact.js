@@ -179,7 +179,7 @@ export async function handleContact(request, env, ctx) {
     .run();
   row.id = ins.meta.last_row_id;
   // 그 방문 기록(관리자 '최근 방문')에 문의 번호를 붙임 — 실패해도 문의 접수에는 영향 없음
-  try { await linkInquiry(env, clean(body.vid, 32), row.id); } catch (e) { console.error('link visit', e); }
+  try { await linkInquiry(env, clean(body.vid, 32), row.id, request); } catch (e) { console.error('link visit', e); }
 
   // 저장이 끝난 뒤 메일 발송. 메일이 실패해도 문의는 이미 저장되어 있음.
   ctx.waitUntil(

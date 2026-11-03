@@ -10,8 +10,10 @@
 
   // 0) 방문 통계 신호 (모든 페이지에서 이 파일 하나가 보냄 — main.js가 주소의 ?… 를 지우기 전에 실행됨)
   //    - 방문번호: 무작위 값, 30분 동안 아무 페이지도 안 보면 새 번호 (사람을 알아볼 수 없음)
-  //    - 회사 사람 빼기: gslift.kr/?gs_staff=1 을 한 번 열면 그 브라우저는 기록 안 함 (?gs_staff=0 으로 해제)
-  //      관리자 화면 '이 기기는 통계에서 빼기' 버튼도 같은 표시를 남김
+  //    - 직원 표시: gslift.kr/?gs_staff=1 을 한 번 열거나 이 브라우저로 관리자에 로그인하면 남음 (?gs_staff=0 으로 해제)
+  //      직원 기기도 신호는 보내되 '직원'으로 표시 → 서버가 합계에서 빼고 관리자 화면에서 기본 숨김. 행동 신호는 안 보냄
+  //    - 페이지 안 행동: 머문 시간(방문 전체) · 처음 들어온 페이지의 스크롤 깊이 · 누른 것(설치사례·전화·견적)
+  //      다음 페이지 신호에 실어 보내고, 사이트를 떠날 때는 방문당 1번만 따로 보냄 (DB 쓰기가 방문당 최대 1번만 늘게)
   var VISIT_GAP = 30 * 60 * 1000, vid = '';
   function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function lsSet(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); return true; } catch (e) { return false; } }
@@ -24,20 +26,75 @@
       setTimeout(function () { d.remove(); }, 5000);
     } catch (e) {}
   }
+  function send(o) {
+    var data = JSON.stringify(o);
+    try {
+      if (navigator.sendBeacon && navigator.sendBeacon('/api/hit', new Blob([data], { type: 'text/plain' }))) return;
+      fetch('/api/hit', { method: 'POST', body: data, keepalive: true });
+    } catch (e) {}
+  }
   try {
     var sq = new URLSearchParams(location.search).get('gs_staff');
     if (sq === '1') { var saved = lsSet('gs_staff', '1'); document.addEventListener('DOMContentLoaded', function () { note(saved ? '이 기기(브라우저)는 이제 방문 통계에서 빠집니다.' : '이 브라우저는 설정을 저장할 수 없어 빼지 못했습니다. (비공개 창인지 확인)'); }); }
     if (sq === '0') { lsSet('gs_staff', null); document.addEventListener('DOMContentLoaded', function () { note('이 기기(브라우저)를 다시 방문 통계에 넣습니다.'); }); }
     var staff = lsGet('gs_staff') === '1' || sq === '1';
-    if (!staff && !navigator.webdriver) {
+    if (!navigator.webdriver) {
       var now = Date.now(), first = 0, prev = null;
       try { prev = JSON.parse(lsGet('gs_v') || 'null'); } catch (e) {}
       if (prev && prev.id && now - prev.t < VISIT_GAP) vid = prev.id;
-      else { vid = (Math.random().toString(36).slice(2) + now.toString(36)).slice(0, 20); first = 1; }
-      if (!lsSet('gs_v', JSON.stringify({ id: vid, t: now }))) { vid = ''; } // 저장이 안 되는 브라우저는 방문 1건 기록 없이 합계만
-      var hitData = JSON.stringify({ p: location.pathname + location.search, r: document.referrer, v: vid, f: first });
-      if (navigator.sendBeacon) navigator.sendBeacon('/api/hit', new Blob([hitData], { type: 'text/plain' }));
-      else fetch('/api/hit', { method: 'POST', body: hitData, keepalive: true });
+      else { vid = (Math.random().toString(36).slice(2) + now.toString(36)).slice(0, 20); first = 1; prev = null; }
+      // 행동 누적값 (방문 단위): d 머문 시간(초) · s 처음 페이지 스크롤 · a 누른 것 · e 떠날 때 신호를 보냈는지
+      var B = first ? { d: 0, s: 0, a: 0, e: 0 } : { d: +(prev.d || 0), s: +(prev.s || 0), a: +(prev.a || 0), e: +(prev.e || 0) };
+      var save = function () { if (vid) lsSet('gs_v', JSON.stringify({ id: vid, t: Date.now(), d: B.d, s: B.s, a: B.a, e: B.e })); };
+      if (!lsSet('gs_v', JSON.stringify({ id: vid, t: now, d: B.d, s: B.s, a: B.a, e: B.e }))) vid = ''; // 저장이 안 되는 브라우저는 방문 1건 기록 없이 합계만
+      var hit = { p: location.pathname + location.search, r: document.referrer, v: vid, f: first };
+      if (staff) hit.s = 1;
+      else if (!first && vid) hit.b = { d: B.d, s: B.s, a: B.a }; // 지난 페이지까지의 행동을 이 신호에 실음 (쓰기 추가 없음)
+      send(hit);
+
+      if (vid && !staff) {
+        // 머문 시간: 화면을 보고 있는 동안만 셈
+        var shownAt = document.visibilityState === 'visible' ? Date.now() : 0;
+        var flushTime = function () { if (shownAt) { B.d = Math.min(B.d + Math.round((Date.now() - shownAt) / 1000), 3600); shownAt = 0; } };
+        // 스크롤 깊이: 이 방문의 처음 페이지에서만 (25·50·75·100%)
+        if (first) {
+          var depth = function () {
+            var h = document.documentElement.scrollHeight - window.innerHeight;
+            var pct = h <= 0 ? 100 : Math.min(100, (window.scrollY / h) * 100);
+            var st = pct >= 99 ? 100 : pct >= 75 ? 75 : pct >= 50 ? 50 : pct >= 25 ? 25 : 0;
+            if (st > B.s) B.s = st;
+          };
+          window.addEventListener('scroll', depth, { passive: true });
+          window.addEventListener('load', depth);
+        }
+        // 누른 것: 1 설치사례 열어 봄 · 2 전화번호 · 4 견적 문의 버튼 · 8 견적 양식에 입력 시작
+        var leaving = false; // 우리 사이트 안의 다른 페이지로 가는 중 → 떠날 때 신호 대신 다음 페이지 신호에 실음
+        document.addEventListener('click', function (e) {
+          var t = e.target && e.target.closest ? e.target : null; if (!t) return;
+          var a = t.closest('a'), href = a ? a.getAttribute('href') || '' : '';
+          if (/^tel:/i.test(href)) B.a |= 2;
+          if (/case\.html/.test(href) || t.closest('#track .case:not(.case-more), .cl-card, #lbMore, .cd-more-grid a')) B.a |= 1;
+          if (/#contact|to=contact/.test(href)) B.a |= 4;
+          if (a && !a.target && a.host === location.host && !/^(tel|mailto):/i.test(href) && href.charAt(0) !== '#') leaving = true;
+          save();
+        }, true);
+        var form = function (e) { if (e.target && e.target.closest && e.target.closest('#form')) { if (!(B.a & 8)) { B.a |= 8; save(); } } };
+        document.addEventListener('input', form, true);
+        document.addEventListener('change', form, true);
+        // 화면이 가려질 때(다른 앱·탭, 창 닫기, 전화 걸기): 행동을 저장하고, 사이트를 떠나는 것이면 방문당 1번만 보냄
+        var hidden = function () {
+          flushTime(); save();
+          if (leaving || B.e) return;
+          B.e = 1; save();
+          send({ v: vid, e: 1, b: { d: B.d, s: B.s, a: B.a } });
+        };
+        document.addEventListener('visibilitychange', function () {
+          if (document.visibilityState === 'hidden') hidden();
+          else { shownAt = Date.now(); leaving = false; }
+        });
+        window.addEventListener('pagehide', function () { flushTime(); save(); if (!leaving && !B.e) hidden(); });
+        window.addEventListener('pageshow', function (e) { if (e.persisted) { shownAt = Date.now(); leaving = false; } });
+      }
     }
   } catch (e) {}
 

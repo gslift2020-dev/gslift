@@ -99,6 +99,17 @@ const MIGRATIONS = [
   'ALTER TABLE cases ADD COLUMN taken_at TEXT',
   'ALTER TABLE cases ADD COLUMN note TEXT', // 내부 메모(원래 폴더·현장명) — 관리자만 봄
   'ALTER TABLE cases ADD COLUMN tags TEXT', // 상황별 꼬리표 ",in,mesh," (src/tags.js)
+  // 방문 1건 기록: 로봇·직원 판정과 페이지 안 행동 (2026-11-03, src/stats.js)
+  'ALTER TABLE visits ADD COLUMN net TEXT',      // 접속망 이름 (Cloudflare asOrganization, 예: Korea Telecom) — IP 아님
+  'ALTER TABLE visits ADD COLUMN ua TEXT',       // 브라우저 요약 (예: Chrome 130 · Android) — 원문 저장 안 함
+  "ALTER TABLE visits ADD COLUMN who TEXT NOT NULL DEFAULT ''", // 직원: staff(기기 표시) · office(회사 인터넷) · admin(로그인 중)
+  'ALTER TABLE visits ADD COLUMN bot INTEGER NOT NULL DEFAULT 0', // 기록 때 로봇 의심으로 판정
+  'ALTER TABLE visits ADD COLUMN why TEXT',      // 로봇 의심 이유
+  'ALTER TABLE visits ADD COLUMN mark INTEGER NOT NULL DEFAULT 0', // 관리자가 고친 판정: 1 사람, 2 로봇
+  'ALTER TABLE visits ADD COLUMN counted INTEGER NOT NULL DEFAULT 1', // 날짜별 합계에 넣었는지
+  'ALTER TABLE visits ADD COLUMN dwell INTEGER NOT NULL DEFAULT 0', // 머문 시간(초, 방문 전체)
+  'ALTER TABLE visits ADD COLUMN scroll INTEGER NOT NULL DEFAULT 0', // 처음 들어온 페이지 스크롤 깊이 0·25·50·75·100
+  'ALTER TABLE visits ADD COLUMN acts INTEGER NOT NULL DEFAULT 0', // 누른 것: 1 설치사례 · 2 전화 · 4 견적 버튼 · 8 견적 양식 입력
 ];
 
 // 설치사례 분류 (제품소개 4종과 같음)
@@ -119,7 +130,7 @@ const INDEXES = [
   'CREATE INDEX IF NOT EXISTS idx_visits_day ON visits (day, at)',
 ];
 // 표 구조를 바꿀 때만 이 값을 올림 → 같으면 서버가 새로 뜰 때마다 점검을 반복하지 않음
-const SCHEMA_VERSION = '2026-10-30a';
+const SCHEMA_VERSION = '2026-11-03a';
 
 let schemaReady = false;
 export async function ensureSchema(env) {

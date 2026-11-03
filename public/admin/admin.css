@@ -346,3 +346,22 @@ input[type=month],input[type=email],input[type=search]{height:46px;padding:0 14p
 .iplist small{color:var(--muted)}
 .iplist .link{margin-left:auto}
 @media (max-width:760px){.staff-grid{grid-template-columns:1fr}}
+
+/* 최근 방문: 판정·행동 (2026-11-03) */
+.vchk{display:flex;flex-direction:row;align-items:center;gap:6px;font-weight:600;font-size:14px;cursor:pointer}
+.vchk input{width:18px;height:18px}
+.vsum{margin:0;font-size:14px;color:var(--ink)}
+.vsum .vx{color:var(--muted)}
+.vtbl tr.c-bot td,.vtbl tr.c-staff td{color:#7A869C;background:#F7F8FA}
+.vtbl tr.c-bot .vsrc,.vtbl tr.c-staff .vsrc{color:#7A869C}
+.vbadge{display:inline-block;font-size:12px;font-weight:700;border-radius:6px;padding:2px 8px;white-space:nowrap}
+.vbadge.bot{background:#E5E7EB;color:#374151}
+.vbadge.check{background:#FEF3C7;color:#92400E}
+.vbadge.staff{background:#DBEAFE;color:#1E40AF}
+.vbtns{display:flex;flex-direction:column;align-items:flex-start}
+.vbtns .link{min-height:30px;padding:4px 0;font-size:13px}
+.vdw{font-weight:600;white-space:nowrap}
+.vacts{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px}
+.vact{font-style:normal;font-size:11px;font-weight:700;background:#E5ECF8;color:var(--blue);border-radius:5px;padding:1px 6px;white-space:nowrap}
+.vact.hot{background:#FFEDD5;color:#C2410C}
+.vtbl td .vinq{margin-top:4px}
