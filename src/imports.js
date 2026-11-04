@@ -42,7 +42,9 @@ export async function runImports(request, env, force = false) {
   if (fin && fin.value === sig) { doneSig = sig; return; }
   let pending = false;
   // 8초 안에서 여러 건을 차례로 올림 (Cloudflare 무료 요금제의 뒤처리 시간 제한 안에 끝나도록)
-  for (const batch of manifest.batches || []) {
+  // 글 고치기·꼬리표·삭제처럼 가벼운 묶음을 먼저 처리 (글 수백 건 확인에 시간이 걸려 뒤쪽 묶음이 잘리는 것 방지)
+  const batches = [...(manifest.batches || [])].sort((a, b) => ((a.cases || []).length ? 1 : 0) - ((b.cases || []).length ? 1 : 0));
+  for (const batch of batches) {
     if (!/^[\w-]{3,60}$/.test(batch.id || '')) continue;
     const cases = batch.cases || [];
     // 이미 올린 글에서 일부 사진 빼기: 제목으로 글을 찾고, 정해진 순서(0부터)의 사진을 삭제
