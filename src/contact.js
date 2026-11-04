@@ -71,7 +71,7 @@ async function sendMail(env, row, spec, photos) {
   ];
   if (spec.email) lines.push(['이메일', spec.email]);
   lines.push(['관심 제품', row.product || '-']);
-  if (spec.src) lines.push(['유입 경로', spec.src]);
+  if (spec.src) lines.push(['유입 경로', spec.src + (spec.kw ? ' · 검색어: ' + spec.kw : '')]);
   const sr = specRows(spec);
   const table = (rows) => `<table style="border-collapse:collapse">${rows
     .map(([k, v]) => `<tr><td style="padding:6px 14px 6px 0;color:#4A5A78;white-space:nowrap">${k}</td><td style="padding:6px 0"><b>${esc(v)}</b></td></tr>`)
@@ -167,6 +167,9 @@ export async function handleContact(request, env, ctx) {
   // 광고 유입 경로 (홈페이지가 자동으로 붙여 보냄: naver, kakao, search.naver.com 등)
   const src = clean(body.src, 40).replace(/[^\w.\-]/g, '');
   if (src) spec.src = src;
+  // 광고 검색어 (track.js가 광고 주소의 n_query·k_query·utm_term에서 꺼내 둔 것, 이미 한글로 풀린 글자). 유입 경로 옆에 같이 남김
+  const kw = clean(body.kw, 60).replace(/[\u0000-\u001f\u007f<>]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (kw && src) spec.kw = kw;
 
   if (files.length > MAX_PHOTOS) return json({ ok: false, field: 'photos', error: `사진은 ${MAX_PHOTOS}장까지 보낼 수 있습니다.` }, 400);
   const photos = [];

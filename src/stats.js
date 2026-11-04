@@ -62,7 +62,8 @@ export function rawSource(p, ref, ua, host) {
   const q = qs(p);
   const u = q.get('utm_source');
   if (u) return u.slice(0, 40);
-  if (q.get('n_media')) return 'naver';
+  if (q.get('n_media') || q.get('n_query') || q.get('n_keyword')) return 'naver';
+  if (q.get('k_query') || q.get('k_keyword')) return 'kakao';
   const r = refUrl(ref);
   const h = r ? r.hostname.replace(/^www\./, '') : '';
   if (h && h !== host.replace(/^www\./, '')) return h;
@@ -71,12 +72,32 @@ export function rawSource(p, ref, ua, host) {
   return 'direct';
 }
 
-// 검색어: 이전 페이지 주소에 담겨 온 경우만 (구글은 주지 않음) + 네이버 광고 자동 추적 값(n_query·n_keyword)
+// 광고 추적 값 꺼내기: 주소의 %EC%97… (UTF-8)은 URLSearchParams가 이미 풀어 줌.
+// 광고 쪽에서 두 번 인코딩해 보내는 경우(%25EC…)도 있어 % 모양이 남아 있으면 한 번 더 푼다(최대 2번, 깨진 값은 그대로).
+export function adVal(q, k, max = 50) {
+  let v = String(q.get(k) || '');
+  for (let i = 0; i < 2 && /%[0-9A-Fa-f]{2}/.test(v); i++) {
+    try { v = decodeURIComponent(v.replace(/\+/g, ' ')); } catch { break; }
+  }
+  if (v.includes('\uFFFD')) return ''; // UTF-8이 아닌 값(깨진 글자)은 버림
+  return v.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
+}
+// 실제 검색어(손님이 친 말): 네이버 n_query · 카카오 k_query 또는 utm_term
+export function adQuery(p) {
+  const q = qs(p);
+  return adVal(q, 'n_query') || adVal(q, 'k_query') || adVal(q, 'utm_term');
+}
+// 등록 키워드(우리가 광고에 넣은 말): 네이버 n_keyword · 카카오 k_keyword
+export function adKeyword(p) {
+  const q = qs(p);
+  return adVal(q, 'n_keyword') || adVal(q, 'k_keyword');
+}
+
+// 검색어: 광고 실제 검색어 → 없으면 이전 페이지 주소에 담겨 온 검색어 (구글은 주지 않음)
 const KW_PARAM = { '네이버 검색': ['query', 'oquery'], '다음 검색': ['q'], '빙 검색': ['q'], '구글 검색': ['q'], '야후 검색': ['p'], '줌 검색': ['query'] };
 function keywordOf(p, ref, label) {
-  const q = qs(p);
-  const ad = q.get('n_query') || q.get('n_keyword') || q.get('utm_term');
-  if (ad) return ad.slice(0, 50);
+  const ad = adQuery(p);
+  if (ad) return ad;
   const r = refUrl(ref);
   if (!r) return '';
   // 네이버 광고는 이전 페이지가 search.naver.com 이 아닐 때도 있음(광고 클릭 중간 주소) → 검색 사이트 판단은 주소로
@@ -85,11 +106,12 @@ function keywordOf(p, ref, label) {
   return '';
 }
 
-// 광고·홍보 이름표 전부 (utm_* + 네이버 광고 자동 추적 n_*)
-const AD_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'n_media', 'n_query', 'n_keyword', 'n_ad_group', 'n_campaign_type', 'n_rank', 'n_ad'];
+// 광고·홍보 이름표 전부 (utm_* + 네이버 광고 추적 n_* + 카카오 광고 추적 k_*)
+// 실제 검색어(n_query·k_query·utm_term)는 kw 칸, 등록 키워드(n_keyword·k_keyword)는 adkw 칸에 따로 넣고 여기서는 뺌(같은 말 두 번 안 보이게)
+const AD_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'n_media', 'n_ad_group', 'n_campaign_type', 'n_rank', 'n_ad', 'k_keyword_type'];
 function adTags(p) {
   const q = qs(p), out = [];
-  for (const k of AD_KEYS) { const v = q.get(k); if (v) out.push(k + '=' + v.slice(0, 60)); }
+  for (const k of AD_KEYS) { const v = adVal(q, k, 60); if (v) out.push(k + '=' + v); }
   return out.join(' · ').slice(0, 300);
 }
 
@@ -278,8 +300,8 @@ export async function recordHit(request, env) {
   if (vid && b.f) {
     const r = refUrl(b.r);
     const refHost = r && r.hostname.replace(/^www\./, '') !== url.hostname.replace(/^www\./, '') ? r.hostname.replace(/^www\./, '').slice(0, 80) : '';
-    stmts.push(env.DB.prepare('INSERT OR IGNORE INTO visits (vid, day, at, last_at, src, kw, ad, ref, landing, pages, plist, mobile, region, net, ua, who, bot, why, counted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-      .bind(vid, day, now, now, label, keywordOf(b.p, b.r, label), adTags(b.p), refHost, path, path, mobile, regionOf(cf), net, uaSum, who, why ? 1 : 0, why || null, human ? 1 : 0));
+    stmts.push(env.DB.prepare('INSERT OR IGNORE INTO visits (vid, day, at, last_at, src, kw, adkw, ad, ref, landing, pages, plist, mobile, region, net, ua, who, bot, why, counted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      .bind(vid, day, now, now, label, keywordOf(b.p, b.r, label), adKeyword(b.p) || null, adTags(b.p), refHost, path, path, mobile, regionOf(cf), net, uaSum, who, why ? 1 : 0, why || null, human ? 1 : 0));
   } else if (vid) {
     stmts.push(env.DB.prepare('UPDATE visits SET pages = pages + 1, last_at = ?, plist = CASE WHEN pages < 20 THEN plist || char(10) || ? ELSE plist END, dwell = MAX(dwell, ?), scroll = MAX(scroll, ?), acts = acts | ? WHERE vid = ?')
       .bind(now, path, bh.d, bh.s, bh.a, vid));
@@ -395,7 +417,7 @@ export async function visitsAdmin(request, env) {
   const [a, b] = range === 'yesterday' ? [dayAgo(1), dayAgo(1)] : range === '7d' ? [dayAgo(6), dayAgo(0)] : [dayAgo(0), dayAgo(0)];
   const [{ results }, L] = await Promise.all([
     env.DB.prepare(
-      'SELECT id, at, src, kw, ad, ref, landing, pages, plist, mobile, region, inquiry_id, net, ua, who, bot, why, mark, dwell, scroll, acts FROM visits WHERE day >= ? AND day <= ? ORDER BY at DESC LIMIT 500'
+      'SELECT id, at, src, kw, adkw, ad, ref, landing, pages, plist, mobile, region, inquiry_id, net, ua, who, bot, why, mark, dwell, scroll, acts FROM visits WHERE day >= ? AND day <= ? ORDER BY at DESC LIMIT 500'
     ).bind(a, b).all(),
     readLists(env),
   ]);
@@ -407,7 +429,7 @@ export async function visitsAdmin(request, env) {
     return {
       id: r.id, at: r.at, src: ALIAS[r.src] || r.src,
       kw: r.kw || (r.src === '구글 검색' ? '(구글: 검색어 비공개)' : ''),
-      ad: r.ad || '', ref: r.ref || '',
+      adkw: r.adkw || '', ad: r.ad || '', ref: r.ref || '',
       landing: { path: r.landing, label: label(r.landing || '/') },
       pages: r.pages, plist: plist.map((p) => ({ path: p, label: label(p) })),
       mobile: r.mobile, region: r.region || '', inquiry: r.inquiry_id || null,

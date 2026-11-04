@@ -804,7 +804,8 @@
       list.map(function (v) {
         var t = v.at.slice(11, 16), dd = (+v.at.slice(5, 7)) + '/' + (+v.at.slice(8, 10));
         var src = '<span class="vsrc' + (isAd(v.src) ? ' ad' : '') + '">' + esc(v.src) + '</span>' + (v.ref && v.src.indexOf(v.ref) < 0 ? '<span class="vref">' + esc(v.ref) + '</span>' : '');
-        var kw = (v.kw ? '<span class="vkw">' + esc(v.kw) + '</span>' : '') + (v.ad ? '<span class="vad">' + esc(v.ad) + '</span>' : '');
+        // 굵게 = 손님이 실제로 친 검색어(광고 n_query·k_query·utm_term 또는 검색 사이트 주소) / 「키워드」 = 광고에 등록한 키워드(n_keyword·k_keyword) / 회색 = 그 밖의 이름표
+        var kw = (v.kw ? '<span class="vkw">' + esc(v.kw) + '</span>' : '') + (v.adkw && v.adkw !== v.kw ? '<span class="vadkw">키워드: ' + esc(v.adkw) + '</span>' : '') + (v.ad ? '<span class="vad">' + esc(v.ad) + '</span>' : '');
         var pg = v.pages > 1
           ? '<details class="vpages"><summary>' + v.pages + '쪽</summary><ol>' + v.plist.map(function (p) { return '<li><a href="' + esc(p.path) + '" target="_blank" rel="noopener">' + esc(p.label) + '</a></li>'; }).join('') + (v.pages > v.plist.length ? '<li>… 외 ' + (v.pages - v.plist.length) + '쪽</li>' : '') + '</ol></details>'
           : '1쪽';

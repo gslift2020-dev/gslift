@@ -109,6 +109,7 @@ const MIGRATIONS = [
   'ALTER TABLE visits ADD COLUMN counted INTEGER NOT NULL DEFAULT 1', // 날짜별 합계에 넣었는지
   'ALTER TABLE visits ADD COLUMN dwell INTEGER NOT NULL DEFAULT 0', // 머문 시간(초, 방문 전체)
   'ALTER TABLE visits ADD COLUMN scroll INTEGER NOT NULL DEFAULT 0', // 처음 들어온 페이지 스크롤 깊이 0·25·50·75·100
+  'ALTER TABLE visits ADD COLUMN adkw TEXT',     // 광고 등록 키워드 (네이버 n_keyword · 카카오 k_keyword, 2026-11-04). 실제 검색어는 kw 칸
   'ALTER TABLE visits ADD COLUMN acts INTEGER NOT NULL DEFAULT 0', // 누른 것: 1 설치사례 · 2 전화 · 4 견적 버튼 · 8 견적 양식 입력
 ];
 
@@ -130,7 +131,7 @@ const INDEXES = [
   'CREATE INDEX IF NOT EXISTS idx_visits_day ON visits (day, at)',
 ];
 // 표 구조를 바꿀 때만 이 값을 올림 → 같으면 서버가 새로 뜰 때마다 점검을 반복하지 않음
-const SCHEMA_VERSION = '2026-11-03a';
+const SCHEMA_VERSION = '2026-11-04a';
 
 let schemaReady = false;
 export async function ensureSchema(env) {

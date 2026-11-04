@@ -161,7 +161,7 @@ async function listInquiries(env) {
     ok: true,
     items: results.map((r) => ({
       ...r,
-      spec: ((s) => (s.email ? [['이메일', s.email]] : []).concat(specRows(s), s.src ? [['유입 경로', s.src]] : []))(parse(r.spec, {})),
+      spec: ((s) => (s.email ? [['이메일', s.email]] : []).concat(specRows(s), s.src ? [['유입 경로', s.src + (s.kw ? ' · 검색어: ' + s.kw : '')]] : []))(parse(r.spec, {})),
       photos: parse(r.photos, []).map((k) => '/api/admin/inq-photo/' + encodeURIComponent(k)),
     })),
   });

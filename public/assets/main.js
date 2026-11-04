@@ -441,6 +441,17 @@
         if (sel) $$('option', sel).forEach(function (o) { if (o.textContent.replace(/\s/g, '').indexOf(prod.replace(/\s/g, '').slice(0, 5)) === 0) sel.value = o.value || o.textContent; });
       }
       goTo(want);
+      // 위쪽 설치사례 사진이 늦게 들어오며 화면이 밀리면 목표가 아래로 내려감 → 손님이 직접 움직이지 않았을 때만 두 번 다시 맞춤
+      var moved = false, stop = function () { moved = true; };
+      ['wheel', 'touchstart', 'keydown', 'mousedown'].forEach(function (ev) { window.addEventListener(ev, stop, { once: true, passive: true }); });
+      [900, 2000].forEach(function (ms) {
+        setTimeout(function () {
+          var el = document.getElementById(want);
+          if (!el || moved) return;
+          var top = el.getBoundingClientRect().top;
+          if (top > 120 || top < -20) el.scrollIntoView({ behavior: 'auto', block: 'start' });
+        }, ms);
+      });
     });
   }
 
@@ -587,7 +598,7 @@
       var fd = new FormData();
       ['company', 'name', 'phone', 'email', 'product', 'loc', 'message', 'gs_hp', 'dir', 'load', 'stops', 'travel', 'place', 'hole', 'pit', 'cargo', 'w', 'd', 'h'].forEach(function (k) { if (f[k]) fd.append(k, f[k].value); });
       fd.append('agree', f.agree.checked ? 'true' : 'false');
-      if (window.GSTrack) { fd.append('src', window.GSTrack.src()); fd.append('vid', window.GSTrack.vid()); }
+      if (window.GSTrack) { fd.append('src', window.GSTrack.src()); fd.append('vid', window.GSTrack.vid()); if (window.GSTrack.kw) fd.append('kw', window.GSTrack.kw()); }
       shots.forEach(function (sh, i) { fd.append('photos', sh.blob, 'photo' + (i + 1) + '.jpg'); });
       btn.disabled = true; btn.textContent = shots.length ? '사진과 함께 보내는 중…' : '보내는 중…'; say('');
       fetch('/api/contact', { method: 'POST', body: fd })

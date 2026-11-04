@@ -99,6 +99,24 @@
   } catch (e) {}
 
   // 1) 어디서 들어왔는지 세션에 기억 (main.js가 주소의 ?… 를 지우기 전에 실행됨)
+  //    광고 추적 값이 붙은 주소로 들어오면 그 광고가 이김(같은 창에서 광고를 다시 눌러 들어온 경우)
+  //    광고 검색어(gs_kw): 손님이 실제로 친 말 — 네이버 n_query · 카카오 k_query 또는 utm_term. 없으면 등록 키워드(n_keyword·k_keyword)
+  function adv(q, k) {
+    var v = q.get(k) || '';
+    for (var i = 0; i < 2 && /%[0-9A-Fa-f]{2}/.test(v); i++) { try { v = decodeURIComponent(v.replace(/\+/g, ' ')); } catch (e) { break; } }
+    if (v.indexOf('\uFFFD') >= 0) return ''; // UTF-8이 아닌 값(깨진 글자)은 버림
+    return v.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 50);
+  }
+  try {
+    var aq = new URLSearchParams(location.search);
+    var adSrc = aq.get('utm_source') || (aq.get('n_media') || aq.get('n_query') || aq.get('n_keyword') ? 'naver' : '') || (aq.get('k_query') || aq.get('k_keyword') ? 'kakao' : '');
+    if (adSrc) {
+      sessionStorage.setItem('gs_src', adSrc.slice(0, 40));
+      var akw = adv(aq, 'n_query') || adv(aq, 'k_query') || adv(aq, 'utm_term');
+      var areg = adv(aq, 'n_keyword') || adv(aq, 'k_keyword');
+      sessionStorage.setItem('gs_kw', akw || (areg ? '키워드: ' + areg : ''));
+    }
+  } catch (e) {}
   try {
     if (!sessionStorage.getItem('gs_src')) {
       var q = new URLSearchParams(location.search);
@@ -140,6 +158,10 @@
     // 문의와 함께 보낼 유입 경로 (예: naver, kakao, search.naver.com)
     src: function () {
       try { return sessionStorage.getItem('gs_src') || ''; } catch (e) { return ''; }
+    },
+    // 문의와 함께 보낼 광고 검색어 (광고로 들어온 경우만, 예: 화물용리프트)
+    kw: function () {
+      try { return sessionStorage.getItem('gs_kw') || ''; } catch (e) { return ''; }
     },
     // 문의를 이 방문 기록에 연결하기 위한 방문번호
     vid: function () { return vid; },
