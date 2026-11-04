@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="preload" as="image" href="assets/img/s1.webp">
-<link rel="stylesheet" href="assets/style.css?v=44bf4e6b">
+<link rel="stylesheet" href="assets/style.css?v=d7aa8187">
 <script>document.documentElement.classList.remove('no-js')</script>
 </head>
 <body>
@@ -400,15 +400,24 @@
 <label>회사명<input type="text" name="company" placeholder="(주)회사명" autocomplete="organization"></label>
 <label><span>담당자명 <span class="req" aria-hidden="true">*</span></span><input type="text" name="name" autocomplete="name" required maxlength="50"></label>
 <label><span>연락처 <span class="req" aria-hidden="true">*</span></span><input type="tel" name="phone" placeholder="010-0000-0000" autocomplete="tel" inputmode="numeric" required maxlength="14"></label>
+<label>담당자 이메일<input type="email" name="email" placeholder="견적서를 메일로 받으실 경우" autocomplete="email" inputmode="email" maxlength="100"></label>
 <label>관심 제품<select name="product"><option>화물용 리프트 (F/L)</option><option>테이블 리프트 (T/L)</option><option>수동·자동 스태커</option><option>기타</option></select></label>
 <label class="full">설치 현장 위치 <input type="text" name="loc" maxlength="100" placeholder="예) 경기 김포시 양촌읍, 부산 사상구 (시·군·구까지만 적어도 됩니다)" autocomplete="off"></label>
 <fieldset class="full spec-set">
 <legend>원하시는 리프트 사양 <small>아는 것만 고르세요. 모르면 비워두셔도 됩니다.</small></legend>
 <div class="spec-grid">
-<label>출입방향<select name="dir"><option value="">모름 / 상담 후 결정</option><option>일방향 (한쪽 문)</option><option>양방향 (앞뒤 문)</option><option>직각 방향 (ㄱ자)</option></select></label>
 <label>적재하중<select name="load"><option value="">모름 / 상담 후 결정</option><option>500kg</option><option>1톤</option><option>2톤</option><option>3톤</option><option>4톤</option><option>5톤 이상</option></select></label>
+<fieldset class="wide dir-set"><legend>출입방향 <small>짐을 싣고 내리는 문의 위치 (옆에서 본 그림, 화살표 = 문)</small></legend><div class="dir-grid"><label class="dir-opt"><input type="radio" name="dir" value="일방향 (모든 층 같은 쪽)"><span class="dir-pic"><svg viewBox="0 0 96 72" width="96" height="72" aria-hidden="true"><defs><marker id="ah" viewBox="0 0 6 6" refX="3" refY="3" markerWidth="3.2" markerHeight="3.2" orient="auto-start-reverse"><path d="M0 0L6 3L0 6z" fill="currentColor"/></marker></defs><rect x="33" y="6" width="30" height="60" rx="2" fill="#fff" stroke="#8A99B5" stroke-width="2"/><path d="M33 36H63" stroke="#8A99B5" stroke-width="1.5" stroke-dasharray="3 3"/><text x="48" y="25" text-anchor="middle" font-size="11" fill="#4A5A78" font-weight="700">2층</text><text x="48" y="56" text-anchor="middle" font-size="11" fill="#4A5A78" font-weight="700">1층</text><path d="M6 21 H29" stroke="currentColor" stroke-width="3" marker-start="url(#ah)" marker-end="url(#ah)"/><path d="M6 51 H29" stroke="currentColor" stroke-width="3" marker-start="url(#ah)" marker-end="url(#ah)"/></svg></span><b>일방향</b><small>모든 층에서 <b>같은 쪽 문</b>으로 싣고 내림</small></label><label class="dir-opt"><input type="radio" name="dir" value="양방향 (앞뒤 관통)"><span class="dir-pic"><svg viewBox="0 0 96 72" width="96" height="72" aria-hidden="true"><defs><marker id="ah" viewBox="0 0 6 6" refX="3" refY="3" markerWidth="3.2" markerHeight="3.2" orient="auto-start-reverse"><path d="M0 0L6 3L0 6z" fill="currentColor"/></marker></defs><rect x="33" y="6" width="30" height="60" rx="2" fill="#fff" stroke="#8A99B5" stroke-width="2"/><path d="M33 36H63" stroke="#8A99B5" stroke-width="1.5" stroke-dasharray="3 3"/><text x="48" y="25" text-anchor="middle" font-size="11" fill="#4A5A78" font-weight="700">2층</text><text x="48" y="56" text-anchor="middle" font-size="11" fill="#4A5A78" font-weight="700">1층</text><path d="M6 21 H29" stroke="currentColor" stroke-width="3" marker-start="url(#ah)" marker-end="url(#ah)"/><path d="M6 51 H29" stroke="currentColor" stroke-width="3" marker-start="url(#ah)" marker-end="url(#ah)"/><path d="M67 21 H90" stroke="currentColor" stroke-width="3" marker-start="url(#ah)" marker-end="url(#ah)"/><path d="M67 51 H90" stroke="currentColor" stroke-width="3" marker-start="url(#ah)" marker-end="url(#ah)"/></svg></span><b>양방향 (관통)</b><small>한 층에 <b>앞·뒤 문이 모두</b> 있음 (앞으로 넣고 뒤로 뺌)</small></label><label class="dir-opt"><input type="radio" name="dir" value="Z방향 (층마다 반대쪽)"><span class="dir-pic"><svg viewBox="0 0 96 72" width="96" height="72" aria-hidden="true"><defs><marker id="ah" viewBox="0 0 6 6" refX="3" refY="3" markerWidth="3.2" markerHeight="3.2" orient="auto-start-reverse"><path d="M0 0L6 3L0 6z" fill="currentColor"/></marker></defs><rect x="33" y="6" width="30" height="60" rx="2" fill="#fff" stroke="#8A99B5" stroke-width="2"/><path d="M33 36H63" stroke="#8A99B5" stroke-width="1.5" stroke-dasharray="3 3"/><text x="48" y="25" text-anchor="middle" font-size="11" fill="#4A5A78" font-weight="700">2층</text><text x="48" y="56" text-anchor="middle" font-size="11" fill="#4A5A78" font-weight="700">1층</text><path d="M6 51 H29" stroke="currentColor" stroke-width="3" marker-start="url(#ah)" marker-end="url(#ah)"/><path d="M67 21 H90" stroke="currentColor" stroke-width="3" marker-start="url(#ah)" marker-end="url(#ah)"/></svg></span><b>Z방향</b><small><b>1층은 앞, 2층은 뒤</b>처럼 층마다 반대쪽 문</small></label><label class="dir-opt"><input type="radio" name="dir" value="직각 방향 (ㄱ자)"><span class="dir-pic"><svg viewBox="0 0 96 72" width="96" height="72" aria-hidden="true"><defs><marker id="ah" viewBox="0 0 6 6" refX="3" refY="3" markerWidth="3.2" markerHeight="3.2" orient="auto-start-reverse"><path d="M0 0L6 3L0 6z" fill="currentColor"/></marker></defs><rect x="33" y="6" width="30" height="60" rx="2" fill="#fff" stroke="#8A99B5" stroke-width="2"/><path d="M33 36H63" stroke="#8A99B5" stroke-width="1.5" stroke-dasharray="3 3"/><text x="48" y="25" text-anchor="middle" font-size="11" fill="#4A5A78" font-weight="700">2층</text><text x="48" y="56" text-anchor="middle" font-size="11" fill="#4A5A78" font-weight="700">1층</text><path d="M6 51 H29" stroke="currentColor" stroke-width="3" marker-start="url(#ah)" marker-end="url(#ah)"/><circle cx="78" cy="21" r="7" fill="none" stroke="currentColor" stroke-width="2.5"/><circle cx="78" cy="21" r="2.4" fill="currentColor"/></svg></span><b>직각 (ㄱ자)</b><small><b>1층은 앞, 2층은 옆면</b>처럼 90도 꺾인 문</small></label><label class="dir-opt dir-none"><input type="radio" name="dir" value="" checked><b>모름</b><small>상담 후 결정</small></label></div></fieldset>
 <label>정지 층수<select name="stops"><option value="">모름 / 상담 후 결정</option><option>2개 층</option><option>3개 층</option><option>4개 층</option><option>5개 층</option><option>6개 층 이상</option></select></label>
+<label class="travel">운행 높이 (행정거리) <span class="unit-in"><input type="text" name="travel" inputmode="decimal" maxlength="6" placeholder="예) 4.5"><span>m</span></span><small class="hint">맨 아래층 바닥에서 맨 위층 바닥까지의 높이입니다. 예) 1층에서 2층까지 층 높이가 4.5m면 4.5</small></label>
 <label>실내 / 외부<select name="place"><option value="">모름 / 상담 후 결정</option><option>건물 실내</option><option>건물 외부</option></select></label>
+<div class="wide indoor" id="indoorSet" hidden>
+<span class="indoor-l">실내 설치 준비 상태 <small>(아는 것만)</small></span>
+<div class="indoor-in">
+<label>윗층 바닥 구멍(천공)<select name="hole"><option value="">모름 / 상담 후 결정</option><option>이미 뚫려 있음</option><option>아직 안 뚫음 (뚫어야 함)</option><option>공사 중</option></select><small class="hint">리프트가 윗층으로 지나갈 바닥 구멍</small></label>
+<label>1층 바닥 피트(구덩이)<select name="pit"><option value="">모름 / 상담 후 결정</option><option>이미 파 놓음</option><option>아직 없음 (파야 함)</option><option>공사 중</option><option>피트 없이 설치하고 싶음</option></select><small class="hint">리프트 바닥을 1층 바닥 높이에 맞추려고 파는 구덩이</small></label>
+</div>
+</div>
 <label class="wide">주로 싣는 물건<input type="text" name="cargo" maxlength="100" placeholder="예) 팔레트, 롤테이너, 원자재, 대차 등"></label>
 <div class="wide size">
 <span class="size-l">카 내부 크기 <small>(mm, 아는 만큼만)</small></span>
@@ -478,7 +487,7 @@
 <button type="button" class="to-top" id="toTop" aria-label="맨 위로"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
 <script src="assets/track.js?v=b465c05d" defer></script>
 <script src="assets/cases-static.js?v=62ed638e"></script>
-<script src="assets/main.js?v=ed5e937b" defer></script>
+<script src="assets/main.js?v=70d40cc5" defer></script>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "33714223118f4d4eb58afc836328272c"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
 </html>

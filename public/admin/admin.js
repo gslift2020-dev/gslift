@@ -66,8 +66,21 @@
       if (!d.ok) { $('#inqList').innerHTML = '<p class="empty">' + esc(d.error) + '</p>'; return; }
       inquiries = d.items; renderInquiries();
       $('#dNew').textContent = inquiries.filter(function (x) { return x.status === 'new'; }).length;
+      goHashInquiry();
     });
   }
+  // 알림 메일의 '관리자 화면에서 이 문의 보기' 링크(/admin/#inq-12) → 문의 탭에서 그 문의로 이동
+  function goHashInquiry() {
+    var m = /^#inq-(\d+)$/.exec(location.hash || ''); if (!m) return;
+    openTab('inq'); filter = 'all';
+    $$('#filters button').forEach(function (x) { x.classList.toggle('on', x.dataset.f === 'all'); });
+    renderInquiries();
+    var el = document.getElementById('inq-' + m[1]);
+    if (!el) { alert('문의 #' + m[1] + '을(를) 찾지 못했습니다. 삭제되었거나 오래된 문의일 수 있습니다.'); }
+    else { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('flash'); setTimeout(function () { el.classList.remove('flash'); }, 3000); }
+    history.replaceState(null, '', location.pathname);
+  }
+  window.addEventListener('hashchange', function () { if (inquiries.length) goHashInquiry(); else loadInquiries(); });
   var inqQuery = '';
   function renderInquiries() {
     var now = new Date(Date.now() + 9 * 3600 * 1000), month = now.toISOString().slice(0, 7);

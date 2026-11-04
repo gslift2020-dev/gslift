@@ -199,7 +199,7 @@ th:last-child,td:last-child{text-align:right}
 .form{flex:1.3 1 440px;min-width:0;align-self:flex-start;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;padding:32px;border:1px solid var(--line);border-radius:var(--radius);background:#fff}
 .form label{display:flex;flex-direction:column;gap:6px;font-weight:500;font-size:14px}
 .form .full{grid-column:1/-1}
-.form input[type=text],.form input[type=tel],.form select,.form textarea{height:48px;padding:0 14px;border:1px solid #C6D1E4;border-radius:8px;font:inherit;background:#fff;color:var(--ink)}
+.form input[type=text],.form input[type=tel],.form input[type=email],.form select,.form textarea{height:48px;padding:0 14px;border:1px solid #C6D1E4;border-radius:8px;font:inherit;background:#fff;color:var(--ink)}
 .form textarea{height:auto;padding:12px 14px;resize:vertical}
 .form .agree{flex-direction:row;align-items:center;gap:8px;color:var(--muted)}
 .form .agree input{width:20px;height:20px}
@@ -558,3 +558,24 @@ body.gv-on .bento .opt img{transition:none}
 .lightbox .inner::-webkit-scrollbar{display:none}
 .lightbox img#lbImg{max-height:calc(100vh - 330px);min-height:240px;object-fit:contain}
 .lb-body{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;white-space:normal}
+
+/* 견적 문의: 출입방향 그림 고르기 · 운행 높이 · 실내 준비 상태 (2026-11-04) */
+.dir-set{border:0;margin:0;padding:0;min-width:0}
+.dir-set legend{font-weight:500;font-size:14px;padding:0;margin-bottom:6px}
+.dir-set legend small,.form .hint,.indoor-l small{font-weight:400;color:var(--muted);font-size:12.5px}
+.dir-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:8px}
+.form .dir-opt{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;padding:10px 8px;border:1.5px solid #C6D1E4;border-radius:10px;background:#fff;cursor:pointer;font-size:13.5px;color:var(--blue);line-height:1.35}
+.form .dir-opt input{position:absolute;opacity:0;pointer-events:none}
+.form .dir-opt b{color:var(--ink);font-size:14px}
+.form .dir-opt small{color:var(--muted);font-size:12px;font-weight:400}
+.form .dir-opt small b{color:var(--ink);font-size:12px}
+.form .dir-opt.on,.form .dir-opt:has(input:checked){border-color:var(--blue);background:#EEF3FC;box-shadow:0 0 0 2px rgba(6,54,120,.15)}
+.form .dir-opt:has(input:focus-visible){outline:2px solid var(--blue);outline-offset:2px}
+.form .dir-none{justify-content:center}
+.unit-in{display:flex;align-items:center;gap:8px}
+.unit-in input{flex:1;min-width:0}
+.unit-in span{font-weight:600;color:var(--muted)}
+.indoor{display:flex;flex-direction:column;gap:8px;padding:12px;border:1px dashed #C6D1E4;border-radius:10px;background:#fff}
+.indoor[hidden]{display:none}
+.indoor-l{font-weight:600;font-size:14px}
+.indoor-in{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}

@@ -559,6 +559,18 @@
     var PHONE_OK = /^(0\d{1,3}-\d{3,4}-\d{4}|1[5-9]\d{2}-\d{4})$/;
     var phoneIn = form.elements.phone;
     phoneIn.addEventListener('input', function () { var v = fmtPhone(phoneIn.value); if (v !== phoneIn.value) phoneIn.value = v; });
+    // 실내 설치일 때만 '윗층 바닥 구멍·피트' 질문을 보여 줌 (외부·모름이면 숨기고 값도 비움)
+    var placeSel = form.elements.place, indoorSet = $('#indoorSet');
+    function syncIndoor() {
+      var on = placeSel && placeSel.value === '건물 실내';
+      if (indoorSet) indoorSet.hidden = !on;
+      if (!on) ['hole', 'pit'].forEach(function (k) { if (form.elements[k]) form.elements[k].value = ''; });
+    }
+    if (placeSel) { placeSel.addEventListener('change', syncIndoor); syncIndoor(); }
+    // 출입방향 그림: 고른 칸 표시 (오래된 브라우저용 — 새 브라우저는 CSS :has로도 표시)
+    function syncDir() { $$('.dir-opt', form).forEach(function (o) { o.classList.toggle('on', $('input', o).checked); }); }
+    $$('.dir-opt input', form).forEach(function (i) { i.addEventListener('change', syncDir); }); syncDir();
+    if (form.elements.travel) form.elements.travel.addEventListener('input', function () { var t = this; var v = t.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1'); if (v !== t.value) t.value = v; });
     $$('input[name=w], input[name=d], input[name=h]', form).forEach(function (i) {
       i.addEventListener('input', function () { i.value = i.value.replace(/[^0-9]/g, ''); });
     });
@@ -567,10 +579,11 @@
       var f = form.elements;
       if (!f.name.value.trim()) { mark('name'); return say('담당자명을 입력해 주세요.', 'err'); }
       if (!PHONE_OK.test(f.phone.value.trim())) { mark('phone'); return say('연락처를 정확히 입력해 주세요. 예) 010-1234-5678', 'err'); }
+      if (f.email && f.email.value.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.value.trim())) { mark('email'); return say('이메일 주소를 확인해 주세요. 예) name@company.com', 'err'); }
       if (!f.agree.checked) { mark('agree'); return say('개인정보 수집·이용에 동의해 주세요.', 'err'); }
       mark(null);
       var fd = new FormData();
-      ['company', 'name', 'phone', 'product', 'loc', 'message', 'website', 'dir', 'load', 'stops', 'place', 'cargo', 'w', 'd', 'h'].forEach(function (k) { if (f[k]) fd.append(k, f[k].value); });
+      ['company', 'name', 'phone', 'email', 'product', 'loc', 'message', 'website', 'dir', 'load', 'stops', 'travel', 'place', 'hole', 'pit', 'cargo', 'w', 'd', 'h'].forEach(function (k) { if (f[k]) fd.append(k, f[k].value); });
       fd.append('agree', f.agree.checked ? 'true' : 'false');
       if (window.GSTrack) { fd.append('src', window.GSTrack.src()); fd.append('vid', window.GSTrack.vid()); }
       shots.forEach(function (sh, i) { fd.append('photos', sh.blob, 'photo' + (i + 1) + '.jpg'); });
@@ -580,7 +593,7 @@
         .then(function (d) {
           if (d.ok) {
             if (window.GSTrack) window.GSTrack.lead();
-            form.reset(); shots.forEach(function (sh) { URL.revokeObjectURL(sh.url); }); shots = []; drawShots();
+            form.reset(); syncIndoor(); syncDir(); shots.forEach(function (sh) { URL.revokeObjectURL(sh.url); }); shots = []; drawShots();
             say('문의가 접수되었습니다. 담당자가 확인 후 연락드리겠습니다. 급하신 경우 ' + TEL + '로 전화 주세요.', 'ok');
           } else {
             if (d.field) mark(d.field);

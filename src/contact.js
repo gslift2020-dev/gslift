@@ -10,10 +10,13 @@ const MAX_PHOTO_BYTES = 3 * 1024 * 1024;
 // 고객이 아는 만큼만 적는 리프트 사양 (모두 선택)
 export const SPEC_FIELDS = [
   ['loc', '설치 현장 위치', 100],
-  ['dir', '출입방향', 30],
+  ['dir', '출입방향', 40],
   ['load', '적재하중', 30],
   ['stops', '정지 층수', 30],
+  ['travel', '운행 높이(행정거리)', 12],
   ['place', '실내·외부', 30],
+  ['hole', '윗층 바닥 구멍(천공)', 40],
+  ['pit', '1층 바닥 피트', 40],
   ['cargo', '주로 싣는 물건', 100],
   ['w', '카 가로(W, mm)', 8],
   ['d', '카 깊이(D, mm)', 8],
@@ -54,15 +57,20 @@ export function specRows(spec) {
   return rows;
 }
 
+// 알림 메일의 '관리자 화면에서 이 문의 보기' 주소 (로그인 후 그 문의로 바로 이동)
+const ADMIN_BASE = 'https://gslift.kr/admin/';
+
 async function sendMail(env, row, spec, photos) {
   if (!env.RESEND_API_KEY) return { ok: false, error: 'RESEND_API_KEY 미설정' };
+  const adminUrl = ADMIN_BASE + '#inq-' + row.id;
   const lines = [
     ['접수 시각', row.created_at + ' (한국시간)'],
     ['회사명', row.company || '-'],
     ['담당자', row.name],
     ['연락처', row.phone],
-    ['관심 제품', row.product || '-'],
   ];
+  if (spec.email) lines.push(['이메일', spec.email]);
+  lines.push(['관심 제품', row.product || '-']);
   if (spec.src) lines.push(['유입 경로', spec.src]);
   const sr = specRows(spec);
   const table = (rows) => `<table style="border-collapse:collapse">${rows
@@ -70,11 +78,16 @@ async function sendMail(env, row, spec, photos) {
     .join('')}</table>`;
   const html = `<div style="font-family:sans-serif;font-size:15px;color:#0F1E3A">
 <h2 style="color:#063678;margin:0 0 12px">홈페이지 견적·상담 문의 #${row.id}</h2>
+<p style="margin:0 0 16px;padding:12px 14px;background:#FFF7E6;border:1px solid #F3D58A;border-radius:8px">이 문의는 <b>거산리프트 홈페이지 관리자 화면</b>에서 확인·처리합니다.<br>
+<a href="${adminUrl}" style="display:inline-block;margin-top:8px;background:#063678;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none;font-weight:700">관리자 화면에서 이 문의 보기 (#${row.id})</a><br>
+<span style="font-size:13px;color:#4A5A78">주소: ${adminUrl} — 비밀번호로 로그인하면 이 문의로 바로 이동합니다.</span></p>
 ${table(lines)}
 ${sr.length ? `<h3 style="color:#063678;margin:18px 0 6px;font-size:16px">고객이 적은 리프트 사양</h3>${table(sr)}` : ''}
 <div style="margin-top:16px;padding:14px;background:#F2F5FB;border-radius:8px;white-space:pre-wrap">${esc(row.message || '(내용 없음)')}</div>
 ${photos.length ? `<p style="color:#4A5A78">현장 사진 ${photos.length}장이 첨부되어 있습니다.</p>` : ''}
 <p style="margin-top:16px"><a href="tel:${esc(row.phone)}" style="background:#063678;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none">${esc(row.phone)} 전화하기</a></p>
+${spec.email ? `<p style="color:#4A5A78;font-size:13px">이 메일에서 '답장'을 누르면 고객 이메일(${esc(spec.email)})로 바로 보내집니다.</p>` : ''}
+<p style="color:#4A5A78;font-size:13px;margin-top:16px">관리자 화면: <a href="${adminUrl}">${adminUrl}</a></p>
 </div>`;
   try {
     const res = await fetch('https://api.resend.com/emails', {
@@ -85,6 +98,7 @@ ${photos.length ? `<p style="color:#4A5A78">현장 사진 ${photos.length}장이
         to: [env.NOTIFY_EMAIL || 'gslift2020@naver.com'],
         subject: `[홈페이지 문의] ${row.company || row.name} · ${row.product || '문의'}${spec.loc ? ' · ' + spec.loc.slice(0, 20) : ''}${photos.length ? ` (사진 ${photos.length})` : ''}`,
         html,
+        ...(spec.email ? { reply_to: spec.email } : {}),
         attachments: photos.map((p, i) => ({ filename: `문의${row.id}_현장사진${i + 1}.${p.ext}`, content: toBase64(p.bytes) })),
       }),
     });
@@ -135,6 +149,18 @@ export async function handleContact(request, env, ctx) {
     let v = clean(body[k], max);
     if (['w', 'd', 'h'].includes(k)) v = v.replace(/[^0-9]/g, '');
     if (v && v !== '모름') spec[k] = v;
+  }
+
+  // 운행 높이: 숫자만 오면 m를 붙임 (예: 4.5 → 4.5 m)
+  if (spec.travel) {
+    const t = spec.travel.replace(/[^0-9.]/g, '');
+    if (t && /^\d{1,3}(\.\d{1,2})?$/.test(t)) spec.travel = t + ' m';
+  }
+  // 담당자 이메일 (선택) — 모양이 맞을 때만 저장
+  const email = clean(body.email, 100);
+  if (email) {
+    if (!/^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/.test(email)) return json({ ok: false, field: 'email', error: '이메일 주소를 확인해 주세요.' }, 400);
+    spec.email = email;
   }
 
   // 광고 유입 경로 (홈페이지가 자동으로 붙여 보냄: naver, kakao, search.naver.com 등)
