@@ -7886,6 +7886,98 @@
      "sink": true
     }
    ]
+  },
+  {
+   "id": "2026-10-a",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 철골 구조물 · 계단 옆 설치",
+     "site": "",
+     "body": "철골 구조물 안에 계단과 나란히 설치한 화물용 리프트입니다.\n\n철망으로 둘러싼 승강로를 세우고, 승강장에는 철판 출입문을 달았습니다.",
+     "photos": [
+      "imports/2026-10/sw-01.webp",
+      "imports/2026-10/sw-02.webp",
+      "imports/2026-10/sw-03.webp"
+     ],
+     "category": "fl",
+     "date": "2026-10",
+     "tags": [
+      "steel",
+      "mesh"
+     ]
+    },
+    {
+     "title": "화물용 리프트(F/L) · 공장 실내 · 철망 승강로 · 셔터",
+     "site": "",
+     "body": "공장 안에 철망 승강로로 세운 화물용 리프트입니다.\n\n아래층 승강장은 셔터로 마감했고, 위층은 계단 옆 작업장과 연결했습니다.",
+     "photos": [
+      "imports/2026-10/irx-01.webp",
+      "imports/2026-10/irx-02.webp",
+      "imports/2026-10/irx-03.webp",
+      "imports/2026-10/irx-04.webp"
+     ],
+     "category": "fl",
+     "date": "2026-10",
+     "tags": [
+      "in",
+      "mesh",
+      "shutter"
+     ]
+    },
+    {
+     "title": "화물용 리프트(F/L) · 공장 실내 · 벽체 안 승강로",
+     "site": "",
+     "body": "공장 건물 벽체 안에 승강로를 두고 설치한 화물용 리프트입니다.\n\n층마다 벽면에 승강장 출입구를 냈습니다.",
+     "photos": [
+      "imports/2026-10/jam-01.webp",
+      "imports/2026-10/jam-02.webp",
+      "imports/2026-10/jam-03.webp"
+     ],
+     "category": "fl",
+     "date": "2026-10",
+     "tags": [
+      "in"
+     ]
+    },
+    {
+     "title": "화물용 리프트(F/L) · 공장 실내 · 노란색 철망 승강로 · 셔터",
+     "site": "",
+     "body": "공장 안에 노란색 프레임과 철망으로 승강로를 세운 화물용 리프트입니다.\n\n아래층 승강장은 셔터로 마감했습니다.",
+     "photos": [
+      "imports/2026-10/cmc-01.webp",
+      "imports/2026-10/cmc-02.webp",
+      "imports/2026-10/cmc-03.webp",
+      "imports/2026-10/cmc-04.webp"
+     ],
+     "category": "fl",
+     "date": "2026-10",
+     "tags": [
+      "in",
+      "mesh",
+      "shutter"
+     ]
+    },
+    {
+     "title": "화물용 리프트(F/L) · 창고 · 다층 메자닌 연결 · 진입판",
+     "site": "경기 안성",
+     "body": "창고의 여러 층 메자닌(복층 선반)을 잇는 화물용 리프트입니다.\n\n노란색 프레임과 철망으로 승강로를 세우고, 대차가 바로 오를 수 있도록 승강장 바닥에 진입판을 붙였습니다.",
+     "photos": [
+      "imports/2026-10/hy-01.webp",
+      "imports/2026-10/hy-02.webp",
+      "imports/2026-10/hy-03.webp",
+      "imports/2026-10/hy-04.webp",
+      "imports/2026-10/hy-05.webp"
+     ],
+     "category": "fl",
+     "date": "2026-10",
+     "tags": [
+      "in",
+      "mesh",
+      "multi",
+      "ramp"
+     ]
+    }
+   ]
   }
  ]
 }
