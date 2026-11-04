@@ -58,7 +58,7 @@ function jsonLd(co, origin) {
     '@type': 'LocalBusiness',
     name: co.name,
     alternateName: 'GSLIFT',
-    description: '화물용 리프트(F/L), 테이블 리프트(T/L), 스태커, 운반기계 설계·제작·설치·A/S',
+    description: '화물용 리프트(F/L), 테이블 리프트(T/L), 스태커 설계·제작·설치·A/S',
     url: origin + '/',
     logo: origin + '/assets/img/logo-stack.webp',
     image: origin + '/assets/img/og.jpg',

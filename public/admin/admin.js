@@ -8,8 +8,8 @@
   var HERO_W = 1200, HERO_H = 1500;   // 메인 슬라이드 (세로 4:5)
   var WM_RATIO = 0.30, WM_ALPHA = 0.38;
   var STATUS = { 'new': '신규', progress: '처리중', done: '완료' };
-  var CATS = { fl: '화물용 리프트(F/L)', tl: '테이블 리프트(T/L)', st: '수동·자동 스태커', tr: '운반기계' };
-  function inferCat(t) { t = String(t || ''); if (/테이블|T\/L/i.test(t)) return 'tl'; if (/스태커/.test(t)) return 'st'; if (/운반|대차/.test(t)) return 'tr'; return 'fl'; }
+  var CATS = { fl: '화물용 리프트(F/L)', tl: '테이블 리프트(T/L)', st: '수동·자동 스태커' };
+  function inferCat(t) { t = String(t || ''); if (/테이블|T\/L/i.test(t)) return 'tl'; if (/스태커/.test(t)) return 'st'; return 'fl'; }
 
   /* ================= 공통 ================= */
   function api(path, opts) {
@@ -425,7 +425,7 @@
   }
   $$('#catSeg button').forEach(function (b) { b.addEventListener('click', function () { if (editing) { editing.cat = b.dataset.cat; renderCat(); setTitleCat(b.dataset.cat); } }); });
   // 제품 이름(분류)은 제목 맨 앞: "화물용 리프트(F/L) · 2톤 · 3STOP"
-  function isProduct(v) { return /리프트|스태커|운반기계|F\/L|T\/L/i.test(v); }
+  function isProduct(v) { return /리프트|스태커|F\/L|T\/L/i.test(v); }
   function splitTitle(t) { return String(t || '').split('·').map(function (x) { return x.trim(); }).filter(Boolean); }
   function setTitleCat(cat) {
     var f = $('#caseForm'), parts = splitTitle(f.title.value);
@@ -453,7 +453,7 @@
     var f = e.target, msg = $('#caseMsg'), btn = $('#caseSave');
     if (!editing.items.length) return say(msg, '사진을 1장 이상 올려주세요.', 'err');
     if (!f.title.value.trim()) { f.title.focus(); return say(msg, '제목을 입력하거나 사양 버튼을 골라주세요.', 'err'); }
-    if (!editing.cat) { $('#catSeg').scrollIntoView({ block: 'center' }); return say(msg, '분류(화물용·테이블·스태커·운반기계)를 골라주세요.', 'err'); }
+    if (!editing.cat) { $('#catSeg').scrollIntoView({ block: 'center' }); return say(msg, '분류(화물용·테이블·스태커)를 골라주세요.', 'err'); }
     btn.disabled = true;
     var fd = new FormData(), order = [], news = editing.items.filter(function (x) { return x.kind === 'new'; }), done = 0;
     fd.append('title', f.title.value.trim()); fd.append('category', editing.cat); fd.append('site', f.site.value.trim()); fd.append('body', f.body.value.trim()); fd.append('note', f.note.value.trim());
@@ -574,11 +574,12 @@
       if (!list.length) { $('#caseList').innerHTML = '<p class="empty">' + (caseQ ? '찾는 글이 없습니다.' : caseFilter === 'all' ? '아직 올린 글이 없습니다. "새 글 쓰기"를 눌러 시작하세요.' : '이 분류에 올린 글이 없습니다.') + '</p>'; return; }
       $('#caseList').innerHTML = list.map(function (c) {
         var cover = c.photos[0] ? c.photos[0].img : '';
-        return '<article class="post' + (c.visible ? '' : ' hidden') + (c.pinned ? ' pinned' : '') + '"><div class="ph"><img src="' + esc(cover) + '" alt="" loading="lazy"><span class="cnt">사진 ' + c.photos.length + '장</span>' + (c.pinned ? '<span class="pin">📌 맨 앞 고정</span>' : '') + '</div>' +
+        return '<article class="post' + (c.visible ? '' : ' hidden') + (c.pinned ? ' pinned' : '') + '"><div class="ph"><img src="' + esc(cover) + '" alt="" loading="lazy"><span class="cnt">사진 ' + c.photos.length + '장</span>' + (c.pinned ? '<span class="pin">📌 맨 앞 고정</span>' : c.sunk ? '<span class="pin sunk">⬇ 맨 뒤</span>' : '') + '</div>' +
           '<span class="pcat">' + esc(CATS[c.cat] || '') + '</span><div class="t">' + esc(c.title) + (c.visible ? '' : ' (숨김)') + '</div><div class="s">' + esc([c.site, c.taken_at ? '설치 ' + c.taken_at.slice(0, 7) : '등록 ' + (c.created_at || '').slice(0, 10)].filter(Boolean).join(' · ')) + '</div>' + (c.note ? '<div class="s note">🔒 ' + esc(c.note) + '</div>' : '') +
           '<div class="s tags">' + ((c.tags || []).length ? c.tags.map(function (k) { return '#' + esc(tagLabel[k] || k); }).join(' ') : '꼬리표 없음') + '</div>' +
           '<div class="a"><button type="button" class="link" data-act="edit" data-id="' + c.id + '">수정</button>' +
           '<button type="button" class="link" data-act="pin" data-id="' + c.id + '" data-v="' + c.pinned + '">' + (c.pinned ? '고정 풀기' : '맨 앞 고정') + '</button>' +
+          '<button type="button" class="link" data-act="sink" data-id="' + c.id + '" data-v="' + c.sunk + '">' + (c.sunk ? '순서 원래대로' : '맨 뒤로') + '</button>' +
           '<a class="link" href="/case.html?id=' + c.id + '" target="_blank" rel="noopener">보기</a>' +
           '<button type="button" class="link" data-act="toggle" data-id="' + c.id + '" data-v="' + c.visible + '">' + (c.visible ? '숨기기' : '보이기') + '</button>' +
           '<button type="button" class="link del" data-act="del" data-id="' + c.id + '">삭제</button></div></article>';
@@ -591,6 +592,7 @@
     if (b.dataset.act === 'edit') openEditor(post);
     else if (b.dataset.act === 'toggle') api('/api/admin/cases/' + id + '/visible', { method: 'POST', json: { visible: b.dataset.v !== '1' } }).then(function () { loadCases(true); });
     else if (b.dataset.act === 'pin') api('/api/admin/cases/' + id + '/pin', { method: 'POST', json: { pinned: b.dataset.v !== '1' } }).then(function () { loadCases(true); });
+    else if (b.dataset.act === 'sink') api('/api/admin/cases/' + id + '/pin', { method: 'POST', json: { sink: b.dataset.v !== '1' } }).then(function () { loadCases(true); });
     else if (b.dataset.act === 'del' && confirm('이 글과 사진을 완전히 삭제할까요? 되돌릴 수 없습니다.')) api('/api/admin/cases/' + id, { method: 'DELETE' }).then(function () { loadCases(true); });
   });
 

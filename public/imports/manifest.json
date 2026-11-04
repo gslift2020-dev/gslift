@@ -7140,174 +7140,750 @@
    ]
   },
   {
-   "id": "promo-a",
-   "cases": [
+   "id": "promo-b",
+   "remove": [
     {
-     "title": "테이블 리프트(T/L) · 이동식(바퀴형)",
-     "site": "",
-     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
-     "photos": [
-      "imports/promo/tl0-01.webp",
-      "imports/promo/tl0-02.webp",
-      "imports/promo/tl0-03.webp",
-      "imports/promo/tl0-04.webp",
-      "imports/promo/tl0-05.webp",
-      "imports/promo/tl0-06.webp",
-      "imports/promo/tl0-07.webp",
-      "imports/promo/tl0-08.webp"
-     ],
-     "category": "tl",
-     "tags": []
+     "ref": "promo-a#0",
+     "title": "테이블 리프트(T/L) · 이동식(바퀴형)"
     },
     {
-     "title": "테이블 리프트(T/L) · 바닥 매립형",
+     "ref": "promo-a#1",
+     "title": "테이블 리프트(T/L) · 바닥 매립형"
+    },
+    {
+     "ref": "promo-a#2",
+     "title": "테이블 리프트(T/L) · 고정형 가위 리프트(1)"
+    },
+    {
+     "ref": "promo-a#3",
+     "title": "테이블 리프트(T/L) · 고정형 가위 리프트(2)"
+    },
+    {
+     "ref": "promo-a#4",
+     "title": "테이블 리프트(T/L) · 2단·고행정형"
+    },
+    {
+     "ref": "promo-a#5",
+     "title": "테이블 리프트(T/L) · 벨로즈·롤러형"
+    },
+    {
+     "ref": "promo-a#6",
+     "title": "테이블 리프트(T/L) · 틸팅형"
+    },
+    {
+     "ref": "promo-a#7",
+     "title": "수동·자동 스태커 · 제작 사례"
+    },
+    {
+     "ref": "promo-a#8",
+     "title": "운반기계 · 전동 대차(1)"
+    },
+    {
+     "ref": "promo-a#9",
+     "title": "운반기계 · 전동 대차(2)"
+    }
+   ],
+   "cases": [
+    {
+     "title": "수동·자동 스태커 · 맞춤 부착장치형",
      "site": "",
      "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "st",
      "photos": [
-      "imports/promo/tl1-01.webp",
-      "imports/promo/tl1-02.webp",
-      "imports/promo/tl1-03.webp",
-      "imports/promo/tl1-04.webp",
-      "imports/promo/tl1-05.webp",
-      "imports/promo/tl1-06.webp",
-      "imports/promo/tl1-07.webp"
+      "imports/promo/st7-01.webp",
+      "imports/promo/st7-02.webp"
      ],
+     "tags": [],
+     "sink": true
+    },
+    {
+     "title": "수동·자동 스태커 · 핸들 조작형",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "st",
+     "photos": [
+      "imports/promo/st7-03.webp",
+      "imports/promo/st7-07.webp"
+     ],
+     "tags": [],
+     "sink": true
+    },
+    {
+     "title": "수동·자동 스태커 · 포크형 · 2대 제작",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "st",
+     "photos": [
+      "imports/promo/st7-05r.webp"
+     ],
+     "tags": [
+      "twin"
+     ],
+     "sink": true
+    },
+    {
+     "title": "수동·자동 스태커 · 스테인리스",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "st",
+     "photos": [
+      "imports/promo/st7-06.webp"
+     ],
+     "tags": [],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 이동식 · 등받이형(1)",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
      "category": "tl",
+     "photos": [
+      "imports/promo/tl0-01.webp"
+     ],
+     "tags": [],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 이동식 · 등받이형(2)",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/st7-04.webp"
+     ],
+     "tags": [],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 이동식 · 전동 주행형",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl0-02.webp"
+     ],
+     "tags": [],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 이동식 · 대형 상판",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl0-03.webp"
+     ],
+     "tags": [
+      "large"
+     ],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 이동식 · 견인형",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl0-04.webp"
+     ],
+     "tags": [],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 이동식 · 수동 손잡이형",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl0-05.webp"
+     ],
+     "tags": [],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 이동식 · 견인봉형",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl0-06.webp"
+     ],
+     "tags": [],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 이동식 · 긴 상판형",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl0-07.webp"
+     ],
+     "tags": [],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 이동식 · 제어반 일체형",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl0-08.webp"
+     ],
+     "tags": [],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 이동식 · 안전 난간형",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tr8-03.webp"
+     ],
+     "tags": [
+      "rail"
+     ],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 바닥 매립형 · 바닥 높이 상판",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl1-01.webp"
+     ],
      "tags": [
       "pit",
       "low"
-     ]
+     ],
+     "sink": true
     },
     {
-     "title": "테이블 리프트(T/L) · 고정형 가위 리프트(1)",
+     "title": "테이블 리프트(T/L) · 바닥 매립형 · 레일 연결",
      "site": "",
      "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
      "photos": [
-      "imports/promo/tl2-01.webp",
-      "imports/promo/tl2-02.webp",
-      "imports/promo/tl2-03.webp",
-      "imports/promo/tl2-04.webp",
-      "imports/promo/tl2-05.webp",
-      "imports/promo/tl2-06.webp",
-      "imports/promo/tl2-07.webp",
-      "imports/promo/tl2-08.webp",
+      "imports/promo/tl1-02.webp"
+     ],
+     "tags": [
+      "pit",
+      "low"
+     ],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 바닥 매립형 · 농기계 적재",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl1-03.webp"
+     ],
+     "tags": [
+      "pit",
+      "large"
+     ],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 바닥 매립형 · 실내 소형",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl1-04.webp"
+     ],
+     "tags": [
+      "pit",
+      "small"
+     ],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 바닥 매립형 · 상자형 커버",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl1-05.webp"
+     ],
+     "tags": [
+      "pit"
+     ],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 바닥 매립형 · 화물차 적재",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl1-06.webp"
+     ],
+     "tags": [
+      "pit",
+      "large"
+     ],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 바닥 매립형 · 승용차 2층 연결",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl1-07.webp"
+     ],
+     "tags": [
+      "pit",
+      "ext",
+      "large"
+     ],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 고정형 · 날개 상판",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl2-01.webp"
+     ],
+     "tags": [],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 고정형 · 저상 장방형",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl2-02.webp"
+     ],
+     "tags": [
+      "low"
+     ],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 고정형 · 초저상 긴 상판",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl2-03.webp"
+     ],
+     "tags": [
+      "low"
+     ],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 고정형 · 유압 유닛 일체",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl2-04.webp"
+     ],
+     "tags": [
+      "small"
+     ],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 고정형 · 유압 유닛 분리",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl2-05.webp"
+     ],
+     "tags": [],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 고정형 · 안전 난간 · 여러 대",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl2-06.webp"
+     ],
+     "tags": [
+      "rail",
+      "twin"
+     ],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 고정형 · 대형 상판",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl2-07.webp"
+     ],
+     "tags": [
+      "large"
+     ],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 고정형 · 여러 대 제작(1)",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl2-08.webp"
+     ],
+     "tags": [
+      "twin"
+     ],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 고정형 · 중하중형",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
       "imports/promo/tl2-09.webp"
      ],
-     "category": "tl",
-     "tags": []
+     "tags": [],
+     "sink": true
     },
     {
-     "title": "테이블 리프트(T/L) · 고정형 가위 리프트(2)",
+     "title": "테이블 리프트(T/L) · 고정형 · 긴 상판",
      "site": "",
      "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
      "photos": [
-      "imports/promo/tl3-01.webp",
-      "imports/promo/tl3-02.webp",
-      "imports/promo/tl3-03.webp",
-      "imports/promo/tl3-04.webp",
-      "imports/promo/tl3-05.webp",
-      "imports/promo/tl3-06.webp",
-      "imports/promo/tl3-07.webp",
-      "imports/promo/tl3-08.webp",
+      "imports/promo/tl3-01.webp"
+     ],
+     "tags": [],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 고정형 · 상부 프레임형",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl3-02.webp"
+     ],
+     "tags": [],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 고정형 · 광폭 상판",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl3-03.webp"
+     ],
+     "tags": [
+      "large"
+     ],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 고정형 · 소형",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl3-04.webp"
+     ],
+     "tags": [
+      "small"
+     ],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 고정형 · 사각 프레임 상판",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl3-05.webp"
+     ],
+     "tags": [],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 고정형 · 대형 가위",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl3-06.webp"
+     ],
+     "tags": [
+      "large"
+     ],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 고정형 · 청색 도장(1)",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl3-07.webp"
+     ],
+     "tags": [],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 고정형 · 청색 도장(2)",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl3-08.webp"
+     ],
+     "tags": [],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 고정형 · 여러 대 제작(2)",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
       "imports/promo/tl3-09.webp"
      ],
-     "category": "tl",
-     "tags": []
+     "tags": [
+      "twin"
+     ],
+     "sink": true
     },
     {
-     "title": "테이블 리프트(T/L) · 2단·고행정형",
+     "title": "테이블 리프트(T/L) · 2단·고행정 · 안전 난간형(1)",
      "site": "",
      "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
-     "photos": [
-      "imports/promo/tl4-01.webp",
-      "imports/promo/tl4-02.webp",
-      "imports/promo/tl4-03.webp",
-      "imports/promo/tl4-04.webp",
-      "imports/promo/tl4-05.webp",
-      "imports/promo/tl4-06.webp"
-     ],
      "category": "tl",
+     "photos": [
+      "imports/promo/tl4-01.webp"
+     ],
      "tags": [
       "rail"
-     ]
+     ],
+     "sink": true
     },
     {
-     "title": "테이블 리프트(T/L) · 벨로즈·롤러형",
+     "title": "테이블 리프트(T/L) · 2단·고행정 · 안전 난간형(2)",
      "site": "",
      "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
      "photos": [
-      "imports/promo/tl5-01.webp",
-      "imports/promo/tl5-02.webp",
-      "imports/promo/tl5-03.webp",
-      "imports/promo/tl5-04.webp",
-      "imports/promo/tl5-05.webp",
+      "imports/promo/tl4-02.webp"
+     ],
+     "tags": [
+      "rail"
+     ],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 2단·고행정",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl4-03.webp"
+     ],
+     "tags": [],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 2단·고행정 · 건물 외부 설치",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl4-04.webp"
+     ],
+     "tags": [
+      "ext",
+      "rail"
+     ],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 2단·고행정 · 승강장 연결",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl4-05.webp"
+     ],
+     "tags": [
+      "rail"
+     ],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 2단·고행정 · 여러 대 제작",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl4-06.webp"
+     ],
+     "tags": [
+      "twin"
+     ],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 벨로즈 커버 · 이동식",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl5-01.webp"
+     ],
+     "tags": [],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 저상형 · 실내",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl5-02.webp"
+     ],
+     "tags": [
+      "low"
+     ],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 롤러 컨베이어 상판",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl5-03.webp"
+     ],
+     "tags": [],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 곡면 받침 상판",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl5-04.webp"
+     ],
+     "tags": [],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 벨로즈 커버 · 실내",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl5-05.webp"
+     ],
+     "tags": [],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 벨로즈 커버 · 중하중",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
       "imports/promo/tl5-06.webp"
      ],
-     "category": "tl",
-     "tags": []
+     "tags": [],
+     "sink": true
     },
     {
-     "title": "테이블 리프트(T/L) · 틸팅형",
+     "title": "테이블 리프트(T/L) · 틸팅형 · 출하",
      "site": "",
      "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
      "photos": [
-      "imports/promo/tl6-01.webp",
-      "imports/promo/tl6-02.webp",
-      "imports/promo/tl6-03.webp",
-      "imports/promo/tl6-04.webp",
-      "imports/promo/tl6-05.webp",
+      "imports/promo/tl6-01.webp"
+     ],
+     "tags": [
+      "twin"
+     ],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 틸팅형 · 여러 대 제작(1)",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl6-02.webp"
+     ],
+     "tags": [
+      "twin"
+     ],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 틸팅형 · 여러 대 제작(2)",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl6-03.webp"
+     ],
+     "tags": [
+      "twin"
+     ],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 틸팅형 · 경사 상판",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl6-04.webp"
+     ],
+     "tags": [],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 틸팅형 · 대형",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
+      "imports/promo/tl6-05.webp"
+     ],
+     "tags": [
+      "large"
+     ],
+     "sink": true
+    },
+    {
+     "title": "테이블 리프트(T/L) · 틸팅형 · 저상 여러 대",
+     "site": "",
+     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
+     "category": "tl",
+     "photos": [
       "imports/promo/tl6-06.webp"
      ],
-     "category": "tl",
-     "tags": []
-    },
-    {
-     "title": "수동·자동 스태커 · 제작 사례",
-     "site": "",
-     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
-     "photos": [
-      "imports/promo/st7-01.webp",
-      "imports/promo/st7-02.webp",
-      "imports/promo/st7-03.webp",
-      "imports/promo/st7-04.webp",
-      "imports/promo/st7-05.webp",
-      "imports/promo/st7-06.webp",
-      "imports/promo/st7-07.webp"
+     "tags": [
+      "low",
+      "twin"
      ],
-     "category": "st",
-     "tags": []
-    },
-    {
-     "title": "운반기계 · 전동 대차(1)",
-     "site": "",
-     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
-     "photos": [
-      "imports/promo/tr8-01.webp",
-      "imports/promo/tr8-02.webp",
-      "imports/promo/tr8-03.webp",
-      "imports/promo/tr8-04.webp",
-      "imports/promo/tr8-05.webp",
-      "imports/promo/tr8-06.webp",
-      "imports/promo/tr8-07.webp"
-     ],
-     "category": "tr",
-     "tags": []
-    },
-    {
-     "title": "운반기계 · 전동 대차(2)",
-     "site": "",
-     "body": "공장에서 제작한 제품 사진입니다. 설치 현장과 시기는 기록이 없어 적지 않았습니다.",
-     "photos": [
-      "imports/promo/tr9-01.webp",
-      "imports/promo/tr9-02.webp",
-      "imports/promo/tr9-03.webp",
-      "imports/promo/tr9-04.webp",
-      "imports/promo/tr9-05.webp",
-      "imports/promo/tr9-06.webp",
-      "imports/promo/tr9-07.webp"
-     ],
-     "category": "tr",
-     "tags": []
+     "sink": true
     }
    ]
   }

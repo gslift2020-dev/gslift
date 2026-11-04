@@ -17,6 +17,8 @@ const MAX_PHOTOS_PER_CASE = 20;
 const MAX_SLIDES = 10;
 
 const STATUSES = ['new', 'progress', 'done'];
+// 홈페이지에 보이는 분류 (src/util.js CATS) — 없앤 분류의 글은 홈페이지에서 숨김
+const PUB_CAT = "category IN (" + Object.keys(CATS).map((c) => "'" + c + "'").join(', ') + ")";
 
 export const DEFAULT_CHIPS = [
   { name: '적재하중', items: ['1톤', '2톤', '3톤', '4톤', '5톤', '6톤', '7톤'] },
@@ -208,13 +210,14 @@ async function casePhotos(env, ids) {
   return map;
 }
 
-// 정렬: 고정한 글 → 설치(촬영) 날짜 최신순 → 올린 순서
+// 정렬: 고정한 글(pinned > 0) → 보통 글 → 맨 뒤로 보낸 글(pinned = -1, 예: 날짜 없는 제품 사진) / 같은 묶음 안에서는 설치(촬영) 날짜 최신순 → 올린 순서
 const CASE_ORDER = "ORDER BY pinned DESC, COALESCE(taken_at, substr(created_at, 1, 10)) DESC, id DESC";
 
 // 분류·검색 조건 (관리자/홈페이지 공용)
 function caseWhere(url, onlyVisible) {
   const where = [], args = [];
-  if (onlyVisible) where.push('visible = 1');
+  // 홈페이지에는 지금 분류(CATS)에 있는 글만 (운반기계 등 없앤 분류의 예전 글은 숨김)
+  if (onlyVisible) where.push('visible = 1', PUB_CAT);
   const cat = url.searchParams.get('cat');
   if (CATS[cat]) { where.push('category = ?'); args.push(cat); }
   // 꼬리표: tag=ext,shutter → 모두 가진 글만
@@ -236,8 +239,8 @@ function pageArgs(url, def, max) {
 // 홈페이지 목록용 개수: 분류별 개수 + 지금 분류·꼬리표 조건에서 꼬리표별 개수
 // (글 표를 한 번만 읽어 둘 다 계산 → 예전 catCounts와 읽는 양이 같음)
 async function facetCounts(env, url) {
-  const { results } = await env.DB.prepare('SELECT category, tags FROM cases WHERE visible = 1').all();
-  const counts = { all: 0, fl: 0, tl: 0, st: 0, tr: 0 }, tagCounts = {};
+  const { results } = await env.DB.prepare(`SELECT category, tags FROM cases WHERE visible = 1 AND ${PUB_CAT}`).all();
+  const counts = { all: 0, fl: 0, tl: 0, st: 0 }, tagCounts = {};
   const cat = CATS[url.searchParams.get('cat')] ? url.searchParams.get('cat') : '';
   const sel = normTags(url.searchParams.get('tag'));
   for (const r of results) {
@@ -252,8 +255,8 @@ async function facetCounts(env, url) {
 }
 async function catCounts(env, onlyVisible) {
   const { results } = await env.DB.prepare(`SELECT category, COUNT(*) AS n FROM cases ${onlyVisible ? 'WHERE visible = 1' : ''} GROUP BY category`).all();
-  const counts = { all: 0, fl: 0, tl: 0, st: 0, tr: 0 };
-  for (const r of results) { const c = CATS[r.category] ? r.category : 'fl'; counts[c] += r.n; counts.all += r.n; }
+  const counts = { all: 0, fl: 0, tl: 0, st: 0 };
+  for (const r of results) { if (!CATS[r.category]) continue; counts[r.category] += r.n; counts.all += r.n; }
   return counts;
 }
 
@@ -268,7 +271,7 @@ async function listCasesAdmin(request, env) {
   const photos = await casePhotos(env, results.map((r) => r.id));
   return json({
     ok: true, total: total.n, counts, tagGroups: TAG_GROUPS,
-    items: results.map((r) => ({ ...r, tags: unpackTags(r.tags), pinned: r.pinned ? 1 : 0, cat: CATS[r.category] ? r.category : inferCat(r.title), site: r.site ?? r.sub ?? '', photos: photos[r.id] || [] })),
+    items: results.map((r) => ({ ...r, tags: unpackTags(r.tags), pinned: r.pinned > 0 ? 1 : 0, sunk: r.pinned < 0 ? 1 : 0, cat: CATS[r.category] ? r.category : inferCat(r.title), site: r.site ?? r.sub ?? '', photos: photos[r.id] || [] })),
   });
 }
 
@@ -378,7 +381,9 @@ async function setCaseVisible(request, env, id) {
 async function setCasePinned(request, env, id) {
   let body = {};
   try { body = await request.json(); } catch {}
-  await env.DB.prepare('UPDATE cases SET pinned = ? WHERE id = ?').bind(body.pinned ? Math.floor(Date.now() / 1000) : 0, id).run();
+  // sink: 맨 뒤로 보내기(-1) / pinned: 맨 앞 고정(시각) / 둘 다 아니면 보통(0)
+  const v = body.sink ? -1 : body.pinned ? Math.floor(Date.now() / 1000) : 0;
+  await env.DB.prepare('UPDATE cases SET pinned = ? WHERE id = ?').bind(v, id).run();
   return json({ ok: true });
 }
 
@@ -537,14 +542,14 @@ const PUB_COLS = 'id, created_at, taken_at, title, sub, site, body, category, ta
 //  - /api/cases?home=1            : 분류마다 최신 12개(사진 전부) + 분류별 개수 → 첫 화면 가로 목록
 //  - /api/cases?cat=fl&offset=0   : 목록 페이지용 (대표 사진 1장 + 사진 수), 24개씩
 export async function publicCases(request, env) {
-  if (!env.DB) return json({ ok: true, items: [], total: 0, counts: { all: 0, fl: 0, tl: 0, st: 0, tr: 0 } });
+  if (!env.DB) return json({ ok: true, items: [], total: 0, counts: { all: 0, fl: 0, tl: 0, st: 0 } });
   await ensureSchema(env);
   const url = new URL(request.url);
   const hdr = { 'cache-control': 'no-cache' };
   if (url.searchParams.get('home')) {
     const per = Math.min(Math.max(parseInt(url.searchParams.get('per'), 10) || 12, 1), 30);
     const { results } = await env.DB.prepare(
-      `SELECT ${PUB_COLS} FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY category ${CASE_ORDER}) AS rn FROM cases WHERE visible = 1) WHERE rn <= ? ${CASE_ORDER}`
+      `SELECT ${PUB_COLS} FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY category ${CASE_ORDER}) AS rn FROM cases WHERE visible = 1 AND ${PUB_CAT}) WHERE rn <= ? ${CASE_ORDER}`
     ).bind(per).all();
     const photos = await casePhotos(env, results.map((r) => r.id));
     const items = results.map((r) => publicRow(r, photos[r.id])).filter((r) => r.photos.length);
@@ -579,7 +584,7 @@ function publicRow(r, photos) {
 
 // 상세 페이지 미리보기(카카오톡·검색)용: 제목, 대표 사진
 export async function caseMeta(env, id) {
-  const r = await env.DB.prepare(`SELECT ${PUB_COLS} FROM cases WHERE id = ? AND visible = 1`).bind(id).first();
+  const r = await env.DB.prepare(`SELECT ${PUB_COLS} FROM cases WHERE id = ? AND visible = 1 AND ${PUB_CAT}`).bind(id).first();
   if (!r) return null;
   const photos = await casePhotos(env, [r.id]);
   return publicRow(r, photos[r.id]);
@@ -587,7 +592,7 @@ export async function caseMeta(env, id) {
 
 // 사이트맵용: 보이는 글 번호와 날짜
 export async function caseIdsForSitemap(env) {
-  const { results } = await env.DB.prepare('SELECT id, COALESCE(updated_at, created_at) AS d FROM cases WHERE visible = 1 ORDER BY id DESC LIMIT 5000').all();
+  const { results } = await env.DB.prepare(`SELECT id, COALESCE(updated_at, created_at) AS d FROM cases WHERE visible = 1 AND ${PUB_CAT} ORDER BY id DESC LIMIT 5000`).all();
   return results;
 }
 
@@ -595,7 +600,7 @@ export async function caseIdsForSitemap(env) {
 export async function publicCase(env, id) {
   if (!env.DB) return json({ ok: false, error: '없는 사례입니다.' }, 404);
   await ensureSchema(env);
-  const r = await env.DB.prepare(`SELECT ${PUB_COLS} FROM cases WHERE id = ? AND visible = 1`).bind(id).first();
+  const r = await env.DB.prepare(`SELECT ${PUB_COLS} FROM cases WHERE id = ? AND visible = 1 AND ${PUB_CAT}`).bind(id).first();
   if (!r) return json({ ok: false, error: '없는 사례입니다.' }, 404);
   const photos = await casePhotos(env, [r.id]);
   const item = publicRow(r, photos[r.id]);

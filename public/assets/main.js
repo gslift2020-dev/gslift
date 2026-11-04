@@ -175,7 +175,7 @@
 
   /* ================= 설치사례: 분류 탭 + 가로 목록 + 크게 보기 ================= */
   var CATS = window.GS_CATS || {};
-  var EMPTY_MSG = { all: '아직 등록된 설치사례가 없습니다.', fl: '화물용 리프트 설치사례를 준비 중입니다.', tl: '테이블 리프트 설치사례를 준비 중입니다.', st: '스태커 설치사례를 준비 중입니다. 문의 주시면 사례 사진을 보내드립니다.', tr: '운반기계 제작 사례를 준비 중입니다. 문의 주시면 사례 사진을 보내드립니다.' };
+  var EMPTY_MSG = { all: '아직 등록된 설치사례가 없습니다.', fl: '화물용 리프트 설치사례를 준비 중입니다.', tl: '테이블 리프트 설치사례를 준비 중입니다.', st: '스태커 설치사례를 준비 중입니다. 문의 주시면 사례 사진을 보내드립니다.' };
   var EXPAND = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>';
   var track = $('#track'), allCases = [], caseFilter = 'all', posts = [], casesReady = false, caseCounts = {};
 

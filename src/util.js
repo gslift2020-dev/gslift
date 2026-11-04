@@ -113,12 +113,12 @@ const MIGRATIONS = [
 ];
 
 // 설치사례 분류 (제품소개 4종과 같음)
-export const CATS = { fl: '화물용 리프트(F/L)', tl: '테이블 리프트(T/L)', st: '수동·자동 스태커', tr: '운반기계' };
+// 2026-11-04 운반기계(tr) 분류 삭제 (사장님 지시) — 예전 tr 글은 홈페이지에 보이지 않음
+export const CATS = { fl: '화물용 리프트(F/L)', tl: '테이블 리프트(T/L)', st: '수동·자동 스태커' };
 export function inferCat(title) {
   const t = String(title || '');
   if (/테이블|T\/L/i.test(t)) return 'tl';
   if (/스태커/.test(t)) return 'st';
-  if (/운반|대차/.test(t)) return 'tr';
   return 'fl';
 }
 

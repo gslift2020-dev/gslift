@@ -95,16 +95,18 @@ export async function runImports(request, env, force = false) {
         return;
       }
     }
-    // 예전에 중간에 끊겨 올라간 글 정리 (번호와 제목이 둘 다 맞을 때만)
+    // 글 지우기 (한 번만): { id, title } = 번호와 제목이 둘 다 맞을 때 / { ref: "묶음#순서", title } = 가져오기로 올린 그 글 (제목도 맞을 때)
     for (const rm of batch.remove || []) {
-      const key = `import:${batch.id}:rm${rm.id}`;
+      const key = `import:${batch.id}:rm${rm.ref || rm.id}`;
       const lock = await env.DB.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)').bind(key, JSON.stringify({ at: kst() })).run();
       if (!lock.meta || !lock.meta.changes) continue;
-      const row = await env.DB.prepare('SELECT id FROM cases WHERE id = ? AND title = ?').bind(rm.id, rm.title).first();
+      const rid = rm.ref ? await caseIdOf(env, rm.ref) : rm.id;
+      if (!rid) continue;
+      const row = await env.DB.prepare('SELECT id FROM cases WHERE id = ? AND title = ?').bind(rid, rm.title).first();
       if (!row) continue;
-      const { results } = await env.DB.prepare('SELECT photo_key FROM case_photos WHERE case_id = ?').bind(rm.id).all();
+      const { results } = await env.DB.prepare('SELECT photo_key FROM case_photos WHERE case_id = ?').bind(rid).all();
       for (const p of results) await env.PHOTOS.delete(p.photo_key);
-      await env.DB.batch([env.DB.prepare('DELETE FROM case_photos WHERE case_id = ?').bind(rm.id), env.DB.prepare('DELETE FROM cases WHERE id = ?').bind(rm.id)]);
+      await env.DB.batch([env.DB.prepare('DELETE FROM case_photos WHERE case_id = ?').bind(rid), env.DB.prepare('DELETE FROM cases WHERE id = ?').bind(rid)]);
     }
     for (let i = 0; i < cases.length; i++) {
       const key = `import:${batch.id}:${i}`;
@@ -164,8 +166,9 @@ async function importCase(env, origin, c) {
   const date = /^\d{4}-\d{2}$/.test(c.date || '') ? c.date + '-01' : null;
   // 꼬리표: manifest에 tags가 있으면 그대로, 없으면 글로 추측
   const tags = packTags(Array.isArray(c.tags) ? c.tags : inferTags([c.title, c.site, c.body].join(' '), cat));
-  const row = await env.DB.prepare('INSERT INTO cases (created_at, title, sub, site, body, note, category, photo_key, taken_at, visible, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-    .bind(kst(), String(c.title).slice(0, 120), '', String(c.site || '').slice(0, 80), String(c.body || '').slice(0, 5000), c.note ? String(c.note).slice(0, 300) : null, cat, keys[0], date, c.visible === false ? 0 : 1, tags).run();
+  // sink: 목록 맨 뒤로 (날짜·현장 기록이 없는 제품 사진 등) → pinned = -1
+  const row = await env.DB.prepare('INSERT INTO cases (created_at, title, sub, site, body, note, category, photo_key, taken_at, visible, tags, pinned) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+    .bind(kst(), String(c.title).slice(0, 120), '', String(c.site || '').slice(0, 80), String(c.body || '').slice(0, 5000), c.note ? String(c.note).slice(0, 300) : null, cat, keys[0], date, c.visible === false ? 0 : 1, tags, c.sink ? -1 : 0).run();
   const id = row.meta.last_row_id;
   await env.DB.batch(keys.map((k, i) => env.DB.prepare('INSERT INTO case_photos (case_id, photo_key, sort) VALUES (?, ?, ?)').bind(id, k, i)));
   return id;
