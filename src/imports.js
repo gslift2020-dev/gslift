@@ -14,7 +14,7 @@ async function loadManifest(request, env) {
   if (!r.ok) return null;
   try { return await r.json(); } catch { return null; }
 }
-const sigOf = (manifest) => (manifest.batches || []).map((b) => `${b.id}:${(b.cases || []).length}:${(b.remove || []).length}:${(b.retag || []).length}`).join('|');
+const sigOf = (manifest) => (manifest.batches || []).map((b) => `${b.id}:${(b.cases || []).length}:${(b.remove || []).length}:${(b.retag || []).length}:${(b.edit || []).length}`).join('|');
 
 // 묶음#순서(예: 2024-05-a#0) 또는 글 번호 → 글 번호
 async function caseIdOf(env, ref) {
@@ -73,6 +73,24 @@ export async function runImports(request, env, force = false) {
         for (const t of batch.retag) {
           const id = await caseIdOf(env, t.ref);
           if (id && Array.isArray(t.tags)) stmts.push(env.DB.prepare('UPDATE cases SET tags = ? WHERE id = ?').bind(packTags(t.tags), id));
+        }
+        for (let i = 0; i < stmts.length; i += 50) await env.DB.batch(stmts.slice(i, i + 50));
+      }
+      continue;
+    }
+    // 이미 올린 글의 제목·설명·꼬리표 고치기 (한 번만): { ref: "2026-10-a#0" 또는 글번호, title?, body?, tags? }
+    // 사진·내부메모·날짜는 건드리지 않음. 다시 고치려면 새 id로.
+    if (batch.edit) {
+      const key = `import:${batch.id}:edit`;
+      const lock = await env.DB.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)').bind(key, JSON.stringify({ at: kst() })).run();
+      if (lock.meta && lock.meta.changes) {
+        const stmts = [];
+        for (const t of batch.edit) {
+          const id = await caseIdOf(env, t.ref);
+          if (!id) continue;
+          if (t.title) stmts.push(env.DB.prepare('UPDATE cases SET title = ? WHERE id = ?').bind(String(t.title).slice(0, 120), id));
+          if (t.body != null) stmts.push(env.DB.prepare('UPDATE cases SET body = ? WHERE id = ?').bind(String(t.body).slice(0, 5000), id));
+          if (Array.isArray(t.tags)) stmts.push(env.DB.prepare('UPDATE cases SET tags = ? WHERE id = ?').bind(packTags(t.tags), id));
         }
         for (let i = 0; i < stmts.length; i += 50) await env.DB.batch(stmts.slice(i, i + 50));
       }
