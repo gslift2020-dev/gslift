@@ -576,6 +576,6 @@ body.gv-on .bento .opt img{transition:none}
 .unit-in input{flex:1;min-width:0}
 .unit-in span{font-weight:600;color:var(--muted)}
 .indoor{display:flex;flex-direction:column;gap:8px;padding:12px;border:1px dashed #C6D1E4;border-radius:10px;background:#fff}
-.indoor[hidden]{display:none}
+.indoor[hidden],.indoor-in label[hidden]{display:none}
 .indoor-l{font-weight:600;font-size:14px}
 .indoor-in{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}

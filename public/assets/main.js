@@ -559,12 +559,14 @@
     var PHONE_OK = /^(0\d{1,3}-\d{3,4}-\d{4}|1[5-9]\d{2}-\d{4})$/;
     var phoneIn = form.elements.phone;
     phoneIn.addEventListener('input', function () { var v = fmtPhone(phoneIn.value); if (v !== phoneIn.value) phoneIn.value = v; });
-    // 실내 설치일 때만 '윗층 바닥 구멍·피트' 질문을 보여 줌 (외부·모름이면 숨기고 값도 비움)
-    var placeSel = form.elements.place, indoorSet = $('#indoorSet');
+    // 설치 준비 상태: 실내·외부를 고르면 '피트' 질문, 실내일 때는 '윗층 바닥 구멍(천공)'도 보여 줌 (숨긴 질문은 값도 비움)
+    var placeSel = form.elements.place, indoorSet = $('#indoorSet'), holeQ = $('#holeQ');
     function syncIndoor() {
-      var on = placeSel && placeSel.value === '건물 실내';
-      if (indoorSet) indoorSet.hidden = !on;
-      if (!on) ['hole', 'pit'].forEach(function (k) { if (form.elements[k]) form.elements[k].value = ''; });
+      var v = placeSel ? placeSel.value : '', inside = v === '건물 실내', any = inside || v === '건물 외부';
+      if (indoorSet) indoorSet.hidden = !any;
+      if (holeQ) holeQ.hidden = !inside;
+      if (!inside && form.elements.hole) form.elements.hole.value = '';
+      if (!any && form.elements.pit) form.elements.pit.value = '';
     }
     if (placeSel) { placeSel.addEventListener('change', syncIndoor); syncIndoor(); }
     // 출입방향 그림: 고른 칸 표시 (오래된 브라우저용 — 새 브라우저는 CSS :has로도 표시)

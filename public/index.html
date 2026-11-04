@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="preload" as="image" href="assets/img/s1.webp">
-<link rel="stylesheet" href="assets/style.css?v=d7aa8187">
+<link rel="stylesheet" href="assets/style.css?v=c48af4be">
 <script>document.documentElement.classList.remove('no-js')</script>
 </head>
 <body>
@@ -412,10 +412,10 @@
 <label class="travel">운행 높이 (행정거리) <span class="unit-in"><input type="text" name="travel" inputmode="decimal" maxlength="6" placeholder="예) 4.5"><span>m</span></span><small class="hint">맨 아래층 바닥에서 맨 위층 바닥까지의 높이입니다. 예) 1층에서 2층까지 층 높이가 4.5m면 4.5</small></label>
 <label>실내 / 외부<select name="place"><option value="">모름 / 상담 후 결정</option><option>건물 실내</option><option>건물 외부</option></select></label>
 <div class="wide indoor" id="indoorSet" hidden>
-<span class="indoor-l">실내 설치 준비 상태 <small>(아는 것만)</small></span>
+<span class="indoor-l">설치 준비 상태 <small>(아는 것만)</small></span>
 <div class="indoor-in">
-<label>윗층 바닥 구멍(천공)<select name="hole"><option value="">모름 / 상담 후 결정</option><option>이미 뚫려 있음</option><option>아직 안 뚫음 (뚫어야 함)</option><option>공사 중</option></select><small class="hint">리프트가 윗층으로 지나갈 바닥 구멍</small></label>
-<label>1층 바닥 피트(구덩이)<select name="pit"><option value="">모름 / 상담 후 결정</option><option>이미 파 놓음</option><option>아직 없음 (파야 함)</option><option>공사 중</option><option>피트 없이 설치하고 싶음</option></select><small class="hint">리프트 바닥을 1층 바닥 높이에 맞추려고 파는 구덩이</small></label>
+<label id="holeQ">윗층 바닥 구멍(천공)<select name="hole"><option value="">모름 / 상담 후 결정</option><option>이미 뚫려 있음</option><option>아직 안 뚫음 (뚫어야 함)</option><option>공사 중</option></select><small class="hint">리프트가 윗층으로 지나갈 바닥 구멍</small></label>
+<label>바닥 피트(구덩이)<select name="pit"><option value="">모름 / 상담 후 결정</option><option>이미 파 놓음</option><option>아직 없음 (파야 함)</option><option>공사 중</option><option>피트 없이 설치하고 싶음</option></select><small class="hint">리프트 바닥을 1층 바닥(외부는 지면) 높이에 맞추려고 파는 구덩이</small></label>
 </div>
 </div>
 <label class="wide">주로 싣는 물건<input type="text" name="cargo" maxlength="100" placeholder="예) 팔레트, 롤테이너, 원자재, 대차 등"></label>
@@ -487,7 +487,7 @@
 <button type="button" class="to-top" id="toTop" aria-label="맨 위로"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
 <script src="assets/track.js?v=b465c05d" defer></script>
 <script src="assets/cases-static.js?v=62ed638e"></script>
-<script src="assets/main.js?v=70d40cc5" defer></script>
+<script src="assets/main.js?v=b37362ca" defer></script>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "33714223118f4d4eb58afc836328272c"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
 </html>
