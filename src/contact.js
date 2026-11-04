@@ -129,7 +129,8 @@ export async function handleContact(request, env, ctx) {
   }
 
   // 스팸 방지: 사람에게는 보이지 않는 칸이 채워져 있으면 조용히 무시
-  if (body.website) return json({ ok: true });
+  // (칸 이름이 website 였을 때 브라우저 자동완성이 채울 위험이 있어 gs_hp 로 바꿈. 예전 화면이 보내는 website 도 계속 받음)
+  if (body.gs_hp || body.website) return json({ ok: true });
 
   const row = {
     company: clean(body.company, LIMITS.company),

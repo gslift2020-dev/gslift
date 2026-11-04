@@ -585,7 +585,7 @@
       if (!f.agree.checked) { mark('agree'); return say('개인정보 수집·이용에 동의해 주세요.', 'err'); }
       mark(null);
       var fd = new FormData();
-      ['company', 'name', 'phone', 'email', 'product', 'loc', 'message', 'website', 'dir', 'load', 'stops', 'travel', 'place', 'hole', 'pit', 'cargo', 'w', 'd', 'h'].forEach(function (k) { if (f[k]) fd.append(k, f[k].value); });
+      ['company', 'name', 'phone', 'email', 'product', 'loc', 'message', 'gs_hp', 'dir', 'load', 'stops', 'travel', 'place', 'hole', 'pit', 'cargo', 'w', 'd', 'h'].forEach(function (k) { if (f[k]) fd.append(k, f[k].value); });
       fd.append('agree', f.agree.checked ? 'true' : 'false');
       if (window.GSTrack) { fd.append('src', window.GSTrack.src()); fd.append('vid', window.GSTrack.vid()); }
       shots.forEach(function (sh, i) { fd.append('photos', sh.blob, 'photo' + (i + 1) + '.jpg'); });
