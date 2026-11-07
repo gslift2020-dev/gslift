@@ -279,7 +279,7 @@ function caseFields(form) {
   const title = clean(form.get('title'), 120);
   if (!title) throw new UserError('제목을 입력하거나 사양 버튼을 골라주세요.');
   const c = String(form.get('category') || '');
-  // 설치 날짜: 2023-05 또는 2023-05-17 (비우면 올린 날짜)
+  // 설치 날짜: 2023-05 또는 2023-05-17 (비우면 null → 홈페이지에 날짜 표시 없음, 정렬만 올린 날짜로)
   const d = clean(form.get('date'), 10);
   let date = null;
   if (d) {
@@ -576,7 +576,8 @@ function publicRow(r, photos) {
   return {
     id: r.id, title: r.title, site: r.site ?? r.sub ?? '', body: r.body || '',
     cat: CATS[r.category] ? r.category : inferCat(r.title),
-    date: String(r.taken_at || r.created_at || '').slice(0, 7).replace('-', '.'),
+    // 설치 날짜: 실제 설치 연·월(taken_at)만 보여 줌. 없으면 비움 — 올린 날짜(created_at)를 설치 날짜처럼 보이지 않게 (2026-11-07)
+    date: /^\d{4}-\d{2}/.test(r.taken_at || '') ? r.taken_at.slice(0, 7).replace('-', '.') : '',
     photos: (photos || []).map((p) => p.img),
     tags: unpackTags(r.tags),
   };

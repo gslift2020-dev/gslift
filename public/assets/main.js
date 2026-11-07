@@ -187,6 +187,7 @@
     var im = document.createElement('img'); im.src = c.photos[0]; im.alt = c.alt || c.title; im.loading = 'lazy'; im.width = 900; im.height = 1200;
     z.appendChild(im);
     z.insertAdjacentHTML('beforeend', '<span class="exp">' + EXPAND + '</span>');
+    if (c.date) { var dt = document.createElement('span'); dt.className = 'when'; dt.textContent = c.date + ' 설치'; z.appendChild(dt); }
     var t = document.createElement('b'); t.textContent = c.title;
     var sm = document.createElement('small'); sm.textContent = [CATS[c.cat], c.site].filter(Boolean).join(' · ');
     b.appendChild(z); b.appendChild(t); b.appendChild(sm);
@@ -230,13 +231,17 @@
     var casesP = window.fetch ? fetch('/api/cases?home=1&per=12').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }) : Promise.resolve(null);
     Promise.all([casesP, siteP]).then(function (r) {
       var mine = (r[0] && r[0].ok ? r[0].items : []).map(function (c) {
-        return { cat: c.cat, title: c.title, site: c.site, body: c.body, photos: c.photos, href: '/case.html?id=' + c.id };
+        return { cat: c.cat, title: c.title, site: c.site, body: c.body, date: c.date || '', photos: c.photos, href: '/case.html?id=' + c.id };
       });
       var hide = r[1] && r[1].hideSamples;
       var samples = hide ? [] : (window.GS_SAMPLE || []).map(function (c) {
         return { cat: c.cat, title: c.title, site: c.site || '', body: c.body || '', alt: c.alt, photos: c.photos || [c.img], href: '/case.html?s=' + c.id };
       });
       allCases = mine.concat(samples);
+      // 가장 최근 설치 연·월 (올린 사례 중 설치 날짜가 있는 것만)
+      var latest = mine.map(function (c) { return c.date; }).filter(Boolean).sort().pop();
+      var le = $('#caseLatest');
+      if (le && latest) { le.innerHTML = '<i></i>가장 최근 설치 <b>' + latest.replace(/^(\d{4})\.0?(\d{1,2})$/, '$1년 $2월') + '</b>'; le.hidden = false; }
       var sc = (r[0] && r[0].counts) || {};
       caseCounts = { all: 0 };
       Object.keys(CATS).forEach(function (c) {

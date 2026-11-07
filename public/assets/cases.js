@@ -51,8 +51,9 @@
     var im = document.createElement('img'); im.src = c.cover; im.alt = c.title; im.loading = 'lazy'; im.width = 900; im.height = 1200;
     ph.appendChild(im);
     if (c.count > 1) { var n = document.createElement('span'); n.className = 'cnt'; n.textContent = '사진 ' + c.count; ph.appendChild(n); }
+    if (c.date) { var dt = document.createElement('span'); dt.className = 'when'; dt.textContent = c.date + ' 설치'; ph.appendChild(dt); }
     var b = document.createElement('b'); b.textContent = c.title;
-    var sm = document.createElement('small'); sm.textContent = [c.site || CATS[c.cat], c.date].filter(Boolean).join(' · ');
+    var sm = document.createElement('small'); sm.textContent = c.site || CATS[c.cat] || '';
     a.appendChild(ph); a.appendChild(b); a.appendChild(sm);
     // 고른 꼬리표가 있으면 카드에도 표시 (왜 이 사례가 나왔는지 보이게)
     var hit = (c.tags || []).filter(function (t) { return st.tags.indexOf(t) >= 0; });

@@ -275,6 +275,11 @@ th:last-child,td:last-child{text-align:right}
 .lb-thumbs button.on{border-color:#fff;opacity:1}
 .lb-thumbs img{width:100%;height:100%;object-fit:cover}
 .lb-body{max-width:min(720px,92vw);margin:0;color:#DCE4F2;font-size:15px;white-space:pre-wrap;text-align:left;background:rgba(255,255,255,.06);border-radius:10px;padding:12px 16px}
+.case .when,.cl-card .when{position:absolute;right:10px;top:10px;background:rgba(255,255,255,.94);color:var(--navy);font-size:12px;font-weight:700;border-radius:6px;padding:3px 8px;letter-spacing:.01em;box-shadow:0 1px 3px rgba(6,38,86,.18)}
+.case-latest{display:inline-flex;align-items:center;gap:8px;margin:10px 0 0;font-size:14px;color:var(--ink);background:#EAF2FF;border-radius:999px;padding:6px 14px}
+.case-latest[hidden]{display:none}
+.case-latest i{width:8px;height:8px;border-radius:50%;background:#1FA463;box-shadow:0 0 0 3px rgba(31,164,99,.18)}
+.case-latest b{color:var(--navy)}
 .case .cnt{position:absolute;left:10px;top:10px;background:rgba(6,38,86,.85);color:#fff;font-size:12px;border-radius:6px;padding:2px 8px}
 
 /* 유튜브 영상 목록 */

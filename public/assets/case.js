@@ -80,7 +80,7 @@
     info.appendChild(el('h1', null, c.title));
     var meta = el('div', 'cd-site');
     if (c.site) meta.appendChild(el('span', null, '현장: ' + c.site));
-    if (c.date) meta.appendChild(el('span', null, '설치: ' + c.date));
+    if (c.date) meta.appendChild(el('span', 'cd-when', '설치: ' + c.date.replace(/^(\d{4})\.0?(\d{1,2})$/, '$1년 $2월')));
     meta.appendChild(el('span', null, '사진 ' + c.photos.length + '장'));
     info.appendChild(meta);
     var spec = specOf(c.title);
