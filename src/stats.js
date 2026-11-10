@@ -232,7 +232,7 @@ function behavior(b) {
   const x = b && typeof b === 'object' ? b : {};
   const d = Math.min(Math.max(parseInt(x.d, 10) || 0, 0), 3600);
   const s = [0, 25, 50, 75, 100].includes(+x.s) ? +x.s : 0;
-  const a = (parseInt(x.a, 10) || 0) & 15;
+  const a = (parseInt(x.a, 10) || 0) & 63; // 1 사례 열어 봄 · 2 전화 · 4 견적 버튼 · 8 견적 양식 · 16 사례 구역 봄 · 32 견적 구역 봄
   return { d, s, a };
 }
 

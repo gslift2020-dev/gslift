@@ -786,7 +786,7 @@
   }
   function isAd(src) { return /광고$/.test(src); }
   function fmtDwell(sec) { if (!sec) return ''; if (sec < 60) return sec + '초'; var m = Math.floor(sec / 60), r = sec % 60; return m + '분' + (r ? ' ' + r + '초' : ''); }
-  var ACT = [[1, '사례'], [2, '전화'], [4, '견적 버튼'], [8, '견적 양식']];
+  var ACT = [[16, '사례 구역 봄'], [1, '사례'], [2, '전화'], [32, '견적 구역 봄'], [4, '견적 버튼'], [8, '견적 양식']];
   var CLS = { human: '', bot: '로봇 의심', check: '확인 필요', staff: '직원' };
   function drawVisits(more) {
     var f = $('#vSrc').value, hideBot = $('#vHideBot').checked, hideStaff = $('#vHideStaff').checked;

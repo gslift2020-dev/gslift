@@ -243,6 +243,13 @@
       var le = $('#caseLatest');
       if (le && latest) { le.innerHTML = '<i></i>가장 최근 설치 <b>' + latest.replace(/^(\d{4})\.0?(\d{1,2})$/, '$1년 $2월') + '</b>'; le.hidden = false; }
       var sc = (r[0] && r[0].counts) || {};
+      // 첫 화면(히어로) '설치사례 N건 · 가장 최근 설치' 줄 — 같은 자료를 같이 씀 (DB 읽기 추가 없음)
+      // 실제 설치 현장 수만 (맨 뒤로 보낸 공장 제품 사진은 뺌 — 서버 counts.sites)
+      var total = typeof sc.sites === 'number' ? sc.sites : Object.keys(CATS).reduce(function (n, c) { return n + (sc[c] || 0); }, 0);
+      var hc = $('#heroCnt'), hl = $('#heroLatest'), ht = $('#heroThumbs');
+      if (hc && total) hc.textContent = '설치 현장 ' + total.toLocaleString('ko-KR') + '곳 사진';
+      if (hl && latest) hl.textContent = '최근 설치 ' + latest.replace(/^(\d{4})\.0?(\d{1,2})$/, '$1년 $2월');
+      if (ht) mine.slice(0, 3).forEach(function (c) { if (!c.photos || !c.photos[0]) return; var im = document.createElement('img'); im.src = c.photos[0]; im.alt = ''; im.width = 46; im.height = 46; im.decoding = 'async'; ht.appendChild(im); });
       caseCounts = { all: 0 };
       Object.keys(CATS).forEach(function (c) {
         caseCounts[c] = (sc[c] || 0) + samples.filter(function (x) { return x.cat === c; }).length;
@@ -422,6 +429,55 @@
       if (open) $$('.opt-x').forEach(function (c) { c.classList.add('in'); });
       else document.getElementById('options').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' });
     });
+  }
+
+  /* ===== 2026-11-11 휴대폰 첫 화면 줄이기 ===== */
+  // 옆으로 넘기기 줄 아래에 '옆으로 넘겨 보기 · 1 / N' (휴대폰에서만 보임 — CSS)
+  $$('.mswipe').forEach(function (row) {
+    var items = function () { return Array.prototype.filter.call(row.children, function (c) { return c.offsetWidth > 0; }); };
+    var hint = document.createElement('div'); hint.className = 'swipe-hint'; hint.setAttribute('aria-hidden', 'true');
+    hint.innerHTML = '<span>← 옆으로 넘겨 보기</span><span class="sh-bar"><i></i></span><span class="sh-n"></span>';
+    row.parentNode.insertBefore(hint, row.nextSibling);
+    var bar = $('.sh-bar i', hint), num = $('.sh-n', hint);
+    var upd = function () {
+      var list = items(), n = list.length; if (!n) return;
+      var w = list[0].offsetWidth + 12, i = Math.min(n, Math.round(row.scrollLeft / w) + 1);
+      num.textContent = i + ' / ' + n;
+      bar.style.width = (100 / n) + '%'; bar.style.marginLeft = ((i - 1) * 100 / n) + '%';
+    };
+    row.addEventListener('scroll', function () { window.requestAnimationFrame(upd); }, { passive: true });
+    window.addEventListener('resize', upd); setTimeout(upd, 300);
+  });
+  // 접기: 휴대폰에서만 접혀 보임 (글은 HTML에 그대로 — 검색 노출 유지)
+  $$('.mfold, .mclamp').forEach(function (box) {
+    var label = box.dataset.more || '더 보기';
+    box.classList.add('folded');
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'mfold-btn'; b.setAttribute('aria-expanded', 'false');
+    b.innerHTML = label + ' <span aria-hidden="true">▾</span>';
+    b.addEventListener('click', function () {
+      var open = box.classList.toggle('folded') === false;
+      b.setAttribute('aria-expanded', open);
+      b.innerHTML = open ? '접기 <span aria-hidden="true">▴</span>' : label + ' <span aria-hidden="true">▾</span>';
+      if (open) { box.classList.add('in'); $$('.rv', box).forEach(function (r) { r.classList.add('in'); }); }
+    });
+    box.parentNode.insertBefore(b, box.nextSibling);
+  });
+  // 견적 양식: 사양은 '정지 층수'만 밖에, 나머지는 '리프트 사양 자세히 적기'로 펼침 (휴대폰만 접힘 — CSS)
+  var specT = $('#specToggle'), specM = $('#specMore');
+  if (specT && specM) specT.addEventListener('click', function () {
+    var open = specM.classList.toggle('open');
+    specT.setAttribute('aria-expanded', open);
+  });
+  // 아래 고정 바로가기 줄: 지금 보고 있는 구역 표시
+  var mlinks = $$('.mbar a[data-sec]');
+  if (mlinks.length && 'IntersectionObserver' in window) {
+    var mio = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        mlinks.forEach(function (a) { a.classList.toggle('cur', a.dataset.sec === e.target.id); });
+      });
+    }, { rootMargin: '-45% 0px -50% 0px' });
+    mlinks.forEach(function (a) { var el = document.getElementById(a.dataset.sec); if (el) mio.observe(el); });
   }
 
   /* 교체 전후 비교 막대 */

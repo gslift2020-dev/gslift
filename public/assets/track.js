@@ -67,7 +67,7 @@
           window.addEventListener('scroll', depth, { passive: true });
           window.addEventListener('load', depth);
         }
-        // 누른 것: 1 설치사례 열어 봄 · 2 전화번호 · 4 견적 문의 버튼 · 8 견적 양식에 입력 시작
+        // 누른 것: 1 설치사례 열어 봄 · 2 전화번호 · 4 견적 문의 버튼 · 8 견적 양식에 입력 시작 · 16 설치사례 구역 봄 · 32 견적 구역 봄
         var leaving = false; // 우리 사이트 안의 다른 페이지로 가는 중 → 떠날 때 신호 대신 다음 페이지 신호에 실음
         document.addEventListener('click', function (e) {
           var t = e.target && e.target.closest ? e.target : null; if (!t) return;
@@ -78,6 +78,24 @@
           if (a && !a.target && a.host === location.host && !/^(tel|mailto):/i.test(href) && href.charAt(0) !== '#') leaving = true;
           save();
         }, true);
+        // 구역을 봤는지: 16 설치사례 구역 · 32 견적 문의 구역 — 첫 화면에서 그 구역이 화면 절반 이상을 1초 넘게 차지하면 (2026-11-11, 개편 전후 비교용)
+        // 기존 acts 칸에 더하기만 함 → 쓰기·읽기 추가 없음 (다음 페이지 신호나 떠날 때 신호에 같이 실림)
+        if ('IntersectionObserver' in window && (location.pathname === '/' || location.pathname === '/index.html')) {
+          var seen = function (id, bit) {
+            var el = document.getElementById(id); if (!el) return;
+            var tm = 0;
+            var ob = new IntersectionObserver(function (es) {
+              es.forEach(function (en) {
+                var vh = window.innerHeight || 1, big = en.isIntersecting && (en.intersectionRect.height / vh >= 0.5 || en.intersectionRatio >= 0.6);
+                if (big && !tm) tm = setTimeout(function () { B.a |= bit; save(); ob.disconnect(); }, 1000);
+                if (!big && tm) { clearTimeout(tm); tm = 0; }
+              });
+            }, { threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1] });
+            ob.observe(el);
+          };
+          var go = function () { seen('cases', 16); seen('contact', 32); };
+          if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
+        }
         var form = function (e) { if (e.target && e.target.closest && e.target.closest('#form')) { if (!(B.a & 8)) { B.a |= 8; save(); } } };
         document.addEventListener('input', form, true);
         document.addEventListener('change', form, true);

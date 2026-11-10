@@ -254,9 +254,10 @@ async function facetCounts(env, url) {
   return { counts, tagCounts };
 }
 async function catCounts(env, onlyVisible) {
-  const { results } = await env.DB.prepare(`SELECT category, COUNT(*) AS n FROM cases ${onlyVisible ? 'WHERE visible = 1' : ''} GROUP BY category`).all();
-  const counts = { all: 0, fl: 0, tl: 0, st: 0 };
-  for (const r of results) { if (!CATS[r.category]) continue; counts[r.category] += r.n; counts.all += r.n; }
+  // sunk = 맨 뒤로 보낸 글(날짜 없는 공장 제품 사진 등). 같은 조회에서 함께 셈 — 읽는 줄 수는 그대로 (2026-11-11)
+  const { results } = await env.DB.prepare(`SELECT category, COUNT(*) AS n, SUM(CASE WHEN pinned < 0 THEN 1 ELSE 0 END) AS sunk FROM cases ${onlyVisible ? 'WHERE visible = 1' : ''} GROUP BY category`).all();
+  const counts = { all: 0, fl: 0, tl: 0, st: 0, sites: 0 };
+  for (const r of results) { if (!CATS[r.category]) continue; counts[r.category] += r.n; counts.all += r.n; counts.sites += r.n - (r.sunk || 0); }
   return counts;
 }
 

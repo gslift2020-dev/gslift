@@ -584,3 +584,112 @@ body.gv-on .bento .opt img{transition:none}
 .indoor[hidden],.indoor-in label[hidden]{display:none}
 .indoor-l{font-weight:600;font-size:14px}
 .indoor-in{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+
+/* ================= 2026-11-11 휴대폰 첫 화면 줄이기 (①②③④⑤ · 과장님 결정) ================= */
+/* 히어로: 설치사례 건수·최근 사진 줄 (PC·휴대폰 공통) */
+.hero-one{display:none}
+.hero-tel{display:none!important}
+.hero-cases{display:flex;align-items:center;gap:14px;max-width:520px;padding:10px 14px 10px 10px;border-radius:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fff}
+.hero-cases:hover{background:rgba(255,255,255,.14);color:#fff}
+.hc-ph{display:flex;flex-shrink:0}
+.hc-ph:empty{display:none}
+.hc-ph img{width:46px;height:46px;border-radius:9px;object-fit:cover;border:2px solid var(--navy);margin-left:-10px;background:var(--blue-2)}
+.hc-ph img:first-child{margin-left:0}
+.hc-tx{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.hc-tx b{font-size:16px}
+.hc-tx small{font-size:13px;color:var(--sky-2)}
+.hc-arr{font-size:20px;flex-shrink:0}
+/* 옆으로 넘기기 안내 (휴대폰만 보임) */
+.swipe-hint{display:none}
+/* 접기 버튼 (휴대폰만 보임) */
+.mfold-btn{display:none}
+.spec-toggle{display:none}
+
+@media (max-width:600px){
+  .m-hide{display:none!important}
+  /* 히어로: 스크롤 없이 한 화면에 소개·전화·견적·설치사례 */
+  .hero .wrap{padding-top:22px;padding-bottom:30px;gap:24px}
+  .hero-text{gap:14px}
+  .hero .eyebrow{font-size:11px}
+  .hero h1{font-size:27px;line-height:1.3}
+  .hero-long{display:none}
+  .hero-one{display:block;font-size:15px!important;line-height:1.55}
+  .hero .btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .hero .btns .btn{justify-content:center;padding:14px 10px;font-size:16px}
+  .hero-tel{display:inline-flex!important;align-items:center;gap:6px}
+  .hero-cases-btn{display:none!important}
+  .hero .facts{display:none}
+  .hero-cases{max-width:none}
+  .slides{aspect-ratio:4/3}
+  /* 옆으로 넘기기 줄 */
+  .mswipe{display:flex!important;grid-template-columns:none!important;grid-auto-rows:auto!important;overflow-x:auto;scroll-snap-type:x mandatory;gap:12px!important;margin-left:-20px;margin-right:-20px;padding:0 20px 6px;scroll-padding-left:20px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .mswipe::-webkit-scrollbar{display:none}
+  .mswipe>*{flex:0 0 84%;min-width:0;scroll-snap-align:start}
+  .bento.mswipe .opt,.bento.mswipe .opt.tall,.bento.mswipe .opt.wide{aspect-ratio:4/5;display:block}
+  .bento.mswipe .opt-x{display:block}
+  .opt-more{display:none}
+  .safety-photos.mswipe{margin-top:28px}
+  .swipe-hint{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;font-size:13px;color:var(--muted)}
+  .dark .swipe-hint{color:var(--sky-2)}
+  .swipe-hint .sh-bar{flex:1;height:3px;border-radius:2px;background:rgba(127,145,180,.25);overflow:hidden}
+  .swipe-hint .sh-bar i{display:block;height:100%;width:20%;background:var(--blue);border-radius:2px;transition:margin-left .15s}
+  .dark .swipe-hint .sh-bar i{background:#fff}
+  /* 안전검사 12개 항목 목록: 한 줄로 옆으로 */
+  .std-list.mrow{display:flex;overflow-x:auto;gap:8px;margin:0 -20px;padding:0 20px 6px;scrollbar-width:none}
+  .std-list.mrow::-webkit-scrollbar{display:none}
+  .std-list.mrow button{flex:0 0 auto;white-space:nowrap;min-height:44px}
+  .diagram-col{max-width:300px}
+  /* 접기 */
+  .mfold.folded{display:none!important}
+  .mclamp.folded p:not(:first-child){display:none}
+  .mfold-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:12px;padding:12px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--navy);font:inherit;font-size:15px;font-weight:600;cursor:pointer}
+  .dark .mfold-btn{background:transparent;color:#fff;border-color:rgba(255,255,255,.3)}
+  /* 오시는 길 지도 낮게 */
+  .map,.map iframe{min-height:240px}
+  /* 견적 양식: 사양은 '정지 층수'만 밖에, 나머지는 펼쳐서 */
+  .spec-toggle{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:12px 14px;border-radius:10px;border:1.5px dashed #9FB3D6;background:#fff;color:var(--navy);font:inherit;font-size:15px;font-weight:700;text-align:left;cursor:pointer}
+  .spec-toggle small{font-weight:400;color:var(--muted);font-size:12px;display:block}
+  .spec-toggle[aria-expanded="true"] span{transform:rotate(180deg)}
+  .spec-more{display:none}
+  .spec-more.open{display:contents}
+}
+@media (min-width:601px){.spec-more{display:contents}}
+/* 사진 한 장만 안내 */
+.photo-one{display:flex;align-items:flex-start;gap:10px;margin:0;padding:12px 14px;border-radius:12px;background:#EAF2FF;color:var(--navy);font-size:15px;line-height:1.5}
+.photo-one svg{flex-shrink:0;margin-top:1px;color:var(--blue)}
+/* 아래 고정 바로가기 줄 (폭 900 이하): 전화 · 제품 · 설치사례 · 자주 묻는 질문 · 견적 문의 */
+@media (max-width:900px){
+  .mbar{grid-template-columns:1fr 1fr 1fr 1fr 1.35fr}
+  .mbar a{min-height:58px;font-size:11.5px;font-weight:600;gap:2px;line-height:1.2;text-align:center;padding:0 2px}
+  .mbar a span{white-space:nowrap}
+  .mbar a.tel{color:var(--blue);font-weight:700}
+  .mbar a.go{font-size:13px;font-weight:700}
+  .mbar a.cur:not(.go){background:#EEF3FB}
+  .mbar a+a{border-left:1px solid var(--line)}
+}
+@media (max-width:360px){.mbar a{font-size:10.5px}.mbar a[data-sec="faq"] span{letter-spacing:-.04em}}
+
+/* 제품소개: 휴대폰에서 가로형 카드 · 맞춤 제작 장비는 옆으로 넘기기 */
+@media (max-width:600px){
+  .prod-cards{gap:12px}
+  .prod-cards .card{flex-direction:row;align-items:stretch}
+  .prod-cards .card .ph{flex:0 0 38%;aspect-ratio:auto;min-height:132px}
+  .prod-cards .card .body{padding:14px 14px 14px 16px;gap:4px;justify-content:center;min-width:0}
+  .prod-cards .card h3{font-size:17px}
+  .prod-cards .card p{font-size:13.5px;line-height:1.5}
+  .prod-cards .card .more{font-size:13px}
+  .mswipe.mswipe-s>*{flex:0 0 44%}
+  .mini .grid.mswipe figure{margin:0}
+}
+@media (max-width:600px){
+  .stats .wrap{grid-template-columns:1fr 1fr;gap:18px 14px;padding-top:26px;padding-bottom:26px}
+  .stat{padding-left:12px}
+  .stat b{font-size:28px}
+  .stat span{font-size:13px;line-height:1.45}
+}
+@media (max-width:380px){.hero .eyebrow{display:none}.hero h1{font-size:24px}.hero .wrap{padding-top:18px}.hc-tx b{font-size:15px}}
+@media (max-width:600px){
+  .hc-ph img{width:42px;height:42px}
+  .hc-ph img:nth-child(3){display:none}
+  .hc-tx b,.hc-tx small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+}
