@@ -649,7 +649,7 @@ body.gv-on .bento .opt img{transition:none}
   /* 견적 양식: 사양은 '정지 층수'만 밖에, 나머지는 펼쳐서 */
   .spec-toggle{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:12px 14px;border-radius:10px;border:1.5px dashed #9FB3D6;background:#fff;color:var(--navy);font:inherit;font-size:15px;font-weight:700;text-align:left;cursor:pointer}
   .spec-toggle small{font-weight:400;color:var(--muted);font-size:12px;display:block}
-  .spec-toggle[aria-expanded="true"] span{transform:rotate(180deg)}
+  .spec-toggle[aria-expanded="true"] .st-a{transform:rotate(180deg)}
   .spec-more{display:none}
   .spec-more.open{display:contents}
 }
@@ -692,4 +692,34 @@ body.gv-on .bento .opt img{transition:none}
   .hc-ph img{width:42px;height:42px}
   .hc-ph img:nth-child(3){display:none}
   .hc-tx b,.hc-tx small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+}
+
+/* ===== 2026-11-11 오후 손보기 (과장님 휴대폰 확인 후) ===== */
+@media (max-width:600px){
+  /* 옆으로 넘기는 줄: 위아래로는 움직이지 않게, 카드 높이·위치 고정 (떠오르는 효과 끔) */
+  .mswipe{overflow-y:hidden;align-items:stretch;padding-top:4px;padding-bottom:10px;overscroll-behavior-x:contain}
+  .mswipe>*,.mswipe>*.rv,.mswipe>*.lift,.mswipe>*.lift:hover{transform:none!important;opacity:1!important;transition:box-shadow .2s!important}
+  .mswipe.rv{transform:none!important;opacity:1!important}
+  /* '원하시는 리프트 사양' 제목: 상자 안 맨 위에 두 줄로 반듯하게 */
+  .spec-set legend{float:left;width:100%;padding:0;margin:0 0 12px}
+  .spec-set legend small{display:block;margin:4px 0 0;line-height:1.5}
+  .spec-set .spec-grid{clear:both}
+  /* 사양 펼치기 버튼: 양식의 '보내기' 버튼 모양을 따라가지 않게 */
+  .form .spec-toggle{height:auto;min-height:52px;background:#fff;color:var(--navy);border:1.5px dashed #9FB3D6;font-size:15px;font-weight:700}
+  .form .spec-toggle[aria-expanded="true"]{border-style:solid;border-color:var(--blue);background:#F4F8FF}
+  .form .spec-toggle small{color:var(--muted)}
+  /* 넘기기 막대: 손가락으로 눌러 끌기 (천천히·빠르게) — 모양은 그대로, 누르면 티 나게 */
+  .swipe-hint{touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;padding:8px 0}
+  .swipe-hint .sh-bar{height:3px;transition:height .15s,background .15s}
+  .swipe-hint .sh-bar i{transition:margin-left .12s ease-out,height .15s,box-shadow .15s}
+  .swipe-hint.drag{cursor:grabbing}
+  .swipe-hint.drag .sh-bar{height:8px;background:rgba(127,145,180,.35)}
+  .swipe-hint.drag .sh-bar i{transition:none;box-shadow:0 0 0 4px rgba(31,85,170,.18)}
+  .swipe-hint.drag .sh-n{color:var(--navy);font-weight:700}
+  .dark .swipe-hint.drag .sh-n{color:#fff}
+}
+@media (max-width:600px){
+  .form .spec-toggle .st-t{display:flex;flex-direction:column;gap:2px}
+  .form .spec-toggle .st-t small{display:block;font-size:12.5px;font-weight:400}
+  .form .spec-toggle .st-a{flex-shrink:0;font-size:14px;transition:transform .2s}
 }

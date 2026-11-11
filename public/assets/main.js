@@ -438,15 +438,48 @@
     var hint = document.createElement('div'); hint.className = 'swipe-hint'; hint.setAttribute('aria-hidden', 'true');
     hint.innerHTML = '<span>← 옆으로 넘겨 보기</span><span class="sh-bar"><i></i></span><span class="sh-n"></span>';
     row.parentNode.insertBefore(hint, row.nextSibling);
-    var bar = $('.sh-bar i', hint), num = $('.sh-n', hint);
+    var bar = $('.sh-bar i', hint), track = $('.sh-bar', hint), num = $('.sh-n', hint);
     var upd = function () {
       var list = items(), n = list.length; if (!n) return;
       var w = list[0].offsetWidth + 12, i = Math.min(n, Math.round(row.scrollLeft / w) + 1);
+      var max = row.scrollWidth - row.clientWidth, f = max > 0 ? Math.min(1, Math.max(0, row.scrollLeft / max)) : 0;
       num.textContent = i + ' / ' + n;
-      bar.style.width = (100 / n) + '%'; bar.style.marginLeft = ((i - 1) * 100 / n) + '%';
+      bar.style.width = (100 / n) + '%'; bar.style.marginLeft = (f * (100 - 100 / n)) + '%';
     };
     row.addEventListener('scroll', function () { window.requestAnimationFrame(upd); }, { passive: true });
     window.addEventListener('resize', upd); setTimeout(upd, 300);
+    // 막대를 눌러 끌기: 천천히 끌면 조금씩, 빠르게 밀면 크게 움직임(손가락 속도에 따라). 빈 곳을 누르면 그 자리로. 놓으면 가까운 카드에 맞춤
+    var dragging = false, lastX = 0, lastT = 0, vel = 0;
+    var jumpTo = function (x) {
+      var r = track.getBoundingClientRect(), f = (x - r.left) / Math.max(1, r.width);
+      row.scrollLeft = Math.min(1, Math.max(0, f)) * (row.scrollWidth - row.clientWidth);
+    };
+    hint.addEventListener('pointerdown', function (e) {
+      if (e.button > 0) return;
+      dragging = true; hint.classList.add('drag');
+      row.style.scrollSnapType = 'none'; row.style.scrollBehavior = 'auto';
+      var br = bar.getBoundingClientRect(), tr = track.getBoundingClientRect();
+      if (e.clientX >= tr.left - 4 && e.clientX <= tr.right + 4 && (e.clientX < br.left - 6 || e.clientX > br.right + 6)) jumpTo(e.clientX);
+      lastX = e.clientX; lastT = e.timeStamp || Date.now(); vel = 0;
+      try { hint.setPointerCapture(e.pointerId); } catch (er) {}
+      e.preventDefault();
+    });
+    hint.addEventListener('pointermove', function (e) {
+      if (!dragging) return;
+      var t = e.timeStamp || Date.now(), dx = e.clientX - lastX, dt = Math.max(1, t - lastT);
+      vel = vel * 0.6 + Math.abs(dx / dt) * 0.4;                   // 손가락 속도(px/ms), 부드럽게
+      var gain = Math.min(24, 2 + 30 * Math.pow(vel, 1.3));        // 느리면 약 2배, 빠르면 최대 24배
+      row.scrollLeft += dx * gain;
+      lastX = e.clientX; lastT = t; e.preventDefault();
+    });
+    var stop = function () {
+      if (!dragging) return; dragging = false; hint.classList.remove('drag');
+      var list = items(); if (!list.length) return;
+      var w = list[0].offsetWidth + 12, i = Math.round(row.scrollLeft / w);
+      row.style.scrollBehavior = ''; row.scrollTo({ left: i * w, behavior: 'smooth' });
+      setTimeout(function () { row.style.scrollSnapType = ''; }, 350);
+    };
+    hint.addEventListener('pointerup', stop); hint.addEventListener('pointercancel', stop); hint.addEventListener('lostpointercapture', stop);
   });
   // 접기: 휴대폰에서만 접혀 보임 (글은 HTML에 그대로 — 검색 노출 유지)
   $$('.mfold, .mclamp').forEach(function (box) {
