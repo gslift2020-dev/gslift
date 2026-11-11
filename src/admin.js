@@ -9,7 +9,13 @@ import { TAG_GROUPS, TAGS, normTags, packTags, unpackTags, inferTags } from './t
 export { CATS, inferCat };
 
 const COOKIE = 'gs_admin';
+// 로그인 유지 (2026-11-11 과장님 요청: "창을 닫기 전까지 유지")
+// · 쿠키에 만료 시간을 두지 않음 → 브라우저를 닫으면 지워짐
+// · 서버 기한은 마지막 사용부터 SESSION_SECONDS. 관리자 화면을 쓰거나 열어 두기만 해도(20분마다 확인) 기한이 계속 늘어남
+// · 그래도 로그인한 지 SESSION_MAX_SECONDS가 지나면 다시 로그인 (도난 쿠키가 영원히 쓰이지 않게)
 const SESSION_SECONDS = 12 * 3600;
+const SESSION_MAX_SECONDS = 30 * 24 * 3600;
+const RENEW_AFTER = 15 * 60; // 마지막 갱신 뒤 15분이 지나면 새 기한으로 갈아 줌
 const MAX_FAILS = 5; // 15분 안에 5번 틀리면 잠금
 const FAIL_WINDOW_MS = 15 * 60 * 1000;
 const MAX_PHOTO_BYTES = 4 * 1024 * 1024;
@@ -43,19 +49,38 @@ function b64urlDecode(s) {
   const bin = atob(s + '==='.slice((s.length + 3) % 4));
   return Uint8Array.from(bin, (c) => c.charCodeAt(0));
 }
-async function makeToken(env) {
-  const exp = Math.floor(Date.now() / 1000) + SESSION_SECONDS;
-  const sig = await crypto.subtle.sign('HMAC', await hmacKey(env), enc.encode('admin|' + exp));
-  return exp + '.' + b64url(sig);
+// 표: 만료.로그인시각.서명  (예전 표 '만료.서명'도 기한까지는 받아 줌 → 올리는 순간 로그인이 풀리지 않게)
+async function makeToken(env, iat) {
+  const now = Math.floor(Date.now() / 1000);
+  iat = iat || now;
+  const exp = Math.min(now + SESSION_SECONDS, iat + SESSION_MAX_SECONDS);
+  const sig = await crypto.subtle.sign('HMAC', await hmacKey(env), enc.encode('admin|' + exp + '|' + iat));
+  return exp + '.' + iat + '.' + b64url(sig);
 }
-async function validToken(env, token) {
-  const m = /^(\d+)\.([A-Za-z0-9_-]+)$/.exec(token || '');
-  if (!m || Number(m[1]) < Date.now() / 1000) return false;
+// 맞으면 { exp, iat }, 아니면 null
+async function readToken(env, token) {
+  const now = Date.now() / 1000;
   try {
-    return await crypto.subtle.verify('HMAC', await hmacKey(env), b64urlDecode(m[2]), enc.encode('admin|' + m[1]));
-  } catch {
-    return false;
-  }
+    let m = /^(\d+)\.(\d+)\.([A-Za-z0-9_-]+)$/.exec(token || '');
+    if (m) {
+      const exp = Number(m[1]), iat = Number(m[2]);
+      if (exp < now || iat + SESSION_MAX_SECONDS < now) return null;
+      const ok = await crypto.subtle.verify('HMAC', await hmacKey(env), b64urlDecode(m[3]), enc.encode('admin|' + m[1] + '|' + m[2]));
+      return ok ? { exp, iat } : null;
+    }
+    m = /^(\d+)\.([A-Za-z0-9_-]+)$/.exec(token || '');
+    if (m) {
+      const exp = Number(m[1]);
+      if (exp < now) return null;
+      const ok = await crypto.subtle.verify('HMAC', await hmacKey(env), b64urlDecode(m[2]), enc.encode('admin|' + m[1]));
+      return ok ? { exp, iat: exp - SESSION_SECONDS } : null;
+    }
+  } catch {}
+  return null;
+}
+function sessionCookie(token) {
+  // Max-Age 없음 = 브라우저를 닫으면 지워지는 쿠키
+  return `${COOKIE}=${token}; Path=/; HttpOnly; Secure; SameSite=Strict`;
 }
 function readCookie(request, name) {
   const c = request.headers.get('cookie') || '';
@@ -70,8 +95,9 @@ async function samePassword(a, b) {
   for (let i = 0; i < x.length; i++) diff |= x[i] ^ y[i];
   return diff === 0;
 }
-async function isAdmin(request, env) {
-  return !!env.ADMIN_PASSWORD && (await validToken(env, readCookie(request, COOKIE)));
+async function adminSession(request, env) {
+  if (!env.ADMIN_PASSWORD) return null;
+  return readToken(env, readCookie(request, COOKIE));
 }
 
 async function login(request, env) {
@@ -89,7 +115,7 @@ async function login(request, env) {
   }
   await env.DB.prepare('DELETE FROM login_attempts WHERE ip = ? OR at < ?').bind(ip, kst(-24 * 3600 * 1000)).run();
   return json({ ok: true }, 200, {
-    'set-cookie': `${COOKIE}=${await makeToken(env)}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${SESSION_SECONDS}`,
+    'set-cookie': sessionCookie(await makeToken(env)),
   });
 }
 function logout() {
@@ -641,11 +667,24 @@ export async function handleAdmin(request, env, path) {
 
   if (path === '/api/admin/login' && method === 'POST') return login(request, env);
   if (path === '/api/admin/logout' && method === 'POST') return logout();
-  if (!(await isAdmin(request, env))) return json({ ok: false, error: '로그인이 필요합니다.', login: true }, 401);
+  const sess = await adminSession(request, env);
+  if (!sess) return json({ ok: false, error: '로그인이 필요합니다.', login: true }, 401);
 
+  const res = await adminRoutes(request, env, path, method);
+  // 쓰는 동안 기한 늘리기: 마지막 갱신 뒤 15분이 지났으면 새 표를 줌 (DB 안 읽음)
+  if (Date.now() / 1000 > sess.exp - SESSION_SECONDS + RENEW_AFTER) {
+    const out = new Response(res.body, res);
+    out.headers.append('set-cookie', sessionCookie(await makeToken(env, sess.iat)));
+    return out;
+  }
+  return res;
+}
+
+async function adminRoutes(request, env, path, method) {
+  let m;
   if (path === '/api/admin/me') return json({ ok: true });
   if (path === '/api/admin/inquiries' && method === 'GET') return listInquiries(env);
-  let m = /^\/api\/admin\/inquiries\/(\d+)$/.exec(path);
+  m = /^\/api\/admin\/inquiries\/(\d+)$/.exec(path);
   if (m && method === 'POST') return setInquiryStatus(request, env, Number(m[1]));
   if (m && method === 'DELETE') return deleteInquiry(env, Number(m[1]));
   if (path.startsWith('/api/admin/inq-photo/') && method === 'GET') return inquiryPhoto(env, decodeURIComponent(path.slice('/api/admin/inq-photo/'.length)));

@@ -36,6 +36,14 @@
     try { if (localStorage.getItem('gs_staff') == null) localStorage.setItem('gs_staff', '1'); } catch (e) {}
     $('#loginView').hidden = true; $('#appView').hidden = false; $('#logoutBtn').hidden = false;
     loadInquiries(); loadSettings(); loadDash();
+    keepAlive();
+  }
+  // 창을 열어 두는 동안 로그인 유지: 20분마다 확인(서버가 기한을 늘려 줌, DB 안 읽음). 창을 닫으면 쿠키가 지워져 로그아웃
+  var aliveT = 0;
+  function keepAlive() {
+    if (aliveT) return;
+    aliveT = setInterval(function () { if (!$('#appView').hidden) api('/api/admin/me'); }, 20 * 60 * 1000);
+    document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && !$('#appView').hidden) api('/api/admin/me'); });
   }
   $('#loginForm').addEventListener('submit', function (e) {
     e.preventDefault();
