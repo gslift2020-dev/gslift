@@ -727,8 +727,59 @@
       $('#dMobile').textContent = d.mobileShare == null ? '' : '휴대폰 ' + d.mobileShare + '% · PC ' + (100 - d.mobileShare) + '%';
       drawChart(d.days); drawSources(d.sources); drawPages(d.pages);
     });
-    loadVisits(); loadStaff();
+    loadVisits(); loadStaff(); loadGsc();
   }
+
+  /* ---------- 구글 검색어 (서치 콘솔) ---------- */
+  var gsc = { data: null, sort: 'i', all: false, busy: false };
+  function loadGsc(refresh) {
+    if (gsc.busy) return; gsc.busy = true;
+    var btn = $('#gscRefresh'); if (refresh) { btn.disabled = true; btn.textContent = '받는 중…'; }
+    api('/api/admin/gsc', refresh ? { method: 'POST' } : null).then(function (d) {
+      gsc.busy = false; btn.disabled = false; btn.textContent = '새로 고침';
+      gsc.data = d; drawGsc();
+    }, function () { gsc.busy = false; btn.disabled = false; btn.textContent = '새로 고침'; $('#gscBody').innerHTML = '<p class="empty">불러오지 못했습니다.</p>'; });
+  }
+  function gNum(n) { return Number(n || 0).toLocaleString('ko-KR'); }
+  function gPct(c, i) { return i ? (Math.round(c / i * 1000) / 10) + '%' : '-'; }
+  function gDay(s) { return s ? (+s.slice(5, 7)) + '/' + (+s.slice(8, 10)) : ''; }
+  function drawGsc() {
+    var d = gsc.data || {}, box = $('#gscBody'), btn = $('#gscRefresh');
+    if (!d.ok) { box.innerHTML = '<p class="empty">' + esc(d.error || '불러오지 못했습니다.') + '</p>'; return; }
+    if (!d.configured) {
+      btn.hidden = true;
+      box.innerHTML = '<div class="gsc-setup">' + (d.error ? '<p class="gsc-err">' + esc(d.error) + '</p>' : '') +
+        '<p>아직 구글 서치 콘솔과 연결되지 않았습니다. 연결하면 구글에서 <b>어떤 검색어로 몇 번 보였고 몇 번 눌렸는지</b>가 여기에 나옵니다.</p><ol>' +
+        '<li>구글 클라우드에서 "Google Search Console API" 켜기</li>' +
+        '<li>서비스 계정(연결용 계정) 만들고 열쇠(JSON) 내려받기</li>' +
+        '<li>Cloudflare → Workers → shiny-snowflake-f1df → 설정 → 변수 및 비밀 → 비밀 <code>GSC_SA_KEY</code>에 열쇠 파일 내용 전체 붙여 넣기</li>' +
+        '<li>서치 콘솔 → 설정 → 사용자 및 권한 → 서비스 계정 이메일을 "제한됨" 권한으로 추가</li></ol></div>';
+      return;
+    }
+    btn.hidden = false;
+    var h = '';
+    if (d.err) h += '<p class="gsc-err">' + esc(d.err) + (d.rows ? '<br><small>아래는 예전에 받아 둔 자료입니다.</small>' : '') + '</p>';
+    if (d.note) h += '<p class="hint">' + esc(d.note) + '</p>';
+    if (!d.rows) { box.innerHTML = h || '<p class="empty">아직 받은 자료가 없습니다. "새로 고침"을 눌러 주세요.</p>'; return; }
+    $('#gscRange').textContent = '(구글 서치 콘솔 · ' + gDay(d.start) + '~' + gDay(d.end) + ' · ' + gDay(new Date(d.at + 9 * 3600e3).toISOString()) + ' ' + new Date(d.at + 9 * 3600e3).toISOString().slice(11, 16) + ' 받음)';
+    var t = d.totals || {};
+    h += '<div class="gsc-kpis"><span>노출<b>' + gNum(t.impressions) + '</b></span><span>클릭<b>' + gNum(t.clicks) + '</b></span><span>클릭률<b>' + gPct(t.clicks, t.impressions) + '</b></span><span>평균 순위<b>' + (t.position == null ? '-' : t.position) + '</b></span></div>';
+    var rows = d.rows.slice(), k = gsc.sort;
+    rows.sort(function (a, b) { return k === 'p' ? a.p - b.p : k === 'r' ? (b.i ? b.c / b.i : 0) - (a.i ? a.c / a.i : 0) || b.i - a.i : b[k] - a[k] || b.i - a.i; });
+    if (!rows.length) { box.innerHTML = h + '<p class="empty">이 기간에 구글 검색으로 보인 기록이 없습니다. 새 홈페이지는 구글에 쌓이는 데 몇 주 걸릴 수 있습니다.</p>'; return; }
+    var show = gsc.all ? rows : rows.slice(0, 20);
+    function th(key, label) { return '<th><button type="button" data-k="' + key + '"' + (k === key ? ' class="on"' : '') + '>' + label + '</button></th>'; }
+    h += '<div class="gsc-wrap"><table class="tbl gsc-tbl"><thead><tr><th>검색어</th>' + th('i', '노출') + th('c', '클릭') + th('r', '클릭률') + th('p', '순위') + '</tr></thead><tbody>' +
+      show.map(function (r) { return '<tr' + (r.c ? '' : ' class="zero"') + '><td>' + esc(r.q) + '</td><td>' + gNum(r.i) + '</td><td>' + gNum(r.c) + '</td><td>' + gPct(r.c, r.i) + '</td><td>' + r.p + '</td></tr>'; }).join('') +
+      '</tbody></table></div>';
+    if (rows.length > 20) h += '<button type="button" class="link gsc-more" id="gscMore">' + (gsc.all ? '20개만 보기' : '전체 ' + rows.length + '개 보기') + '</button>';
+    box.innerHTML = h;
+  }
+  $('#gscBody').addEventListener('click', function (e) {
+    var b = e.target.closest('th button'); if (b) { gsc.sort = b.dataset.k; drawGsc(); return; }
+    if (e.target.id === 'gscMore') { gsc.all = !gsc.all; drawGsc(); }
+  });
+  $('#gscRefresh').addEventListener('click', function () { loadGsc(true); });
   function md(day) { return (+day.slice(5, 7)) + '/' + (+day.slice(8, 10)); }
   function niceMax(v) { if (v <= 4) return 4; var p = Math.pow(10, Math.floor(Math.log10(v))), n = v / p; return (n <= 2 ? 2 : n <= 5 ? 5 : 10) * p; }
   function drawChart(days) {

@@ -368,3 +368,18 @@ input[type=month],input[type=email],input[type=search]{height:46px;padding:0 14p
 .vtbl td .vinq{margin-top:4px}
 
 .post .pin.sunk{background:#E5E7EB;color:#374151}
+
+/* 구글 검색어 (서치 콘솔) */
+.gsc-kpis{display:flex;flex-wrap:wrap;gap:8px 22px;margin:4px 0 12px;font-size:14px;color:var(--muted)}
+.gsc-kpis b{font-size:20px;color:var(--ink);margin-left:4px;font-variant-numeric:tabular-nums}
+.gsc-wrap{overflow-x:auto}
+.gsc-tbl td,.gsc-tbl th{font-variant-numeric:tabular-nums;white-space:nowrap}
+.gsc-tbl td:first-child{white-space:normal;word-break:break-all;min-width:9em}
+.gsc-tbl th button{border:0;background:none;font:inherit;font-weight:700;color:inherit;cursor:pointer;padding:2px 0}
+.gsc-tbl th button.on{color:var(--blue)}
+.gsc-tbl th button.on::after{content:' ▾'}
+.gsc-tbl tr.zero td{color:var(--muted)}
+.gsc-more{margin-top:10px}
+.gsc-err{background:#FFF4E5;border:1px solid #F3C27A;border-radius:10px;padding:10px 12px;font-size:14px;margin:0 0 10px}
+.gsc-setup ol{margin:6px 0 0;padding-left:22px;font-size:14px;line-height:1.7}
+@media (max-width:600px){.gsc-tbl{font-size:13px}.gsc-tbl th,.gsc-tbl td{padding:6px 5px}}
