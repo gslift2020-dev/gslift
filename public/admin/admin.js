@@ -108,13 +108,14 @@
     if (!rows.length) { $('#inqList').innerHTML = '<p class="empty">해당하는 문의가 없습니다.</p>'; return; }
     $('#inqList').innerHTML = rows.map(function (x) {
       var opts = Object.keys(STATUS).map(function (k) { return '<option value="' + k + '"' + (k === x.status ? ' selected' : '') + '>' + STATUS[k] + '</option>'; }).join('');
-      var spec = (x.spec || []).map(function (r) { return '<div><small>' + esc(r[0]) + '</small><b>' + esc(r[1]) + '</b></div>'; }).join('');
+      var spec = (x.spec || []).map(function (r) { return '<div' + (r[0] === '방문 이력' ? ' class="wide"' : '') + '><small>' + esc(r[0]) + '</small><b>' + esc(r[1]) + '</b></div>'; }).join('');
       var photos = (x.photos || []).map(function (u, i) { return '<a href="' + esc(u) + '" target="_blank" rel="noopener" aria-label="현장 사진 ' + (i + 1) + ' 크게 보기"><img src="' + esc(u) + '" alt="" loading="lazy"></a>'; }).join('');
       return '<article class="inq ' + esc(x.status) + '" id="inq-' + x.id + '">' +
         '<div><div class="who">#' + x.id + ' ' + esc(x.company || '(회사명 없음)') + ' · ' + esc(x.name) + '</div>' +
         '<div class="meta">' + esc(x.created_at) + ' · ' + esc(x.product || '-') + (x.photos && x.photos.length ? ' · 사진 ' + x.photos.length + '장' : '') + '</div></div>' +
         '<span class="st st-' + esc(x.status) + '">' + STATUS[x.status] + '</span>' +
         (spec ? '<div class="ispec">' + spec + '</div>' : '') +
+        (x.visitor ? '<div class="ivisit"><button type="button" class="link vwho" data-uid="' + esc(x.visitor.uid) + '" data-from="' + esc(x.visitor.from) + '" data-inqid="' + x.id + '">이 손님 방문 모두 보기</button></div>' : '') +
         '<div class="body">' + esc(x.message) + '</div>' +
         (photos ? '<div class="iphotos">' + photos + '</div>' : '') +
         '<label class="memo">내부 메모 <small>(고객에게 보이지 않음 · 입력 후 다른 곳을 누르면 저장)</small><textarea rows="2" data-memo="' + x.id + '" placeholder="예) 10/15 현장 방문 예정, 견적 1,800만원 제출">' + esc(x.memo || '') + '</textarea></label>' +
@@ -730,6 +731,38 @@
     loadVisits(); loadStaff(); loadGsc();
   }
 
+  /* ---------- 같은 손님의 방문 모두 보기 (재방문 구분) ---------- */
+  // 누를 때만 서버가 '첫 방문 날짜 ~ 오늘'의 방문 기록에서 같은 손님 번호를 찾음 (손님 방문 때 DB 사용 추가 없음)
+  function showVisitor(uid, from, inqId) {
+    var box = $('#whoBox');
+    if (!box) { box = document.createElement('div'); box.id = 'whoBox'; box.className = 'whobox'; box.hidden = true; document.body.appendChild(box);
+      box.addEventListener('click', function (e) { if (e.target === box || e.target.closest('[data-close]')) box.hidden = true; });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape') box.hidden = true; }); }
+    box.innerHTML = '<div class="whoin" role="dialog" aria-modal="true" aria-label="이 손님의 방문"><div class="ph-head"><h2>이 손님의 방문</h2><button type="button" class="link" data-close>닫기 ✕</button></div><p class="empty">불러오는 중…</p></div>';
+    box.hidden = false;
+    api('/api/admin/visitor?uid=' + encodeURIComponent(uid) + '&from=' + encodeURIComponent(from)).then(function (d) {
+      var inner = box.querySelector('.whoin');
+      if (!d.ok) { inner.querySelector('.empty').textContent = d.error || '불러오지 못했습니다.'; return; }
+      var rows = d.items.map(function (v) {
+        var w = v.kw || (v.adkw ? '키워드: ' + v.adkw : '');
+        var acts = ACT.filter(function (x) { return v.acts & x[0]; }).map(function (x) { return '<i class="vact' + (x[0] === 2 || x[0] === 8 ? ' hot' : '') + '">' + x[1] + '</i>'; }).join('');
+        var pages = v.plist.map(function (p) { return esc(p.label); }).join(' → ');
+        return '<li' + (v.inquiry ? ' class="has-inq"' : '') + '><div class="wh"><b>' + (v.vn ? v.vn + '번째' : '방문') + '</b> ' + mdOf(v.at) + ' ' + v.at.slice(11, 16) + ' · ' + (v.mobile ? '휴대폰' : 'PC') +
+          ' · <span class="vsrc' + (isAd(v.src) ? ' ad' : '') + '">' + esc(v.src) + '</span>' + (w ? ' <span class="vkw">' + esc(w) + '</span>' : '') +
+          (v.inquiry ? ' <b class="winq">문의 #' + v.inquiry + '</b>' : '') + '</div>' +
+          '<div class="wp">' + v.pages + '쪽: ' + pages + (v.pages > v.plist.length ? ' …' : '') + '</div>' +
+          '<div class="wa">' + (fmtDwell(v.dwell) || '0초') + ' · 첫 페이지 스크롤 ' + v.scroll + '%' + (acts ? ' <span class="vacts">' + acts + '</span>' : '') + '</div></li>';
+      }).join('');
+      inner.innerHTML = '<div class="ph-head"><h2>이 손님의 방문 <small>(' + mdOf(d.from) + '~' + mdOf(d.to) + ' · 같은 기기·같은 브라우저만)</small></h2><button type="button" class="link" data-close>닫기 ✕</button></div>' +
+        (rows ? '<ol class="wlist">' + rows + '</ol>' : '<p class="empty">남아 있는 방문 기록이 없습니다. (방문별 기록은 90일 보관)</p>') +
+        '<p class="hint">방문별 기록은 90일 보관이라 그보다 오래된 방문은 안 보입니다. 회사 PC로 보고 휴대폰으로 문의한 경우처럼 기기·브라우저가 다르면 다른 손님으로 잡힙니다.</p>';
+    });
+  }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('.vwho'); if (!b) return;
+    showVisitor(b.dataset.uid, b.dataset.from, b.dataset.inqid);
+  });
+
   /* ---------- 구글 검색어 (서치 콘솔) ---------- */
   var gsc = { data: null, sort: 'i', all: false, busy: false };
   function loadGsc(refresh) {
@@ -815,6 +848,8 @@
     var tot = list.reduce(function (a, x) { return a + x.n; }, 0) || 1, max = Math.max.apply(null, list.map(function (x) { return x.n; })) || 1;
     $('#dSources').innerHTML = list.map(function (x) {
       var inq = x.inq ? '<b class="inq">문의 ' + x.inq + (x.n ? ' (' + Math.round(x.inq / x.n * 100) + '%)' : '') + '</b>' : '';
+      // 처음 들어온 경로 기준 문의 수가 다를 때만 (재방문 뒤 문의가 있으면 첫 경로 쪽으로 옮겨 셈)
+      if ((x.finq || 0) !== (x.inq || 0)) inq += '<b class="inq first" title="처음 들어온 경로 기준 문의 수">첫 경로 ' + (x.finq || 0) + '</b>';
       return '<div class="hb"><span class="l">' + esc(x.src) + '</span><span class="tr"><i style="width:' + (x.n / max * 100) + '%"></i></span><span class="v">' + x.n + '<small> · ' + Math.round(x.n / tot * 100) + '%</small>' + inq + '</span></div>';
     }).join('');
   }
@@ -847,6 +882,16 @@
   function fmtDwell(sec) { if (!sec) return ''; if (sec < 60) return sec + '초'; var m = Math.floor(sec / 60), r = sec % 60; return m + '분' + (r ? ' ' + r + '초' : ''); }
   var ACT = [[16, '사례 구역 봄'], [1, '사례'], [2, '전화'], [32, '견적 구역 봄'], [4, '견적 버튼'], [8, '견적 양식']];
   var CLS = { human: '', bot: '로봇 의심', check: '확인 필요', staff: '직원' };
+  // 재방문 구분 (2026-11-12~): "3번째 방문 · 첫 11/4 네이버 광고 '화물리프트'" + [이 손님 방문 모두 보기]
+  function mdOf(at) { return (+at.slice(5, 7)) + '/' + (+at.slice(8, 10)); }
+  function revisit(v) {
+    if (!v.vn) return '';
+    var t = v.vn === 1 ? '첫 방문' : v.vn + '번째 방문';
+    if (v.first) { var w = v.first.kw || (v.first.adkw ? '키워드: ' + v.first.adkw : ''); t += ' · 첫 ' + mdOf(v.first.at) + ' ' + v.first.src + (w ? " '" + w + "'" : ''); }
+    var h = '<span class="vrev' + (v.vn > 1 ? ' re' : '') + '">' + esc(t) + (v.pre ? '<small> (기록 시작 전에도 옴)</small>' : '') + '</span>';
+    if (v.vn > 1 && v.uid) h += '<button type="button" class="link vwho" data-uid="' + esc(v.uid) + '" data-from="' + esc((v.first ? v.first.at : v.at).slice(0, 10)) + '">이 손님 방문 모두 보기</button>';
+    return h;
+  }
   function drawVisits(more) {
     var f = $('#vSrc').value, hideBot = $('#vHideBot').checked, hideStaff = $('#vHideStaff').checked;
     var bySrc = vItems.filter(function (v) { return !f || v.src === f; });
@@ -863,6 +908,7 @@
       list.map(function (v) {
         var t = v.at.slice(11, 16), dd = (+v.at.slice(5, 7)) + '/' + (+v.at.slice(8, 10));
         var src = '<span class="vsrc' + (isAd(v.src) ? ' ad' : '') + '">' + esc(v.src) + '</span>' + (v.ref && v.src.indexOf(v.ref) < 0 ? '<span class="vref">' + esc(v.ref) + '</span>' : '');
+        src += revisit(v);
         // 굵게 = 손님이 실제로 친 검색어(광고 n_query·k_query·utm_term 또는 검색 사이트 주소) / 「키워드」 = 광고에 등록한 키워드(n_keyword·k_keyword) / 회색 = 그 밖의 이름표
         var kw = (v.kw ? '<span class="vkw">' + esc(v.kw) + '</span>' : '') + (v.adkw && v.adkw !== v.kw ? '<span class="vadkw">키워드: ' + esc(v.adkw) + '</span>' : '') + (v.ad ? '<span class="vad">' + esc(v.ad) + '</span>' : '');
         var pg = v.pages > 1

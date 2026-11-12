@@ -383,3 +383,21 @@ input[type=month],input[type=email],input[type=search]{height:46px;padding:0 14p
 .gsc-err{background:#FFF4E5;border:1px solid #F3C27A;border-radius:10px;padding:10px 12px;font-size:14px;margin:0 0 10px}
 .gsc-setup ol{margin:6px 0 0;padding-left:22px;font-size:14px;line-height:1.7}
 @media (max-width:600px){.gsc-tbl{font-size:13px}.gsc-tbl th,.gsc-tbl td{padding:6px 5px}}
+
+/* 재방문 구분 (2026-11-12) */
+.vrev{display:block;font-size:12px;color:var(--muted);margin-top:3px}
+.vrev.re{color:#7A4B00;font-weight:600}
+.vrev small{font-weight:400}
+.vwho{font-size:12px;padding:2px 0;display:block}
+.ivisit{grid-column:1/-1;margin:-2px 0 2px}
+.hbars .inq.first{background:#FFF1D6;color:#7A4B00;margin-left:4px}
+.whobox{position:fixed;inset:0;background:rgba(6,20,45,.45);z-index:1000;display:flex;align-items:flex-start;justify-content:center;padding:6vh 16px;overflow:auto}
+.whobox[hidden]{display:none}
+.whoin{background:#fff;border-radius:14px;max-width:720px;width:100%;padding:18px 20px;box-shadow:0 18px 48px rgba(0,0,0,.25)}
+.whoin h2{font-size:18px;margin:0}
+.wlist{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.wlist li{border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:14px}
+.wlist li.has-inq{border-color:#F3A54A;background:#FFF8EE}
+.wlist .wp,.wlist .wa{color:var(--muted);font-size:13px;margin-top:3px;word-break:keep-all}
+.wlist .winq{color:#B35C00}
+.ispec div.wide{grid-column:1/-1;background:#FFF4E2}

@@ -228,6 +228,30 @@ async function lists(env) {
 }
 
 // 페이지 안 행동 (track.js가 다음 페이지 신호에 싣거나, 떠날 때 한 번 보냄)
+// 재방문 정보 (track.js gs_u → 첫 페이지 신호·견적 문의에 실려 옴). 이상한 값은 버림
+//   n 몇 번째 방문 · id 무작위 손님 번호 · pre 기능 전에도 온 적 있음 · t·p·r 첫 방문 시각·주소·직전 페이지(n ≥ 2일 때만)
+//   첫 방문 경로·검색어는 지금 방문과 같은 규칙(rawSource·keywordOf)으로 서버가 정함
+export function visitorInfo(u, ua, host, nowMs = Date.now()) {
+  if (typeof u === 'string') { if (!u || u.length > 2000) return null; try { u = JSON.parse(u); } catch { return null; } }
+  if (!u || typeof u !== 'object') return null;
+  const n = Number(u.n);
+  if (!Number.isInteger(n) || n < 1 || n > 100000) return null;
+  const out = { vn: n, pre: u.pre ? 1 : 0, uid: /^[a-z0-9]{8,24}$/.test(String(u.id || '')) ? String(u.id) : null, first: null };
+  if (n > 1) {
+    const t = Number(u.t);
+    const p = String(u.p || '');
+    if (Number.isFinite(t) && t > nowMs - 400 * 864e5 && t <= nowMs + 10 * 60e3 && p.charAt(0) === '/' && p.length <= 400) {
+      const r = String(u.r || '').slice(0, 400);
+      const src = srcLabel(rawSource(p, r, ua, host));
+      out.first = {
+        at: new Date(t + 9 * 3600e3).toISOString().replace('T', ' ').slice(0, 19),
+        src, kw: keywordOf(p, r, src) || '', adkw: adKeyword(p) || '',
+      };
+    }
+  }
+  return out;
+}
+
 function behavior(b) {
   const x = b && typeof b === 'object' ? b : {};
   const d = Math.min(Math.max(parseInt(x.d, 10) || 0, 0), 3600);
@@ -259,7 +283,7 @@ export async function recordHit(request, env) {
   const ua = request.headers.get('user-agent') || '';
   if (!ua) return ok;
   let b = {};
-  try { b = JSON.parse((await request.text()).slice(0, 3000)); } catch { return ok; }
+  try { b = JSON.parse((await request.text()).slice(0, 6000)); } catch { return ok; } // 재방문 정보(첫 방문 주소)가 실려 3000 → 6000자
   const vid = /^[a-z0-9]{8,32}$/.test(String(b.v || '')) ? String(b.v) : '';
   await ensureSchema(env);
   const bh = behavior(b.b);
@@ -300,8 +324,12 @@ export async function recordHit(request, env) {
   if (vid && b.f) {
     const r = refUrl(b.r);
     const refHost = r && r.hostname.replace(/^www\./, '') !== url.hostname.replace(/^www\./, '') ? r.hostname.replace(/^www\./, '').slice(0, 80) : '';
-    stmts.push(env.DB.prepare('INSERT OR IGNORE INTO visits (vid, day, at, last_at, src, kw, adkw, ad, ref, landing, pages, plist, mobile, region, net, ua, who, bot, why, counted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-      .bind(vid, day, now, now, label, keywordOf(b.p, b.r, label), adKeyword(b.p) || null, adTags(b.p), refHost, path, path, mobile, regionOf(cf), net, uaSum, who, why ? 1 : 0, why || null, human ? 1 : 0));
+    // 재방문 정보: 직원은 받지 않음 (track.js도 안 보냄)
+    const vi = who ? null : visitorInfo(b.u, ua, url.hostname);
+    const fi = vi && vi.first;
+    stmts.push(env.DB.prepare('INSERT OR IGNORE INTO visits (vid, day, at, last_at, src, kw, adkw, ad, ref, landing, pages, plist, mobile, region, net, ua, who, bot, why, counted, vn, f_at, f_src, f_kw, f_adkw, f_pre, uid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      .bind(vid, day, now, now, label, keywordOf(b.p, b.r, label), adKeyword(b.p) || null, adTags(b.p), refHost, path, path, mobile, regionOf(cf), net, uaSum, who, why ? 1 : 0, why || null, human ? 1 : 0,
+        vi ? vi.vn : null, fi ? fi.at : null, fi ? fi.src : null, fi && fi.kw ? fi.kw : null, fi && fi.adkw ? fi.adkw : null, vi ? vi.pre : 0, vi ? vi.uid : null));
   } else if (vid) {
     stmts.push(env.DB.prepare('UPDATE visits SET pages = pages + 1, last_at = ?, plist = CASE WHEN pages < 20 THEN plist || char(10) || ? ELSE plist END, dwell = MAX(dwell, ?), scroll = MAX(scroll, ?), acts = acts | ? WHERE vid = ?')
       .bind(now, path, bh.d, bh.s, bh.a, vid));
@@ -321,9 +349,14 @@ export async function linkInquiry(env, vid, inquiryId, request) {
 // 경로별 방문 수 + 문의 수를 한 줄로 합침 (경로별 효과 비교용)
 function mergeSources(visits, inquiries) {
   const m = new Map();
-  const row = (k) => m.get(k) || m.set(k, { src: k, n: 0, inq: 0 }).get(k);
+  const row = (k) => m.get(k) || m.set(k, { src: k, n: 0, inq: 0, finq: 0 }).get(k);
   for (const r of visits) row(ALIAS[r.src] || r.src).n += r.n;
-  for (const r of inquiries) row(r.src == null ? '경로 기록 전' : srcLabel(r.src)).inq += r.n;
+  for (const r of inquiries) {
+    const last = r.src == null ? '경로 기록 전' : srcLabel(r.src);
+    row(last).inq += r.n;
+    // 처음 경로 기준: 재방문 문의는 첫 방문 경로, 첫 방문 문의·기능 전 문의는 이번 경로
+    row(r.fsrc ? ALIAS[r.fsrc] || r.fsrc : last).finq += r.n;
+  }
   return [...m.values()].sort((a, b) => b.n - a.n || b.inq - a.inq);
 }
 
@@ -373,7 +406,8 @@ export async function statsAdmin(env) {
     env.DB.prepare('SELECT path, SUM(n) AS n FROM visit_pages WHERE day >= ? GROUP BY path ORDER BY n DESC LIMIT 10').bind(from).all(),
     env.DB.prepare('SELECT SUM(mobile) AS m, COUNT(*) AS n FROM visit_uniq WHERE day >= ?').bind(from).first(),
     env.DB.prepare('SELECT substr(created_at, 1, 10) AS day, COUNT(*) AS n FROM inquiries WHERE created_at >= ? GROUP BY day').bind(from).all(),
-    env.DB.prepare("SELECT json_extract(spec, '$.src') AS src, COUNT(*) AS n FROM inquiries WHERE created_at >= ? GROUP BY src").bind(from).all(),
+    // 문의 경로: 마지막(이번 방문) 경로 + 처음 들어온 경로(재방문 구분, 2026-11-12~) — 같은 줄을 읽어 한 번에 셈
+    env.DB.prepare("SELECT json_extract(spec, '$.src') AS src, json_extract(spec, '$.first.src') AS fsrc, COUNT(*) AS n FROM inquiries WHERE created_at >= ? GROUP BY src, fsrc").bind(from).all(),
   ]);
   const map = (rows) => Object.fromEntries(rows.results.map((r) => [r.day, r.n]));
   const U = map(uv), P = map(pv), I = map(inq);
@@ -417,7 +451,7 @@ export async function visitsAdmin(request, env) {
   const [a, b] = range === 'yesterday' ? [dayAgo(1), dayAgo(1)] : range === '7d' ? [dayAgo(6), dayAgo(0)] : [dayAgo(0), dayAgo(0)];
   const [{ results }, L] = await Promise.all([
     env.DB.prepare(
-      'SELECT id, at, src, kw, adkw, ad, ref, landing, pages, plist, mobile, region, inquiry_id, net, ua, who, bot, why, mark, dwell, scroll, acts FROM visits WHERE day >= ? AND day <= ? ORDER BY at DESC LIMIT 500'
+      'SELECT id, at, src, kw, adkw, ad, ref, landing, pages, plist, mobile, region, inquiry_id, net, ua, who, bot, why, mark, dwell, scroll, acts, vn, f_at, f_src, f_kw, f_adkw, f_pre, uid FROM visits WHERE day >= ? AND day <= ? ORDER BY at DESC LIMIT 500'
     ).bind(a, b).all(),
     readLists(env),
   ]);
@@ -436,9 +470,35 @@ export async function visitsAdmin(request, env) {
       net: r.net == null ? null : r.net, ua: r.ua || '', cls: c.cls, why: c.why, mark: r.mark || 0,
       dwell: r.dwell || 0, scroll: r.scroll || 0, acts: r.acts || 0,
       netListed: !!(r.net && nets.some((n) => n.toLowerCase() === r.net.toLowerCase())),
+      vn: r.vn || null, pre: r.f_pre ? 1 : 0, uid: r.uid || '',
+      first: r.f_at ? { at: r.f_at, src: ALIAS[r.f_src] || r.f_src || '', kw: r.f_kw || '', adkw: r.f_adkw || '' } : null,
     };
   });
   return json({ ok: true, from: a, to: b, items, more: results.length >= 500 });
+}
+
+// 관리자: 같은 손님(같은 브라우저 uid)의 방문 모두 보기 — 누를 때만.
+// uid 색인을 두지 않는 대신(손님 방문 때 쓰기 0) 날짜 색인으로 '첫 방문 날짜 ~ 오늘'만 읽음 → 읽는 줄 = 그 기간의 방문 수
+export async function visitorAdmin(request, env) {
+  await ensureSchema(env);
+  const q = new URL(request.url).searchParams;
+  const uid = String(q.get('uid') || '');
+  if (!/^[a-z0-9]{8,24}$/.test(uid)) return json({ ok: false, error: '손님 번호가 올바르지 않습니다.' }, 400);
+  const today = kst().slice(0, 10), oldest = kst(-VISIT_DAYS * 864e5).slice(0, 10);
+  const from = /^\d{4}-\d{2}-\d{2}$/.test(q.get('from') || '') && q.get('from') > oldest ? q.get('from') : oldest;
+  const { results } = await env.DB.prepare(
+    'SELECT id, at, src, kw, adkw, landing, pages, plist, mobile, inquiry_id, dwell, scroll, acts, vn, who FROM visits INDEXED BY idx_visits_day WHERE day >= ? AND day <= ? AND uid = ? ORDER BY at LIMIT 100'
+  ).bind(from > today ? today : from, today, uid).all();
+  const label = await pageLabeler(env, results.flatMap((r) => String(r.plist || r.landing || '').split('\n')));
+  return json({
+    ok: true, from, to: today,
+    items: results.map((r) => ({
+      id: r.id, at: r.at, src: ALIAS[r.src] || r.src, kw: r.kw || '', adkw: r.adkw || '', vn: r.vn || null,
+      landing: { path: r.landing, label: label(r.landing || '/') }, pages: r.pages,
+      plist: String(r.plist || r.landing || '').split('\n').filter(Boolean).map((p) => ({ path: p, label: label(p) })),
+      mobile: r.mobile, inquiry: r.inquiry_id || null, dwell: r.dwell || 0, scroll: r.scroll || 0, acts: r.acts || 0,
+    })),
+  });
 }
 
 // 관리자: 한 방문을 사람/로봇으로 고침 (화면 표시만 바뀜 — 이미 지난 날짜별 합계는 그대로)

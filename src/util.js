@@ -111,6 +111,14 @@ const MIGRATIONS = [
   'ALTER TABLE visits ADD COLUMN scroll INTEGER NOT NULL DEFAULT 0', // 처음 들어온 페이지 스크롤 깊이 0·25·50·75·100
   'ALTER TABLE visits ADD COLUMN adkw TEXT',     // 광고 등록 키워드 (네이버 n_keyword · 카카오 k_keyword, 2026-11-04). 실제 검색어는 kw 칸
   'ALTER TABLE visits ADD COLUMN acts INTEGER NOT NULL DEFAULT 0', // 누른 것: 1 설치사례 · 2 전화 · 4 견적 버튼 · 8 견적 양식 입력
+  // 재방문 구분 (2026-11-12): 같은 브라우저의 몇 번째 방문인지 + 첫 방문 정보. 첫 페이지의 같은 INSERT에 칸만 더함(읽기·쓰기 추가 없음)
+  'ALTER TABLE visits ADD COLUMN vn INTEGER',    // 몇 번째 방문 (1 = 첫 방문, 비어 있으면 기능 전 기록·직원·저장 막힌 브라우저)
+  'ALTER TABLE visits ADD COLUMN f_at TEXT',     // 첫 방문 시각 (vn ≥ 2일 때만)
+  'ALTER TABLE visits ADD COLUMN f_src TEXT',    // 첫 방문 경로 이름 (예: 네이버 광고)
+  'ALTER TABLE visits ADD COLUMN f_kw TEXT',     // 첫 방문 검색어
+  'ALTER TABLE visits ADD COLUMN f_adkw TEXT',   // 첫 방문 광고 등록 키워드
+  'ALTER TABLE visits ADD COLUMN f_pre INTEGER NOT NULL DEFAULT 0', // 이 기능을 올리기 전에도 온 적 있는 브라우저
+  'ALTER TABLE visits ADD COLUMN uid TEXT',      // 무작위 손님 번호 (같은 브라우저 묶음, 이름·연락처와 무관). 색인 없음 — 관리자가 '방문 모두 보기'를 누를 때만 날짜 범위로 찾음
 ];
 
 // 설치사례 분류 (제품소개 4종과 같음)
@@ -131,7 +139,7 @@ const INDEXES = [
   'CREATE INDEX IF NOT EXISTS idx_visits_day ON visits (day, at)',
 ];
 // 표 구조를 바꿀 때만 이 값을 올림 → 같으면 서버가 새로 뜰 때마다 점검을 반복하지 않음
-const SCHEMA_VERSION = '2026-11-04a';
+const SCHEMA_VERSION = '2026-11-12a';
 
 let schemaReady = false;
 export async function ensureSchema(env) {

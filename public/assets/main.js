@@ -692,7 +692,7 @@
       var fd = new FormData();
       ['company', 'name', 'phone', 'email', 'product', 'loc', 'message', 'gs_hp', 'dir', 'load', 'stops', 'travel', 'place', 'hole', 'pit', 'cargo', 'w', 'd', 'h'].forEach(function (k) { if (f[k]) fd.append(k, f[k].value); });
       fd.append('agree', f.agree.checked ? 'true' : 'false');
-      if (window.GSTrack) { fd.append('src', window.GSTrack.src()); fd.append('vid', window.GSTrack.vid()); if (window.GSTrack.kw) fd.append('kw', window.GSTrack.kw()); }
+      if (window.GSTrack) { fd.append('src', window.GSTrack.src()); fd.append('vid', window.GSTrack.vid()); if (window.GSTrack.kw) fd.append('kw', window.GSTrack.kw()); if (window.GSTrack.u) fd.append('u', window.GSTrack.u()); }
       shots.forEach(function (sh, i) { fd.append('photos', sh.blob, 'photo' + (i + 1) + '.jpg'); });
       btn.disabled = true; btn.textContent = shots.length ? '사진과 함께 보내는 중…' : '보내는 중…'; say('');
       fetch('/api/contact', { method: 'POST', body: fd })

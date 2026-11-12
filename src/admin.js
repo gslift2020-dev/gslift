@@ -1,8 +1,8 @@
 // 관리자 기능: 로그인, 문의, 설치사례(여러 사진·글), 메인 슬라이드, 설정
 import { json, clean, kst, ensureSchema, CATS, inferCat } from './util.js';
-import { specRows } from './contact.js';
+import { specRows, visitLine } from './contact.js';
 import { cleanCompany, cleanFaq, dropSiteCache, DEFAULT_COMPANY, DEFAULT_FAQ } from './site.js';
-import { statsAdmin, visitsAdmin, statsExcludeAdmin, visitMarkAdmin } from './stats.js';
+import { statsAdmin, visitsAdmin, visitorAdmin, statsExcludeAdmin, visitMarkAdmin } from './stats.js';
 import { runImportsNow, importStatus } from './imports.js';
 import { gscAdmin } from './gsc.js';
 import { TAG_GROUPS, TAGS, normTags, packTags, unpackTags, inferTags } from './tags.js';
@@ -188,7 +188,8 @@ async function listInquiries(env) {
     ok: true,
     items: results.map((r) => ({
       ...r,
-      spec: ((s) => (s.email ? [['이메일', s.email]] : []).concat(specRows(s), s.src ? [['유입 경로', s.src + (s.kw ? ' · 검색어: ' + s.kw : '')]] : []))(parse(r.spec, {})),
+      spec: ((s) => (s.email ? [['이메일', s.email]] : []).concat(specRows(s), s.src ? [['유입 경로', s.src + (s.kw ? ' · 검색어: ' + s.kw : '')]] : [], visitLine(s) ? [['방문 이력', visitLine(s)]] : []))(parse(r.spec, {})),
+      visitor: ((s) => (s.uid ? { uid: s.uid, from: s.first ? s.first.at.slice(0, 10) : r.created_at.slice(0, 10) } : null))(parse(r.spec, {})),
       photos: parse(r.photos, []).map((k) => '/api/admin/inq-photo/' + encodeURIComponent(k)),
     })),
   });
@@ -714,6 +715,7 @@ async function adminRoutes(request, env, path, method) {
   if (path === '/api/admin/stats' && method === 'GET') return statsAdmin(env);
   if (path === '/api/admin/gsc' && (method === 'GET' || method === 'POST')) return gscAdmin(request, env);
   if (path === '/api/admin/visits' && method === 'GET') return visitsAdmin(request, env);
+  if (path === '/api/admin/visitor' && method === 'GET') return visitorAdmin(request, env);
   if (path === '/api/admin/stats-exclude') return statsExcludeAdmin(request, env);
   m = /^\/api\/admin\/visits\/(\d+)\/mark$/.exec(path);
   if (m && method === 'POST') return visitMarkAdmin(request, env, Number(m[1]));

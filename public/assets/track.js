@@ -14,7 +14,15 @@
   //      직원 기기도 신호는 보내되 '직원'으로 표시 → 서버가 합계에서 빼고 관리자 화면에서 기본 숨김. 행동 신호는 안 보냄
   //    - 페이지 안 행동: 머문 시간(방문 전체) · 처음 들어온 페이지의 스크롤 깊이 · 누른 것(설치사례·전화·견적)
   //      다음 페이지 신호에 실어 보내고, 사이트를 떠날 때는 방문당 1번만 따로 보냄 (DB 쓰기가 방문당 최대 1번만 늘게)
-  var VISIT_GAP = 30 * 60 * 1000, vid = '';
+  var VISIT_GAP = 30 * 60 * 1000, vid = '', gsU = null;
+  // 서버로 보낼 재방문 정보 (첫 방문이면 주소는 그 신호에 이미 있으므로 빼고 보냄)
+  function uInfo() {
+    if (!gsU) return null;
+    var o = { n: gsU.n, id: gsU.id };
+    if (gsU.f.pre) o.pre = 1;
+    if (gsU.n > 1) { o.t = gsU.f.t; o.p = gsU.f.p; o.r = gsU.f.r; }
+    return o;
+  }
   function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function lsSet(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); return true; } catch (e) { return false; } }
   function note(t) {
@@ -39,7 +47,7 @@
     if (sq === '0') { lsSet('gs_staff', null); document.addEventListener('DOMContentLoaded', function () { note('이 기기(브라우저)를 다시 방문 통계에 넣습니다.'); }); }
     var staff = lsGet('gs_staff') === '1' || sq === '1';
     if (!navigator.webdriver) {
-      var now = Date.now(), first = 0, prev = null;
+      var now = Date.now(), first = 0, prev = null, hadV = lsGet('gs_v') != null;
       try { prev = JSON.parse(lsGet('gs_v') || 'null'); } catch (e) {}
       if (prev && prev.id && now - prev.t < VISIT_GAP) vid = prev.id;
       else { vid = (Math.random().toString(36).slice(2) + now.toString(36)).slice(0, 20); first = 1; prev = null; }
@@ -47,7 +55,25 @@
       var B = first ? { d: 0, s: 0, a: 0, e: 0 } : { d: +(prev.d || 0), s: +(prev.s || 0), a: +(prev.a || 0), e: +(prev.e || 0) };
       var save = function () { if (vid) lsSet('gs_v', JSON.stringify({ id: vid, t: Date.now(), d: B.d, s: B.s, a: B.a, e: B.e })); };
       if (!lsSet('gs_v', JSON.stringify({ id: vid, t: now, d: B.d, s: B.s, a: B.a, e: B.e }))) vid = ''; // 저장이 안 되는 브라우저는 방문 1건 기록 없이 합계만
+      // 재방문 구분 (2026-11-12): 같은 브라우저로 다시 오면 몇 번째 방문인지 + 처음 들어온 주소를 기억 (gs_u, 마지막 방문 뒤 365일)
+      //   - f: 첫 방문 시각(t)·처음 들어온 주소(p)·직전 페이지 주소(r) — 경로 이름(네이버 광고 등)은 서버가 지금과 같은 규칙으로 정함
+      //   - n: 몇 번째 방문(새 방문번호가 생길 때 1씩) · id: 무작위 손님 번호(이름·연락처와 무관) · pre: 이 기능 전에도 온 적 있음
+      //   - 직원 기기·저장이 막힌 브라우저는 만들지도 보내지도 않음. DB 읽기·쓰기 추가 없음(첫 페이지 신호에 실음)
+      if (vid && !staff) {
+        try { gsU = JSON.parse(lsGet('gs_u') || 'null'); } catch (e) { gsU = null; }
+        if (!gsU || typeof gsU !== 'object' || !gsU.f || !gsU.id || now - (+gsU.l || 0) > 365 * 864e5) gsU = null;
+        if (first) {
+          if (!gsU) {
+            gsU = { n: 0, id: (Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)).slice(0, 16),
+              f: { t: now, p: (location.pathname + location.search).slice(0, 400), r: String(document.referrer || '').slice(0, 300) } };
+            if (hadV) gsU.f.pre = 1;
+          }
+          gsU.n = (+gsU.n || 0) + 1; gsU.l = now;
+          if (!lsSet('gs_u', JSON.stringify(gsU))) gsU = null;
+        }
+      }
       var hit = { p: location.pathname + location.search, r: document.referrer, v: vid, f: first };
+      if (first && gsU) hit.u = uInfo();
       if (staff) hit.s = 1;
       else if (!first && vid) hit.b = { d: B.d, s: B.s, a: B.a }; // 지난 페이지까지의 행동을 이 신호에 실음 (쓰기 추가 없음)
       send(hit);
@@ -126,6 +152,11 @@
     return v.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 50);
   }
   try {
+    // 새 방문(30분 넘게 쉬었다 다시 옴)이면 지난 방문의 경로·검색어를 지우고 이번 방문 것으로 다시 정함
+    //   (같은 탭을 며칠 열어 두었다가 다시 들어와 문의해도 '이번 방문 경로'가 맞게 — 첫 방문 경로는 gs_u에 따로 있음, 2026-11-12)
+    if (first === 1) { sessionStorage.removeItem('gs_src'); sessionStorage.removeItem('gs_kw'); }
+  } catch (e) {}
+  try {
     var aq = new URLSearchParams(location.search);
     var adSrc = aq.get('utm_source') || (aq.get('n_media') || aq.get('n_query') || aq.get('n_keyword') ? 'naver' : '') || (aq.get('k_query') || aq.get('k_keyword') ? 'kakao' : '');
     if (adSrc) {
@@ -183,6 +214,8 @@
     },
     // 문의를 이 방문 기록에 연결하기 위한 방문번호
     vid: function () { return vid; },
+    // 재방문 정보 (몇 번째 방문·첫 방문 주소) — 견적 문의에 같이 보냄. 없으면 ''
+    u: function () { try { var o = uInfo(); return o ? JSON.stringify(o) : ''; } catch (e) { return ''; } },
     // 견적문의 접수가 성공했을 때 한 번 호출 → 광고 '전환'으로 집계
     lead: function () {
       try { if (NAVER_WA && window.wcs && window.wcs.trans) window.wcs.trans({ type: 'lead' }); } catch (e) {}

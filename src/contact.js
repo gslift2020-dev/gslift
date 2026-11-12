@@ -1,5 +1,5 @@
 // 견적·상담 문의 접수: DB 저장(사진은 R2) → 메일 알림(사진 첨부)
-import { linkInquiry } from './stats.js';
+import { linkInquiry, visitorInfo, srcLabel } from './stats.js';
 import { json, clean, esc, kst, ensureSchema } from './util.js';
 
 const LIMITS = { company: 100, name: 50, phone: 30, product: 50, message: 3000 };
@@ -57,6 +57,24 @@ export function specRows(spec) {
   return rows;
 }
 
+// 방문 이력 한 줄: "첫 방문 11/4 네이버 광고 '화물리프트' → 이번엔 직접 입력·즐겨찾기로 3번째 방문에 문의"
+// '로'/'으로' (받침이 있으면 '으로', ㄹ 받침·받침 없음·한글 아님은 '로')
+function ro(w) {
+  const c = String(w).trim().slice(-1).charCodeAt(0) - 0xac00;
+  return c >= 0 && c < 11172 && c % 28 && c % 28 !== 8 ? '으로' : '로';
+}
+export function visitLine(spec) {
+  if (!spec || !spec.vn) return '';
+  const pre = spec.pre ? ' (기록 시작 전에도 온 적 있음)' : '';
+  const now = spec.src ? srcLabel(spec.src) : '';
+  if (spec.vn === 1) return '첫 방문에 문의' + pre;
+  const f = spec.first;
+  if (!f) return spec.vn + '번째 방문에 문의' + pre;
+  const md = (+f.at.slice(5, 7)) + '/' + (+f.at.slice(8, 10));
+  const word = f.kw || (f.adkw ? '키워드: ' + f.adkw : '');
+  return '첫 방문 ' + md + ' ' + f.src + (word ? " '" + word + "'" : '') + ' → ' + (now ? '이번엔 ' + now + ro(now) + ' ' : '') + spec.vn + '번째 방문에 문의' + pre;
+}
+
 // 알림 메일의 '관리자 화면에서 이 문의 보기' 주소 (로그인 후 그 문의로 바로 이동)
 const ADMIN_BASE = 'https://gslift.kr/admin/';
 
@@ -72,6 +90,7 @@ async function sendMail(env, row, spec, photos) {
   if (spec.email) lines.push(['이메일', spec.email]);
   lines.push(['관심 제품', row.product || '-']);
   if (spec.src) lines.push(['유입 경로', spec.src + (spec.kw ? ' · 검색어: ' + spec.kw : '')]);
+  if (visitLine(spec)) lines.push(['방문 이력', visitLine(spec)]);
   const sr = specRows(spec);
   const table = (rows) => `<table style="border-collapse:collapse">${rows
     .map(([k, v]) => `<tr><td style="padding:6px 14px 6px 0;color:#4A5A78;white-space:nowrap">${k}</td><td style="padding:6px 0"><b>${esc(v)}</b></td></tr>`)
@@ -170,6 +189,14 @@ export async function handleContact(request, env, ctx) {
   // 광고 검색어 (track.js가 광고 주소의 n_query·k_query·utm_term에서 꺼내 둔 것, 이미 한글로 풀린 글자). 유입 경로 옆에 같이 남김
   const kw = clean(body.kw, 60).replace(/[\u0000-\u001f\u007f<>]/g, ' ').replace(/\s+/g, ' ').trim();
   if (kw && src) spec.kw = kw;
+  // 재방문 정보 (track.js gs_u): 몇 번째 방문에 문의했는지 + 처음 들어온 경로 — DB 읽기·쓰기 추가 없음(spec 안에 저장)
+  const vi = visitorInfo(clean(body.u, 2000), request.headers.get('user-agent') || '', new URL(request.url).hostname);
+  if (vi) {
+    spec.vn = vi.vn;
+    if (vi.pre) spec.pre = 1;
+    if (vi.uid) spec.uid = vi.uid;
+    if (vi.first) spec.first = vi.first;
+  }
 
   if (files.length > MAX_PHOTOS) return json({ ok: false, field: 'photos', error: `사진은 ${MAX_PHOTOS}장까지 보낼 수 있습니다.` }, 400);
   const photos = [];
