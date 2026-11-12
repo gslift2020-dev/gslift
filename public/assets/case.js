@@ -140,8 +140,11 @@
     $('#cdBody').innerHTML = '<p class="case-empty">찾는 설치사례가 없거나 내려간 사례입니다. <a href="/cases.html">설치사례 목록으로</a></p>';
   }
 
-  var siteP = fetch('/api/site').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
-  var oneP = id ? fetch('/api/cases/' + encodeURIComponent(id)).then(function (r) { return r.json(); }).catch(function () { return null; }) : Promise.resolve(null);
+  // 회사 설정은 견본 사례(GS_SAMPLE)를 숨길지 볼 때만 필요 — 견본이 없으면 묻지 않음 (DB 읽기 줄임)
+  var siteP = (window.GS_SAMPLE || []).length ? fetch('/api/site').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }) : Promise.resolve(null);
+  // 서버가 페이지에 담아 둔 자료가 있으면 그대로 씀 (다시 묻지 않음 — DB 읽기 줄임, 2026-11-12)
+  var pre = window.GS_CASE && String(window.GS_CASE.id) === String(id) ? window.GS_CASE : null;
+  var oneP = pre ? Promise.resolve({ ok: true, item: pre }) : id ? fetch('/api/cases/' + encodeURIComponent(id)).then(function (r) { return r.json(); }).catch(function () { return null; }) : Promise.resolve(null);
 
   Promise.all([oneP, siteP]).then(function (r) {
     var cur = null;

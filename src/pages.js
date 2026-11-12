@@ -6,6 +6,7 @@
 import { esc, ensureSchema, CATS } from './util.js';
 import { siteData } from './site.js';
 import { caseMeta, caseIdsForSitemap } from './admin.js';
+import { TAGS } from './tags.js';
 
 // 정식 주소: 이 도메인들에서는 검색 허용, 그 외(임시 주소)는 검색 차단
 const LIVE_HOSTS = ['gslift.kr', 'www.gslift.kr'];
@@ -81,6 +82,42 @@ function setMeta(html, prop, content) {
   return re.test(html) ? html.replace(re, tag) : html.replace('</head>', tag + '\n</head>');
 }
 
+// 설치사례 상세 내용 (case.js render()와 같은 모양 — 화면이 그려진 뒤 case.js가 같은 내용으로 다시 그림)
+function caseSpec(title) {
+  return String(title).split('·').map((x) => x.trim()).filter(Boolean).map((p) => {
+    let label = '사양';
+    if (/리프트|스태커|운반/.test(p)) label = '제품';
+    else if (/톤|kg/i.test(p)) label = '적재하중';
+    else if (/STOP|층/i.test(p)) label = '정지층';
+    else if (/방향/.test(p)) label = '출입방향';
+    else if (/실내|외부|실외/.test(p)) label = '설치위치';
+    else if (/유압|체인|와이어|전동/.test(p)) label = '구동 방식';
+    else if (/도어|셔터|문/.test(p)) label = '출입문';
+    return [label, p];
+  });
+}
+function caseHtml(c, co) {
+  const n = c.photos.length;
+  const alt = (k) => esc(c.title + (n > 1 ? ' (' + (k + 1) + '/' + n + ')' : ''));
+  let h = '<div class="gal"><div class="gal-main">' + (n ? '<img src="' + esc(c.photos[0]) + '" alt="' + alt(0) + '">' : '') +
+    (n > 1 ? '<span class="gal-count">1 / ' + n + '</span>' : '') + '</div>';
+  if (n > 1) h += '<div class="gal-thumbs">' + c.photos.map((src, k) => '<button type="button"' + (k ? '' : ' class="on"') + ' aria-label="' + (k + 1) + '번째 사진"><img src="' + esc(src) + '" alt="' + alt(k) + '" loading="lazy"></button>').join('') + '</div>';
+  h += '</div><div class="cd-info"><span class="cd-cat">' + esc(CATS[c.cat] || '설치사례') + '</span><h1>' + esc(c.title) + '</h1><div class="cd-site">' +
+    (c.site ? '<span>현장: ' + esc(c.site) + '</span>' : '') +
+    (c.date ? '<span class="cd-when">설치: ' + esc(c.date.replace(/^(\d{4})\.0?(\d{1,2})$/, '$1년 $2월')) + '</span>' : '') +
+    '<span>사진 ' + n + '장</span></div>';
+  const spec = caseSpec(c.title);
+  if (spec.length > 1) h += '<div class="spec">' + spec.map(([l, v]) => '<div><small>' + esc(l) + '</small><b>' + esc(v) + '</b></div>').join('') + '</div>';
+  if (c.body) h += '<p class="cd-text">' + esc(c.body) + '</p>';
+  const tags = c.tags.filter((k) => TAGS[k]);
+  if (tags.length) h += '<div class="cd-tags"><span class="cd-tags-t">이런 조건의 사례 더 보기</span>' + tags.map((k) => '<a href="/cases.html?cat=' + esc(c.cat) + '&amp;tag=' + esc(k) + '">#' + esc(TAGS[k]) + '</a>').join('') + '</div>';
+  const tel = co && co.tel ? co.tel : '';
+  h += '<div class="cd-cta"><strong>이 사례와 비슷한 리프트가 필요하신가요?</strong><p>현장 사진과 필요한 하중·층수를 알려주시면 현장에 맞춰 견적을 드립니다.</p><div class="btns">' +
+    '<a class="btn btn-white" href="/?to=contact&amp;product=' + esc(c.cat) + '">견적 문의하기</a>' +
+    (tel ? '<a class="btn btn-ghost" href="tel:' + esc(tel.replace(/[^0-9+]/g, '')) + '">' + esc(tel) + ' 전화</a>' : '') + '</div></div></div>';
+  return h;
+}
+
 export async function servePage(request, env) {
   const url = new URL(request.url);
   const path = url.pathname;
@@ -94,7 +131,9 @@ export async function servePage(request, env) {
   const origin = url.origin;
 
   if (path === '/robots.txt') {
-    const body = live ? `User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /api/\n\nSitemap: ${origin}/sitemap.xml\n` : 'User-agent: *\nDisallow: /\n';
+    // 설치사례 목록·회사 정보 API(읽기 전용)는 검색 로봇이 페이지를 그려 볼 때 쓰도록 열어 둠 (2026-11-12 — 막혀 있어서
+    // 구글에는 목록·상세가 '불러오는 중…'으로만 보여 서로 같은 페이지로 묶였음). 관리자·문의·방문 기록 API는 계속 막음
+    const body = live ? `User-agent: *\nAllow: /\nAllow: /api/cases\nAllow: /api/site\nDisallow: /admin/\nDisallow: /api/\n\nSitemap: ${origin}/sitemap.xml\n` : 'User-agent: *\nDisallow: /\n';
     return new Response(body, { headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'public, max-age=3600' } });
   }
   if (path === '/sitemap.xml') {
@@ -112,6 +151,7 @@ export async function servePage(request, env) {
   const file = PAGES[path];
   let html = await assetText(env, url, file);
   if (html == null) return env.ASSETS.fetch(request);
+  let status = 200, noindex = false;
 
   try {
     await ensureSchema(env);
@@ -130,18 +170,29 @@ export async function servePage(request, env) {
     const head = ['<script>window.GS_TEL=' + JSON.stringify(co.tel).replace(/</g, '\\u003c') + '</script>'];
     if (file === '/case.html') {
       const id = url.searchParams.get('id');
-      if (id && /^\d+$/.test(id)) {
-        const c = await caseMeta(env, Number(id));
-        if (c) {
-          canon += '?id=' + c.id;
-          const title = c.title + ' | ' + co.name + ' 설치사례';
-          const desc = [CATS[c.cat], c.site, c.date && c.date + ' 설치', (c.body || '').slice(0, 80)].filter(Boolean).join(' · ');
-          html = html.replace(/<title>[^<]*<\/title>/, '<title>' + esc(title) + '</title>');
-          html = setMeta(html, 'description', desc);
-          html = setMeta(html, 'og:title', title);
-          html = setMeta(html, 'og:description', desc);
-          if (c.photos[0]) html = setMeta(html, 'og:image', origin + c.photos[0]);
-        }
+      let c = null;
+      if (id && /^\d+$/.test(id)) c = await caseMeta(env, Number(id));
+      if (!c) {
+        // 없는 사례·번호 없는 주소: 검색에 '없는 페이지'로 알림 (화면은 지금처럼 '찾는 설치사례가 없습니다' 안내)
+        status = 404;
+        noindex = true;
+      }
+      if (c) {
+        canon += '?id=' + c.id;
+        // 검색 로봇·느린 휴대폰도 바로 보이게 사진·설명을 HTML에 넣고, 같은 자료를 페이지에 담아 둠
+        // → 브라우저가 /api/cases/번호를 다시 부르지 않음(DB 읽기 줄어듦, 2026-11-12)
+        html = html.replace(/<p class="case-empty" id="cdLoading">[^<]*<\/p>/, caseHtml(c, co));
+        html = html.replace(/(<span id="crumbCat"[^>]*>)[^<]*(<\/span>)/, '$1' + esc(CATS[c.cat] || '설치사례') + '$2');
+        html = html.replace('href="/cases.html" id="crumbList"', 'href="/cases.html?cat=' + esc(c.cat) + '" id="crumbList"');
+        const data = { ...c, tagList: c.tags.map((k) => ({ k, n: TAGS[k] })) };
+        head.push('<script>window.GS_CASE=' + JSON.stringify(data).replace(/</g, '\\u003c') + '</script>');
+        const title = c.title + ' | ' + co.name + ' 설치사례';
+        const desc = [CATS[c.cat], c.site, c.date && c.date + ' 설치', (c.body || '').slice(0, 80)].filter(Boolean).join(' · ');
+        html = html.replace(/<title>[^<]*<\/title>/, '<title>' + esc(title) + '</title>');
+        html = setMeta(html, 'description', desc);
+        html = setMeta(html, 'og:title', title);
+        html = setMeta(html, 'og:description', desc);
+        if (c.photos[0]) html = setMeta(html, 'og:image', origin + c.photos[0]);
       }
     } else if (file === '/cases.html') {
       const cat = url.searchParams.get('cat');
@@ -152,7 +203,7 @@ export async function servePage(request, env) {
     head.push('<meta property="og:url" content="' + esc(canon) + '">');
     if (co.naverVerify) head.push('<meta name="naver-site-verification" content="' + esc(co.naverVerify) + '">');
     if (co.googleVerify) head.push('<meta name="google-site-verification" content="' + esc(co.googleVerify) + '">');
-    if (!live) head.push('<meta name="robots" content="noindex">');
+    if (!live || noindex) head.push('<meta name="robots" content="noindex">');
     // 미리보기 사진은 전체 주소여야 카카오톡·페이스북이 읽음
     html = html.replace(/(<meta property="og:image" content=")(?!https?:)\/?([^"]*)"/, '$1' + origin + '/$2"');
     html = html.replace('</head>', head.join('\n') + '\n</head>');
@@ -160,6 +211,7 @@ export async function servePage(request, env) {
     console.error('page fill failed', e);
   }
   return new Response(html, {
+    status,
     headers: {
       'content-type': 'text/html; charset=utf-8',
       'cache-control': 'no-cache',
