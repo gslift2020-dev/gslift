@@ -249,7 +249,12 @@
       var hc = $('#heroCnt'), hl = $('#heroLatest'), ht = $('#heroThumbs');
       if (hc && total) hc.textContent = '설치 현장 ' + total.toLocaleString('ko-KR') + '곳 사진';
       if (hl && latest) hl.textContent = '최근 설치 ' + latest.replace(/^(\d{4})\.0?(\d{1,2})$/, '$1년 $2월');
-      if (ht) mine.slice(0, 3).forEach(function (c) { if (!c.photos || !c.photos[0]) return; var im = document.createElement('img'); im.src = c.photos[0]; im.alt = ''; im.width = 46; im.height = 46; im.decoding = 'async'; ht.appendChild(im); });
+      // 현장 사진 3장 (자리 표시 칸을 사진으로 바꿈, 사진이 없으면 칸을 없앰)
+      if (ht) {
+        var pics = mine.filter(function (c) { return c.photos && c.photos[0]; }).slice(0, 3);
+        ht.innerHTML = '';
+        if (pics.length === 3) pics.forEach(function (c) { var im = document.createElement('img'); im.src = c.photos[0]; im.alt = ''; im.decoding = 'async'; ht.appendChild(im); });
+      }
       caseCounts = { all: 0 };
       Object.keys(CATS).forEach(function (c) {
         caseCounts[c] = (sc[c] || 0) + samples.filter(function (x) { return x.cat === c; }).length;

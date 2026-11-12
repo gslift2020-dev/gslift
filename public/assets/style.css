@@ -589,12 +589,16 @@ body.gv-on .bento .opt img{transition:none}
 /* 히어로: 설치사례 건수·최근 사진 줄 (PC·휴대폰 공통) */
 .hero-one{display:none}
 .hero-tel{display:none!important}
-.hero-cases{display:flex;align-items:center;gap:14px;max-width:520px;padding:10px 14px 10px 10px;border-radius:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fff}
+/* 첫 화면 설치사례 바로가기: 현장 사진 3장을 크게 + 아래 글 (2026-11-12 과장님 요청 "대표 이미지가 작다") */
+.hero-cases{display:flex;flex-direction:column;gap:10px;max-width:520px;padding:10px;border-radius:16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fff}
 .hero-cases:hover{background:rgba(255,255,255,.14);color:#fff}
-.hc-ph{display:flex;flex-shrink:0}
+.hc-ph{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .hc-ph:empty{display:none}
-.hc-ph img{width:46px;height:46px;border-radius:9px;object-fit:cover;border:2px solid var(--navy);margin-left:-10px;background:var(--blue-2)}
-.hc-ph img:first-child{margin-left:0}
+.hc-ph img,.hc-ph i{display:block;width:100%;aspect-ratio:16/10;height:auto;border-radius:10px;object-fit:cover;background:rgba(255,255,255,.1)}
+.hero-cases:hover .hc-ph img{filter:brightness(1.06)}
+.hc-bar{display:flex;align-items:center;gap:12px;padding:0 4px 2px}
+/* 키 작은 노트북 화면(1366×768 등)에서는 사진 높이를 조금 줄여 첫 화면에 다 보이게 */
+@media (min-width:901px) and (max-height:820px){.hc-ph img,.hc-ph i{aspect-ratio:2/1}}
 .hc-tx{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
 .hc-tx b{font-size:16px}
 .hc-tx small{font-size:13px;color:var(--sky-2)}
@@ -689,8 +693,8 @@ body.gv-on .bento .opt img{transition:none}
 }
 @media (max-width:380px){.hero .eyebrow{display:none}.hero h1{font-size:24px}.hero .wrap{padding-top:18px}.hc-tx b{font-size:15px}}
 @media (max-width:600px){
-  .hc-ph img{width:42px;height:42px}
-  .hc-ph img:nth-child(3){display:none}
+  .hc-ph{gap:6px}
+  .hc-ph img,.hc-ph i{aspect-ratio:4/3;border-radius:9px}
   .hc-tx b,.hc-tx small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 }
 
