@@ -439,45 +439,68 @@
     hint.innerHTML = '<span>← 옆으로 넘겨 보기</span><span class="sh-bar"><i></i></span><span class="sh-n"></span>';
     row.parentNode.insertBefore(hint, row.nextSibling);
     var bar = $('.sh-bar i', hint), track = $('.sh-bar', hint), num = $('.sh-n', hint);
+    var dragging = false;
+    // 막대 위치: 진한 부분 폭 = 1/n, 위치는 transform으로(다시 배치 계산 없이 부드럽게)
+    var place = function (f, n) { bar.style.width = (100 / n) + '%'; bar.style.transform = 'translateX(' + (f * (n - 1) * 100) + '%)'; };
     var upd = function () {
       var list = items(), n = list.length; if (!n) return;
       var w = list[0].offsetWidth + 12, i = Math.min(n, Math.round(row.scrollLeft / w) + 1);
       var max = row.scrollWidth - row.clientWidth, f = max > 0 ? Math.min(1, Math.max(0, row.scrollLeft / max)) : 0;
       num.textContent = i + ' / ' + n;
-      bar.style.width = (100 / n) + '%'; bar.style.marginLeft = (f * (100 - 100 / n)) + '%';
+      if (!dragging) place(f, n);   // 끄는 동안에는 손가락이 막대를 정함
     };
-    row.addEventListener('scroll', function () { window.requestAnimationFrame(upd); }, { passive: true });
+    var updQ = false;
+    row.addEventListener('scroll', function () { if (updQ) return; updQ = true; window.requestAnimationFrame(function () { updQ = false; upd(); }); }, { passive: true });
     window.addEventListener('resize', upd); setTimeout(upd, 300);
-    // 막대를 눌러 끌기: 천천히 끌면 조금씩, 빠르게 밀면 크게 움직임(손가락 속도에 따라). 빈 곳을 누르면 그 자리로. 놓으면 가까운 카드에 맞춤
-    var dragging = false, lastX = 0, lastT = 0, vel = 0;
-    var jumpTo = function (x) {
-      var r = track.getBoundingClientRect(), f = (x - r.left) / Math.max(1, r.width);
-      row.scrollLeft = Math.min(1, Math.max(0, f)) * (row.scrollWidth - row.clientWidth);
+    // 막대를 눌러 끌기 (2026-11-13 고침): 진한 부분이 손가락을 그대로 따라감(휴대폰 스크롤 막대처럼).
+    // 예전 '손가락 속도에 따라 2~24배'는 조금만 빨라도 크게 뛰어 뚝뚝 끊겨 보였음.
+    // 빈 곳을 누르면 그 자리로 옮긴 뒤 이어서 끌 수 있음. 화면 그리기는 한 프레임에 한 번. 놓으면 가까운 카드에 맞춤
+    var grab = 0, wantF = -1, frameQ = false, lastX = 0, lastT = 0, vel = 0;
+    var geo = function () {
+      var tr = track.getBoundingClientRect(), n = Math.max(1, items().length), tw = tr.width / n;
+      return { left: tr.left, room: Math.max(1, tr.width - tw), tw: tw, n: n };
+    };
+    var apply = function () {
+      frameQ = false; if (wantF < 0) return;
+      var n = Math.max(1, items().length);
+      place(wantF, n);
+      row.scrollLeft = wantF * (row.scrollWidth - row.clientWidth);
+    };
+    var follow = function (x) {
+      var g = geo();
+      wantF = Math.min(1, Math.max(0, (x - grab - g.left) / g.room));
+      if (!frameQ) { frameQ = true; window.requestAnimationFrame(apply); }
     };
     hint.addEventListener('pointerdown', function (e) {
       if (e.button > 0) return;
       dragging = true; hint.classList.add('drag');
       row.style.scrollSnapType = 'none'; row.style.scrollBehavior = 'auto';
-      var br = bar.getBoundingClientRect(), tr = track.getBoundingClientRect();
-      if (e.clientX >= tr.left - 4 && e.clientX <= tr.right + 4 && (e.clientX < br.left - 6 || e.clientX > br.right + 6)) jumpTo(e.clientX);
+      var br = bar.getBoundingClientRect(), g = geo();
+      // 진한 부분을 잡으면 잡은 자리 그대로, 빈 곳이면 그 자리가 가운데 오도록
+      grab = (e.clientX >= br.left - 6 && e.clientX <= br.right + 6) ? e.clientX - br.left : g.tw / 2;
       lastX = e.clientX; lastT = e.timeStamp || Date.now(); vel = 0;
+      follow(e.clientX);
       try { hint.setPointerCapture(e.pointerId); } catch (er) {}
       e.preventDefault();
     });
     hint.addEventListener('pointermove', function (e) {
       if (!dragging) return;
-      var t = e.timeStamp || Date.now(), dx = e.clientX - lastX, dt = Math.max(1, t - lastT);
-      vel = vel * 0.6 + Math.abs(dx / dt) * 0.4;                   // 손가락 속도(px/ms), 부드럽게
-      var gain = Math.min(24, 2 + 30 * Math.pow(vel, 1.3));        // 느리면 약 2배, 빠르면 최대 24배
-      row.scrollLeft += dx * gain;
-      lastX = e.clientX; lastT = t; e.preventDefault();
+      var t = e.timeStamp || Date.now();
+      vel = vel * 0.5 + ((e.clientX - lastX) / Math.max(1, t - lastT)) * 0.5;   // 놓을 때 튕긴 방향을 보려고만 씀
+      lastX = e.clientX; lastT = t;
+      follow(e.clientX); e.preventDefault();
     });
     var stop = function () {
-      if (!dragging) return; dragging = false; hint.classList.remove('drag');
+      if (!dragging) return;
+      if (frameQ) apply();   // 톡 누르고 바로 뗀 경우 등: 아직 안 그린 움직임을 먼저 반영
+      dragging = false; hint.classList.remove('drag'); wantF = -1;
       var list = items(); if (!list.length) return;
-      var w = list[0].offsetWidth + 12, i = Math.round(row.scrollLeft / w);
+      var w = list[0].offsetWidth + 12, x = row.scrollLeft / w, i = Math.round(x);
+      // 빠르게 밀고 놓으면 민 방향의 다음 카드로
+      if (Math.abs(vel) > 0.6) i = vel > 0 ? Math.ceil(x) : Math.floor(x);
+      i = Math.max(0, Math.min(list.length - 1, i));
       row.style.scrollBehavior = ''; row.scrollTo({ left: i * w, behavior: 'smooth' });
-      setTimeout(function () { row.style.scrollSnapType = ''; }, 350);
+      setTimeout(function () { row.style.scrollSnapType = ''; }, 450);
     };
     hint.addEventListener('pointerup', stop); hint.addEventListener('pointercancel', stop); hint.addEventListener('lostpointercapture', stop);
   });

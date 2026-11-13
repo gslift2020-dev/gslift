@@ -633,7 +633,7 @@ body.gv-on .bento .opt img{transition:none}
   .swipe-hint{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;font-size:13px;color:var(--muted)}
   .dark .swipe-hint{color:var(--sky-2)}
   .swipe-hint .sh-bar{flex:1;height:3px;border-radius:2px;background:rgba(127,145,180,.25);overflow:hidden}
-  .swipe-hint .sh-bar i{display:block;height:100%;width:20%;background:var(--blue);border-radius:2px;transition:margin-left .15s}
+  .swipe-hint .sh-bar i{display:block;height:100%;width:20%;background:var(--blue);border-radius:2px;transition:transform .15s}
   .dark .swipe-hint .sh-bar i{background:#fff}
   /* 안전검사 12개 항목 목록: 한 줄로 옆으로 */
   .std-list.mrow{display:flex;overflow-x:auto;gap:8px;margin:0 -20px;padding:0 20px 6px;scrollbar-width:none}
@@ -712,7 +712,9 @@ body.gv-on .bento .opt img{transition:none}
   /* 넘기기 막대: 손가락으로 눌러 끌기 (천천히·빠르게) — 모양은 그대로, 누르면 티 나게 */
   .swipe-hint{touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;padding:8px 0}
   .swipe-hint .sh-bar{height:3px;transition:height .15s,background .15s}
-  .swipe-hint .sh-bar i{transition:margin-left .12s ease-out,height .15s,box-shadow .15s}
+  .swipe-hint .sh-bar i{transition:transform .12s ease-out,height .15s,box-shadow .15s;will-change:transform}
+  /* 넘기는 줄 안 꼬리표 흐림 효과 끔 — 넘길 때마다 다시 그려 휴대폰이 버벅임(2026-11-13). 대신 바탕 조금 밝게 */
+  .mswipe .opt .tags span{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(255,255,255,.2)}
   .swipe-hint.drag{cursor:grabbing}
   .swipe-hint.drag .sh-bar{height:8px;background:rgba(127,145,180,.35)}
   .swipe-hint.drag .sh-bar i{transition:none;box-shadow:0 0 0 4px rgba(31,85,170,.18)}
