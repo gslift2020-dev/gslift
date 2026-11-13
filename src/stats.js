@@ -200,6 +200,14 @@ export function botCheck(uaRaw, uaSum, net, userNets) {
    관리자 화면에서 등록 → 방문 때마다 DB를 읽지 않도록 5분 동안 기억 (서버 1대당 5분에 2줄 읽기) */
 let exCache = { at: 0, ips: [], nets: [] };
 export function dropExcludeCache() { exCache = { at: 0, ips: [], nets: [] }; }
+// 직원인지 (방문 기록과 같은 순서): 관리자 로그인 중 > 회사 인터넷 > 직원 기기 표시. 문의 접수 때 광고 전환을 보낼지 정함
+export async function staffOf(env, request, deviceMark) {
+  if (/(?:^|;\s*)gs_admin=/.test(request.headers.get('cookie') || '')) return 'admin';
+  const ip = request.headers.get('cf-connecting-ip') || '';
+  if (ip && (await lists(env)).ips.includes(ipKey(ip))) return 'office';
+  return deviceMark ? 'staff' : '';
+}
+
 // IPv6는 앞 4마디(같은 회선)로 비교 — 기기마다 뒷부분이 바뀌기 때문
 export function ipKey(ip) {
   ip = String(ip || '').trim().toLowerCase();
@@ -219,7 +227,7 @@ async function readLists(env) {
   return out;
 }
 export async function excludeList(env) { return (await readLists(env)).statsExclude; }
-async function lists(env) {
+export async function lists(env) {
   if (Date.now() - exCache.at > 300000) {
     const l = await readLists(env);
     exCache = { at: Date.now(), ips: l.statsExclude.map((x) => x.ip), nets: l.statsBotNets.map((x) => x.net) };
@@ -298,6 +306,7 @@ export async function recordHit(request, env) {
 
   const ip = request.headers.get('cf-connecting-ip') || '';
   const L = await lists(env);
+  // (문의 접수 contact.js의 staffOf도 같은 순서로 판단 — 광고 전환을 보낼지)
   const cf = request.cf || {};
   const net = String(cf.asOrganization || '').slice(0, 60);
   const uaSum = uaSummary(ua);

@@ -692,14 +692,15 @@
       var fd = new FormData();
       ['company', 'name', 'phone', 'email', 'product', 'loc', 'message', 'gs_hp', 'dir', 'load', 'stops', 'travel', 'place', 'hole', 'pit', 'cargo', 'w', 'd', 'h'].forEach(function (k) { if (f[k]) fd.append(k, f[k].value); });
       fd.append('agree', f.agree.checked ? 'true' : 'false');
-      if (window.GSTrack) { fd.append('src', window.GSTrack.src()); fd.append('vid', window.GSTrack.vid()); if (window.GSTrack.kw) fd.append('kw', window.GSTrack.kw()); if (window.GSTrack.u) fd.append('u', window.GSTrack.u()); }
+      if (window.GSTrack) { fd.append('src', window.GSTrack.src()); fd.append('vid', window.GSTrack.vid()); if (window.GSTrack.kw) fd.append('kw', window.GSTrack.kw()); if (window.GSTrack.u) fd.append('u', window.GSTrack.u()); if (window.GSTrack.staff && window.GSTrack.staff()) fd.append('staff', '1'); }
       shots.forEach(function (sh, i) { fd.append('photos', sh.blob, 'photo' + (i + 1) + '.jpg'); });
       btn.disabled = true; btn.textContent = shots.length ? '사진과 함께 보내는 중…' : '보내는 중…'; say('');
       fetch('/api/contact', { method: 'POST', body: fd })
         .then(function (r) { return r.json().catch(function () { return { ok: false }; }); })
         .then(function (d) {
           if (d.ok) {
-            if (window.GSTrack) window.GSTrack.lead();
+            // 광고 전환: 실제로 저장된 문의(번호 있음)만, 서버가 직원(관리자 로그인 중·회사 인터넷·직원 기기)이라고 하면 안 보냄
+            if (window.GSTrack && d.id && !d.staff) window.GSTrack.lead();
             form.reset(); syncIndoor(); syncDir(); shots.forEach(function (sh) { URL.revokeObjectURL(sh.url); }); shots = []; drawShots();
             say('문의가 접수되었습니다. 담당자가 확인 후 연락드리겠습니다. 급하신 경우 ' + TEL + '로 전화 주세요.', 'ok');
           } else {
