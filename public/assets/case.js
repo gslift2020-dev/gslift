@@ -120,16 +120,26 @@
     box.appendChild(gal); box.appendChild(info);
   }
 
+  // 비슷한 설치사례: 서버가 같은 분류 안에서 꼬리표가 많이 겹치는 순으로 골라 줌 (2026-11-13)
   function renderMore(list, cur) {
     var same = list.filter(function (x) { return x.cat === cur.cat && x.key !== cur.key; }).slice(0, 4);
     if (!same.length) return;
-    $('#moreTitle').textContent = (CATS[cur.cat] || '같은 제품') + ' 다른 사례';
+    var names = {};
+    (cur.tagList || []).forEach(function (t) { names[t.k] = t.n; });
+    var anyNear = same.some(function (x) { return x.sc > 0; });
+    $('#moreTitle').textContent = anyNear ? '비슷한 설치사례' : (CATS[cur.cat] || '같은 제품') + ' 다른 사례';
+    var sub = $('#moreSub');
+    if (sub) { sub.textContent = anyNear ? (CATS[cur.cat] || '같은 제품') + ' 중에서 설치 조건이 비슷한 순서' : ''; sub.hidden = !anyNear; }
     $('#moreAll').href = '/cases.html?cat=' + cur.cat;
     var g = $('#moreGrid');
     same.forEach(function (x) {
       var a = el('a'); a.href = x.href;
       var im = el('img'); im.src = x.cover; im.alt = x.title; im.loading = 'lazy';
-      a.appendChild(im); a.appendChild(el('b', null, x.title)); a.appendChild(el('small', null, x.site || CATS[x.cat] || ''));
+      a.appendChild(im); a.appendChild(el('b', null, x.title));
+      if (x.site) a.appendChild(el('small', null, x.site)); // 현장 정보가 없으면 비움(제목에 이미 제품 이름이 있음)
+      // 지금 사례와 겹치는 꼬리표 (최대 2개)
+      var both = (x.tags || []).filter(function (k) { return names[k]; }).slice(0, 2);
+      if (both.length && x.sc > 0) a.appendChild(el('span', 'cd-more-tags', both.map(function (k) { return '#' + names[k]; }).join(' ')));
       g.appendChild(a);
     });
     $('#cdMore').hidden = false;
@@ -152,9 +162,13 @@
     if (sid) { var s = (window.GS_SAMPLE || []).filter(function (x) { return x.id === sid; })[0]; if (s) cur = sampleToCase(s); }
     if (!cur || !cur.photos.length) return notFound();
     render(cur);
-    // 같은 분류 다른 사례 (최신 8개 중에서)
-    fetch('/api/cases?cat=' + cur.cat + '&limit=8').then(function (x) { return x.ok ? x.json() : null; }).catch(function () { return null; }).then(function (l) {
-      var mine = (l && l.ok ? l.items : []).map(function (c) { return { key: 'd' + c.id, cat: c.cat, title: c.title, site: c.site, cover: c.cover, href: '/case.html?id=' + c.id }; });
+    // 아래 '견적 문의' 버튼도 이 사례의 제품을 미리 골라 둠
+    var go = $('#mbarGo'); if (go && cur.cat) go.href = '/?to=contact&product=' + cur.cat;
+    // 비슷한 설치사례 (같은 분류 · 꼬리표가 많이 겹치는 순 · 4개)
+    var near = (cur.tagList || []).map(function (t) { return t.k; }).join(',');
+    var notId = cur.key.charAt(0) === 'd' ? cur.key.slice(1) : '0';
+    fetch('/api/cases?cat=' + cur.cat + '&near=' + encodeURIComponent(near) + '&not=' + notId + '&limit=4').then(function (x) { return x.ok ? x.json() : null; }).catch(function () { return null; }).then(function (l) {
+      var mine = (l && l.ok ? l.items : []).map(function (c) { return { key: 'd' + c.id, cat: c.cat, title: c.title, site: c.site, cover: c.cover, tags: c.tags || [], sc: c.sc || 0, href: '/case.html?id=' + c.id }; });
       var samples = (r[1] && r[1].hideSamples) ? [] : (window.GS_SAMPLE || []).map(sampleToCase);
       renderMore(mine.concat(samples), cur);
     });

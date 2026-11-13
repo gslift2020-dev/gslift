@@ -603,6 +603,7 @@ export async function publicCases(request, env) {
     const items = results.map((r) => publicRow(r, photos[r.id])).filter((r) => r.photos.length);
     return json({ ok: true, items, counts: await catCounts(env, true) }, 200, hdr);
   }
+  if (url.searchParams.has('near')) return similarCases(env, url, hdr);
   const w = caseWhere(url, true), { limit, offset } = pageArgs(url, 24, 60);
   // facet=1: 목록 페이지가 꼬리표 버튼 개수도 함께 받음 (첫 화면 '같은 분류 다른 사례'는 안 받음)
   const wantFacet = url.searchParams.get('facet') === '1';
@@ -618,6 +619,37 @@ export async function publicCases(request, env) {
   }).filter((r) => r.cover);
   if (facet) return json({ ok: true, items, total: total.n, counts: facet.counts, tagCounts: facet.tagCounts, tagGroups: TAG_GROUPS }, 200, hdr);
   return json({ ok: true, items, total: total.n, counts: await catCounts(env, true) }, 200, hdr);
+}
+
+// 상세 페이지 아래 '비슷한 설치사례' (2026-11-13)
+// GET /api/cases?near=in,mesh,factory&cat=fl&not=49&limit=4
+// 같은 분류 안에서 지금 사례와 겹치는 꼬리표 점수가 높은 순 → 같으면 지금 목록 순서(고정 → 최신)
+// 점수: 설치 위치 3 · 승강로·출입문·층·현장 종류 2 · 추가 사항 1 · 보수끼리 3 (새 설치를 보는데 보수 사례면 -3)
+// 맨 뒤로 보낸 글(pinned < 0, 날짜 없는 제품 사진 등)은 점수와 상관없이 뒤로
+// DB: 그 분류 글을 한 번 훑음(지금 목록 조회와 같은 양) + 사진은 고른 글(최대 6)만. 개수 세기 조회는 하지 않음
+const NEAR_W = { loc: 3, shaft: 2, door: 2, floor: 2, place: 2, extra: 1, work: 3 };
+const TAG_W = {};
+for (const g of TAG_GROUPS) for (const t of g.tags) TAG_W[t.k] = NEAR_W[g.id] || 1;
+async function similarCases(env, url, hdr) {
+  const near = normTags(url.searchParams.get('near')).slice(0, 12);
+  const not = parseInt(url.searchParams.get('not'), 10) || 0;
+  const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit'), 10) || 4, 1), 6);
+  const cat = url.searchParams.get('cat');
+  const where = ['visible = 1', PUB_CAT, 'id <> ?'], args = [not];
+  if (CATS[cat]) { where.push('category = ?'); args.push(cat); }
+  const parts = [], sargs = [];
+  for (const k of near) { parts.push('(CASE WHEN tags LIKE ? THEN ' + TAG_W[k] + ' ELSE 0 END)'); sargs.push('%,' + k + ',%'); }
+  if (!near.includes('repair')) { parts.push('(CASE WHEN tags LIKE ? THEN -3 ELSE 0 END)'); sargs.push('%,repair,%'); }
+  const score = parts.join(' + ');
+  const { results } = await env.DB.prepare(
+    `SELECT ${PUB_COLS}, (${score}) AS sc FROM cases WHERE ${where.join(' AND ')} ORDER BY (pinned < 0), sc DESC, pinned DESC, COALESCE(taken_at, substr(created_at, 1, 10)) DESC, id DESC LIMIT ?`
+  ).bind(...sargs, ...args, limit + 2).all();
+  const photos = await casePhotos(env, results.map((r) => r.id));
+  const items = results.map((r) => {
+    const row = publicRow(r, photos[r.id]);
+    return { id: row.id, title: row.title, site: row.site, cat: row.cat, cover: row.photos[0] || '', tags: row.tags, sc: Math.max(r.sc || 0, 0) };
+  }).filter((r) => r.cover).slice(0, limit);
+  return json({ ok: true, items }, 200, hdr);
 }
 
 function publicRow(r, photos) {
