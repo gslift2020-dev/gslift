@@ -401,3 +401,6 @@ input[type=month],input[type=email],input[type=search]{height:46px;padding:0 14p
 .wlist .wp,.wlist .wa{color:var(--muted);font-size:13px;margin-top:3px;word-break:keep-all}
 .wlist .winq{color:#B35C00}
 .ispec div.wide{grid-column:1/-1;background:#FFF4E2}
+
+/* 업무앱(견적 대기) 보내기 상태 (2026-11-13) */
+.inq .erp.ok{font-size:13px;color:#1E6B3A;background:#E6F4EA;border-radius:6px;padding:3px 8px}

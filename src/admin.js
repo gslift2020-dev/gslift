@@ -1,6 +1,7 @@
 // 관리자 기능: 로그인, 문의, 설치사례(여러 사진·글), 메인 슬라이드, 설정
 import { json, clean, kst, ensureSchema, CATS, inferCat } from './util.js';
 import { specRows, visitLine } from './contact.js';
+import { erpPayload, sendToErp, erpResultCols, erpConfigured } from './erp.js';
 import { cleanCompany, cleanFaq, dropSiteCache, DEFAULT_COMPANY, DEFAULT_FAQ } from './site.js';
 import { statsAdmin, visitsAdmin, visitorAdmin, statsExcludeAdmin, visitMarkAdmin } from './stats.js';
 import { runImportsNow, importStatus } from './imports.js';
@@ -179,9 +180,10 @@ async function purgeOldInquiries(env) {
 }
 
 async function listInquiries(env) {
+  await ensureSchema(env);
   await purgeOldInquiries(env);
   const { results } = await env.DB.prepare(
-    'SELECT id, created_at, company, name, phone, product, message, spec, photos, memo, status, email_sent, email_error FROM inquiries ORDER BY id DESC LIMIT 1000'
+    'SELECT id, created_at, company, name, phone, product, message, spec, photos, memo, status, email_sent, email_error, erp_sent, erp_error, erp_id, erp_at FROM inquiries ORDER BY id DESC LIMIT 1000'
   ).all();
   const parse = (s, d) => { try { return JSON.parse(s || '') || d; } catch { return d; } };
   return json({
@@ -192,7 +194,23 @@ async function listInquiries(env) {
       visitor: ((s) => (s.uid ? { uid: s.uid, from: s.first ? s.first.at.slice(0, 10) : r.created_at.slice(0, 10) } : null))(parse(r.spec, {})),
       photos: parse(r.photos, []).map((k) => '/api/admin/inq-photo/' + encodeURIComponent(k)),
     })),
+    erp: erpConfigured(env),
   });
+}
+// 업무앱(견적 대기)으로 다시 보내기 — 같은 문의 번호는 업무앱이 한 번만 받음
+async function resendInquiryToErp(env, id) {
+  if (!erpConfigured(env)) return json({ ok: false, error: '업무앱 연결 비밀값(ERP_INQ_URL·ERP_INQ_SECRET)이 아직 없습니다.' }, 400);
+  await ensureSchema(env);
+  const r = await env.DB.prepare('SELECT id, created_at, company, name, phone, product, message, spec, photos FROM inquiries WHERE id = ?').bind(id).first();
+  if (!r) return json({ ok: false, error: '없는 문의입니다.' }, 404);
+  let spec = {}, keys = [];
+  try { spec = JSON.parse(r.spec || '{}') || {}; } catch {}
+  try { keys = JSON.parse(r.photos || '[]') || []; } catch {}
+  const res = await sendToErp(env, erpPayload(r, spec, keys.length));
+  const [sent, err, eid] = erpResultCols(res);
+  const at = kst();
+  await env.DB.prepare('UPDATE inquiries SET erp_sent = ?, erp_error = ?, erp_id = ?, erp_at = ? WHERE id = ?').bind(sent, err, eid, at, id).run();
+  return json({ ok: res.ok, erp_sent: sent, erp_error: err, erp_id: eid, erp_at: at, dup: !!res.dup, error: res.ok ? undefined : err });
 }
 async function setInquiryStatus(request, env, id) {
   let body = {};
@@ -689,6 +707,8 @@ async function adminRoutes(request, env, path, method) {
   m = /^\/api\/admin\/inquiries\/(\d+)$/.exec(path);
   if (m && method === 'POST') return setInquiryStatus(request, env, Number(m[1]));
   if (m && method === 'DELETE') return deleteInquiry(env, Number(m[1]));
+  m = /^\/api\/admin\/inquiries\/(\d+)\/erp$/.exec(path);
+  if (m && method === 'POST') return resendInquiryToErp(env, Number(m[1]));
   if (path.startsWith('/api/admin/inq-photo/') && method === 'GET') return inquiryPhoto(env, decodeURIComponent(path.slice('/api/admin/inq-photo/'.length)));
 
   if (path === '/api/admin/cases' && method === 'GET') return listCasesAdmin(request, env);

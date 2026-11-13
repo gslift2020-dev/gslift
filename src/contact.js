@@ -1,5 +1,6 @@
 // 견적·상담 문의 접수: DB 저장(사진은 R2) → 메일 알림(사진 첨부)
 import { linkInquiry, visitorInfo, srcLabel } from './stats.js';
+import { erpPayload, sendToErp, erpResultCols } from './erp.js';
 import { json, clean, esc, kst, ensureSchema } from './util.js';
 
 const LIMITS = { company: 100, name: 50, phone: 30, product: 50, message: 3000 };
@@ -238,11 +239,15 @@ export async function handleContact(request, env, ctx) {
   // 그 방문 기록(관리자 '최근 방문')에 문의 번호를 붙임 — 실패해도 문의 접수에는 영향 없음
   try { await linkInquiry(env, clean(body.vid, 32), row.id, request); } catch (e) { console.error('link visit', e); }
 
-  // 저장이 끝난 뒤 메일 발송. 메일이 실패해도 문의는 이미 저장되어 있음.
+  // 저장이 끝난 뒤 메일 발송 + 업무앱(견적 대기)으로 보내기를 함께 하고, 결과를 한 번에 남김(쓰기 1번).
+  // 둘 다 실패해도 문의는 이미 저장되어 있음. 업무앱은 비밀값(ERP_INQ_URL·ERP_INQ_SECRET)이 있을 때만.
   ctx.waitUntil(
-    sendMail(env, row, spec, photos).then((r) =>
-      env.DB.prepare('UPDATE inquiries SET email_sent = ?, email_error = ? WHERE id = ?')
-        .bind(r.ok ? 1 : 0, r.ok ? null : r.error, row.id)
+    Promise.all([
+      sendMail(env, row, spec, photos),
+      sendToErp(env, erpPayload(row, spec, keys.length)).catch((e) => ({ ok: false, error: String(e).slice(0, 300) })),
+    ]).then(([m, e]) =>
+      env.DB.prepare('UPDATE inquiries SET email_sent = ?, email_error = ?, erp_sent = ?, erp_error = ?, erp_id = ?, erp_at = ? WHERE id = ?')
+        .bind(m.ok ? 1 : 0, m.ok ? null : m.error, ...erpResultCols(e), e.skip ? null : kst(), row.id)
         .run()
     )
   );

@@ -67,12 +67,12 @@
   }
 
   /* ================= 문의 ================= */
-  var inquiries = [], filter = 'all';
+  var inquiries = [], filter = 'all', erpOn = false;
   function loadInquiries() {
     $('#inqList').innerHTML = '<p class="empty">불러오는 중…</p>';
     api('/api/admin/inquiries').then(function (d) {
       if (!d.ok) { $('#inqList').innerHTML = '<p class="empty">' + esc(d.error) + '</p>'; return; }
-      inquiries = d.items; renderInquiries();
+      inquiries = d.items; erpOn = !!d.erp; renderInquiries();
       $('#dNew').textContent = inquiries.filter(function (x) { return x.status === 'new'; }).length;
       goHashInquiry();
     });
@@ -122,10 +122,27 @@
         '<div class="acts"><a class="tel" href="tel:' + esc(x.phone) + '">' + esc(x.phone) + ' 전화</a>' +
         '<label style="flex-direction:row;align-items:center;gap:6px;font-weight:500">상태 <select data-id="' + x.id + '" aria-label="처리 상태">' + opts + '</select></label>' +
         (x.email_sent ? '' : '<span class="warn">알림 메일 미발송' + (x.email_error ? ': ' + esc(x.email_error) : '') + '</span>') +
+        erpTag(x) +
         '<button type="button" class="link del" data-del="' + x.id + '">삭제</button>' +
         '</div></article>';
     }).join('');
   }
+  // 업무앱(견적 대기) 보내기 상태 — 연결 비밀값이 없으면 표시하지 않음
+  function erpTag(x) {
+    if (!erpOn) return '';
+    if (x.erp_sent === 1) return '<span class="erp ok" title="' + esc(x.erp_at || '') + '">업무앱 견적 대기 등록' + (x.erp_id ? ' #' + esc(x.erp_id) : '') + '</span>';
+    var why = x.erp_sent === 0 ? '업무앱 보내기 실패' + (x.erp_error ? ': ' + esc(x.erp_error) : '') : '업무앱에 아직 안 보냄';
+    return '<span class="warn">' + why + '</span><button type="button" class="link" data-erp="' + x.id + '">업무앱으로 보내기</button>';
+  }
+  $('#inqList').addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('[data-erp]'); if (!b) return;
+    var id = +b.dataset.erp; b.disabled = true; b.textContent = '보내는 중…';
+    api('/api/admin/inquiries/' + id + '/erp', { method: 'POST' }).then(function (d) {
+      var it = inquiries.filter(function (x) { return x.id === id; })[0];
+      if (it && 'erp_sent' in d) { it.erp_sent = d.erp_sent; it.erp_error = d.erp_error; it.erp_id = d.erp_id; it.erp_at = d.erp_at; }
+      renderInquiries();
+    }, function () { b.disabled = false; b.textContent = '업무앱으로 보내기'; });
+  });
   $('#inqSearch').addEventListener('input', function () { inqQuery = this.value; renderInquiries(); });
   $('#inqList').addEventListener('focusout', function (e) {
     var t = e.target; if (!t.dataset || !t.dataset.memo) return;
@@ -972,7 +989,7 @@
       el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('flash');
       setTimeout(function () { el.classList.remove('flash'); }, 2500);
     };
-    if (inquiries.length) go(); else api('/api/admin/inquiries').then(function (d) { if (d.ok) { inquiries = d.items; go(); } });
+    if (inquiries.length) go(); else api('/api/admin/inquiries').then(function (d) { if (d.ok) { inquiries = d.items; erpOn = !!d.erp; go(); } });
   });
 
   /* ---- 회사 사람 빼기 ---- */

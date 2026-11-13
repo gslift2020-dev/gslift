@@ -119,6 +119,11 @@ const MIGRATIONS = [
   'ALTER TABLE visits ADD COLUMN f_adkw TEXT',   // 첫 방문 광고 등록 키워드
   'ALTER TABLE visits ADD COLUMN f_pre INTEGER NOT NULL DEFAULT 0', // 이 기능을 올리기 전에도 온 적 있는 브라우저
   'ALTER TABLE visits ADD COLUMN uid TEXT',      // 무작위 손님 번호 (같은 브라우저 묶음, 이름·연락처와 무관). 색인 없음 — 관리자가 '방문 모두 보기'를 누를 때만 날짜 범위로 찾음
+  // 업무앱(거산 생태계) 보내기 결과 (2026-11-13): erp_sent 1 보냄 · 0 실패 · NULL 설정 전/기능 전
+  'ALTER TABLE inquiries ADD COLUMN erp_sent INTEGER',
+  'ALTER TABLE inquiries ADD COLUMN erp_error TEXT',
+  'ALTER TABLE inquiries ADD COLUMN erp_id TEXT',
+  'ALTER TABLE inquiries ADD COLUMN erp_at TEXT',
 ];
 
 // 설치사례 분류 (제품소개 4종과 같음)
@@ -139,7 +144,7 @@ const INDEXES = [
   'CREATE INDEX IF NOT EXISTS idx_visits_day ON visits (day, at)',
 ];
 // 표 구조를 바꿀 때만 이 값을 올림 → 같으면 서버가 새로 뜰 때마다 점검을 반복하지 않음
-const SCHEMA_VERSION = '2026-11-12a';
+const SCHEMA_VERSION = '2026-11-13a';
 
 let schemaReady = false;
 export async function ensureSchema(env) {
