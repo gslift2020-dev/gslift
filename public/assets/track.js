@@ -2,9 +2,12 @@
    - 키가 비어 있으면 광고 추적 코드는 아무것도 하지 않음 (유입 경로 기억만 동작)
    - 키는 홈페이지 소스에 원래 공개되는 값이라 저장소에 넣어도 됨
    - 데이터베이스(D1)를 전혀 읽지 않음
-   - 키를 넣기 전에 네이버가 메일로 보내는 '설치 가이드'의 문법과 아래 코드가 같은지 확인할 것 */
+   - 네이버 문법 대조 (2026-11-13, 네이버 광고 웹 전환 추적 가이드 「신 스크립트(trans)」): 공통 = wcs_add.wa · wcs.inflow(1차 도메인) · wcs_do(),
+     신청완료 전환 = wcs.trans({ type: 'lead' }) — 공통(wcs_do)이 먼저 돌고 난 뒤에 보내야 함 → 아래 lead()가 순서를 지킴
+   - 광고 추적(네이버·카카오)은 직원 기기(?gs_staff=1·관리자에 로그인한 적 있는 기기)·자동 프로그램에서는 아예 안 불러옴 (방문 기록 규칙과 같음)
+     관리자 로그인 중·회사 인터넷은 브라우저가 알 수 없으므로 문의 접수 때 서버가 알려 줌(staff) → 그때도 전환 안 보냄 (main.js) */
 (function () {
-  var NAVER_WA = '';    // 네이버 전환추적 공통키 (s_로 시작) — gslift.kr로 새로 발급받은 값
+  var NAVER_WA = 's_22b954ba2b5f'; // 네이버 전환추적 공통키 — gslift.kr로 발급(네이버 광고 > 도구 > 전환 추적 관리, 2026-11-13)
   var KAKAO_PIXEL = ''; // 카카오 픽셀 ID (숫자)
   var DOMAIN = 'gslift.kr';
 
@@ -41,12 +44,13 @@
       fetch('/api/hit', { method: 'POST', body: data, keepalive: true });
     } catch (e) {}
   }
+  var staff = false, robot = !!navigator.webdriver;
   try {
     var sq = new URLSearchParams(location.search).get('gs_staff');
     if (sq === '1') { var saved = lsSet('gs_staff', '1'); document.addEventListener('DOMContentLoaded', function () { note(saved ? '이 기기(브라우저)는 이제 방문 통계에서 빠집니다.' : '이 브라우저는 설정을 저장할 수 없어 빼지 못했습니다. (비공개 창인지 확인)'); }); }
     if (sq === '0') { lsSet('gs_staff', null); document.addEventListener('DOMContentLoaded', function () { note('이 기기(브라우저)를 다시 방문 통계에 넣습니다.'); }); }
-    var staff = lsGet('gs_staff') === '1' || sq === '1';
-    if (!navigator.webdriver) {
+    staff = lsGet('gs_staff') === '1' || sq === '1';
+    if (!robot) {
       var now = Date.now(), first = 0, prev = null, hadV = lsGet('gs_v') != null;
       try { prev = JSON.parse(lsGet('gs_v') || 'null'); } catch (e) {}
       if (prev && prev.id && now - prev.t < VISIT_GAP) vid = prev.id;
@@ -186,18 +190,25 @@
     document.head.appendChild(s);
   }
 
+  // 직원 기기·자동 프로그램은 광고 추적을 불러오지 않음 (방문 통계와 같은 기준)
+  var adsOn = !staff && !robot;
+  var naverReady = false, naverLead = 0; // 공통 스크립트(wcs_do)가 끝나기 전에 접수되면 기다렸다가 보냄
+
   // 2) 네이버 공통 스크립트 (모든 페이지)
-  if (NAVER_WA) {
+  if (NAVER_WA && adsOn) {
     window.wcs_add = window.wcs_add || {};
     window.wcs_add.wa = NAVER_WA;
-    window._nasa = window._nasa || {};
     load('https://wcs.naver.net/wcslog.js', function () {
-      try { if (window.wcs) { window.wcs.inflow(DOMAIN); window.wcs_do(); } } catch (e) {}
+      try { if (window.wcs) { window.wcs.inflow(DOMAIN); window.wcs_do(); naverReady = true; } } catch (e) {}
+      while (naverReady && naverLead > 0) { naverLead--; naverTrans(); }
     });
+  }
+  function naverTrans() {
+    try { window.wcs.trans({ type: 'lead' }); } catch (e) {}
   }
 
   // 3) 카카오 픽셀 (모든 페이지)
-  if (KAKAO_PIXEL) {
+  if (KAKAO_PIXEL && adsOn) {
     load('https://t1.daumcdn.net/kas/static/kp.js', function () {
       try { if (window.kakaoPixel) window.kakaoPixel(KAKAO_PIXEL).pageView(); } catch (e) {}
     });
@@ -216,10 +227,14 @@
     vid: function () { return vid; },
     // 재방문 정보 (몇 번째 방문·첫 방문 주소) — 견적 문의에 같이 보냄. 없으면 ''
     u: function () { try { var o = uInfo(); return o ? JSON.stringify(o) : ''; } catch (e) { return ''; } },
-    // 견적문의 접수가 성공했을 때 한 번 호출 → 광고 '전환'으로 집계
+    // 직원 기기인지 (문의와 함께 보냄 — 서버가 관리자 로그인 중·회사 인터넷까지 합쳐 staff로 답함)
+    staff: function () { return staff; },
+    // 견적문의 접수가 성공했을 때 한 번 호출 → 광고 '전환'(네이버: 신청완료 lead)으로 집계. 직원 기기·자동 프로그램은 안 보냄
     lead: function () {
-      try { if (NAVER_WA && window.wcs && window.wcs.trans) window.wcs.trans({ type: 'lead' }); } catch (e) {}
+      if (!adsOn) return false;
+      if (NAVER_WA) { if (naverReady) naverTrans(); else naverLead++; }
       try { if (KAKAO_PIXEL && window.kakaoPixel) window.kakaoPixel(KAKAO_PIXEL).participation(); } catch (e) {}
+      return true;
     },
   };
 })();

@@ -1,5 +1,5 @@
 // 견적·상담 문의 접수: DB 저장(사진은 R2) → 메일 알림(사진 첨부)
-import { linkInquiry, visitorInfo, srcLabel } from './stats.js';
+import { linkInquiry, visitorInfo, srcLabel, staffOf } from './stats.js';
 import { erpPayload, sendToErp, erpResultCols } from './erp.js';
 import { json, clean, esc, kst, ensureSchema } from './util.js';
 
@@ -252,5 +252,8 @@ export async function handleContact(request, env, ctx) {
     )
   );
 
-  return json({ ok: true, id: row.id });
+  // 직원(관리자 로그인 중·회사 인터넷·직원 기기)이 보낸 문의면 홈페이지가 광고 전환을 보내지 않게 알려 줌
+  let staff = '';
+  try { staff = await staffOf(env, request, body.staff === '1'); } catch (e) { console.error('staff check', e); }
+  return json(staff ? { ok: true, id: row.id, staff: 1 } : { ok: true, id: row.id });
 }
