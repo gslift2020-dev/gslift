@@ -620,7 +620,8 @@ body.gv-on .bento .opt img{transition:none}
   .hero-cases-btn{display:none!important}
   .hero .facts{display:none}
   .hero-cases{max-width:none}
-  .slides{aspect-ratio:4/3}
+  /* 대표 사진: 원본(세로 4:5)이 잘리지 않게 크게 — 단, 한 화면(머리 메뉴·아래 바로가기 줄 제외)을 넘지 않게 (2026-11-13 과장님 요청) */
+  .slides{aspect-ratio:4/5;max-height:calc(100svh - 150px)}
   /* 옆으로 넘기기 줄 */
   .mswipe{display:flex!important;grid-template-columns:none!important;grid-auto-rows:auto!important;overflow-x:auto;scroll-snap-type:x mandatory;gap:12px!important;margin-left:-20px;margin-right:-20px;padding:0 20px 6px;scroll-padding-left:20px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
   .mswipe::-webkit-scrollbar{display:none}
