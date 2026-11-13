@@ -78,3 +78,46 @@ export function erpResultCols(r) {
   if (r.skip) return [null, null, null];
   return r.ok ? [1, null, r.id || null] : [0, r.error || '실패', null];
 }
+
+// ---------- 업무앱 → 홈페이지 문의 상태 받기 (연결 약속 3-3, 2026-11-13) ----------
+// POST /api/erp/inquiry-status — 업무앱 서버 함수 web-inquiry-push 가 부름
+// 서명은 보낼 때와 같은 방식·같은 열쇠(ERP_INQ_SECRET). 본문 { v:1, kind:"status", inquiry_no, status, changed_at }
+// 답: {ok:true} · 서명·시각 틀림 401 · 형식 400 · 없는 문의 번호 422(404는 업무앱이 '받는 곳 없음'으로 보므로 쓰지 않음) · 열쇠 없음 503
+// DB: 요청 1번에 읽기 1 · 쓰기 0~1 (손님 방문과 무관)
+const ERP_STATUS = { '신규': 'new', '처리완료': 'done', '보류': 'hold', '휴지통': 'trash' };
+
+function sameHex(a, b) {
+  if (typeof a !== 'string' || a.length !== b.length) return false;
+  let x = 0;
+  for (let i = 0; i < a.length; i++) x |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return x === 0;
+}
+
+export async function erpStatusIn(request, env, ensureSchema) {
+  const out = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } });
+  if (request.method !== 'POST') return out({ ok: false, error: 'POST만 받습니다' }, 405);
+  const secret = String(env.ERP_INQ_SECRET || '');
+  if (!secret) return out({ ok: false, error: '열쇠(ERP_INQ_SECRET)가 없습니다' }, 503);
+  const raw = (await request.text()).slice(0, 4000);
+  const t = request.headers.get('x-gs-time') || '';
+  if (!/^\d{9,11}$/.test(t) || Math.abs(Date.now() / 1000 - Number(t)) > 300) return out({ ok: false, error: '시각 확인 실패' }, 401);
+  if (!sameHex(request.headers.get('x-gs-sign') || '', await hmacHex(secret, t + '.' + raw))) return out({ ok: false, error: '서명이 맞지 않습니다' }, 401);
+  let p;
+  try { p = JSON.parse(raw); } catch { return out({ ok: false, error: 'JSON 형식이 아닙니다' }, 400); }
+  if (!p || p.v !== 1 || p.kind !== 'status') return out({ ok: false, error: 'v·kind가 맞지 않습니다' }, 400);
+  const no = Number(p.inquiry_no);
+  if (!Number.isInteger(no) || no < 1) return out({ ok: false, error: 'inquiry_no가 맞지 않습니다' }, 400);
+  const st = ERP_STATUS[p.status];
+  if (!st) return out({ ok: false, error: 'status는 신규·처리완료·보류·휴지통 중 하나' }, 400);
+  const ms = Date.parse(p.changed_at);
+  const at = Number.isFinite(ms) ? new Date(ms).toISOString() : new Date().toISOString();
+  await ensureSchema(env);
+  const row = await env.DB.prepare('SELECT status, erp_status_at FROM inquiries WHERE id = ?').bind(no).first();
+  if (!row) return out({ ok: false, error: '문의 번호 없음' }, 422);
+  // 늦게 도착한 옛 상태는 무시(이미 더 새 상태가 있음) — 업무앱이 다시 보내도 같은 답
+  if (row.erp_status_at && row.erp_status_at > at) return out({ ok: true, ignored: 'older' });
+  // 같은 바뀜을 다시 받으면(업무앱 재전송) 그대로 — 그 사이 관리자가 손으로 바꾼 상태를 덮지 않음
+  if (row.erp_status_at === at) return out({ ok: true, same: true });
+  await env.DB.prepare("UPDATE inquiries SET status = ?, status_by = 'erp', erp_status_at = ? WHERE id = ?").bind(st, at, no).run();
+  return out({ ok: true });
+}

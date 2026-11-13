@@ -7,7 +7,8 @@
   var CASE_W = 1200, CASE_H = 1600;   // 설치사례 사진 (세로 3:4)
   var HERO_W = 1200, HERO_H = 1500;   // 메인 슬라이드 (세로 4:5)
   var WM_RATIO = 0.30, WM_ALPHA = 0.38;
-  var STATUS = { 'new': '신규', progress: '처리중', done: '완료' };
+  // 문의 상태 4가지 (2026-11-13 — 업무앱 상태와 같은 뜻, 옛 처리중은 처리완료로 옮김)
+  var STATUS = { 'new': '신규', done: '처리완료', hold: '보류', trash: '휴지통' };
   var CATS = { fl: '화물용 리프트(F/L)', tl: '테이블 리프트(T/L)', st: '수동·자동 스태커' };
   function inferCat(t) { t = String(t || ''); if (/테이블|T\/L/i.test(t)) return 'tl'; if (/스태커/.test(t)) return 'st'; return 'fl'; }
 
@@ -96,12 +97,13 @@
     var n = inquiries.filter(function (x) { return x.status === 'new'; }).length;
     $('#newCount').hidden = !n; $('#newCount').textContent = n;
     $('#kNew').textContent = n;
-    $('#kMonth').textContent = inquiries.filter(function (x) { return (x.created_at || '').slice(0, 7) === month; }).length;
-    $('#k30').textContent = inquiries.filter(function (x) { return (x.created_at || '') > d30; }).length;
-    $('#kAll').textContent = inquiries.length;
+    var live = inquiries.filter(function (x) { return x.status !== 'trash'; }); // 숫자에서 휴지통(스팸·영업 전화 등) 뺌
+    $('#kMonth').textContent = live.filter(function (x) { return (x.created_at || '').slice(0, 7) === month; }).length;
+    $('#k30').textContent = live.filter(function (x) { return (x.created_at || '') > d30; }).length;
+    $('#kAll').textContent = live.length;
     var q = inqQuery.trim().toLowerCase();
     var rows = inquiries.filter(function (x) {
-      if (filter !== 'all' && x.status !== filter) return false;
+      if (filter === 'all' ? x.status === 'trash' : x.status !== filter) return false; // '전체'에는 휴지통 빼고
       if (!q) return true;
       return [x.company, x.name, x.phone, x.message, x.memo, x.product, (x.spec || []).map(function (r) { return r[1]; }).join(' ')].join(' ').toLowerCase().indexOf(q) >= 0;
     });
@@ -113,7 +115,7 @@
       return '<article class="inq ' + esc(x.status) + '" id="inq-' + x.id + '">' +
         '<div><div class="who">#' + x.id + ' ' + esc(x.company || '(회사명 없음)') + ' · ' + esc(x.name) + '</div>' +
         '<div class="meta">' + esc(x.created_at) + ' · ' + esc(x.product || '-') + (x.photos && x.photos.length ? ' · 사진 ' + x.photos.length + '장' : '') + '</div></div>' +
-        '<span class="st st-' + esc(x.status) + '">' + STATUS[x.status] + '</span>' +
+        '<span class="st st-' + esc(x.status) + '">' + (STATUS[x.status] || esc(x.status)) + (x.status_by === 'erp' ? '<small class="st-by">업무앱에서' + (x.erp_status_at ? ' · ' + erpWhen(x.erp_status_at) : '') + '</small>' : '') + '</span>' +
         (spec ? '<div class="ispec">' + spec + '</div>' : '') +
         (x.visitor ? '<div class="ivisit"><button type="button" class="link vwho" data-uid="' + esc(x.visitor.uid) + '" data-from="' + esc(x.visitor.from) + '" data-inqid="' + x.id + '">이 손님 방문 모두 보기</button></div>' : '') +
         '<div class="body">' + esc(x.message) + '</div>' +
@@ -127,6 +129,8 @@
         '</div></article>';
     }).join('');
   }
+  // 업무앱이 바꾼 시각 (UTC ISO → 한국 M/D HH:MM)
+  function erpWhen(iso) { var d = new Date(Date.parse(iso) + 9 * 3600e3); if (isNaN(d)) return ''; var t = d.toISOString(); return (+t.slice(5, 7)) + '/' + (+t.slice(8, 10)) + ' ' + t.slice(11, 16); }
   // 업무앱(견적 대기) 보내기 상태 — 연결 비밀값이 없으면 표시하지 않음
   function erpTag(x) {
     if (!erpOn) return '';

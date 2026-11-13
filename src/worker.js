@@ -7,7 +7,8 @@
 // - /, /case.html, /cases.html  관리자 설정(회사 정보·공지·질문)을 넣어서 보여줌
 // - robots.txt, sitemap.xml     검색 등록용
 // - 그 외 주소는 public/ 폴더의 정적 파일을 그대로 보여줌
-import { json } from './util.js';
+import { json, ensureSchema } from './util.js';
+import { erpStatusIn } from './erp.js';
 import { handleContact } from './contact.js';
 import { handleAdmin, publicCases, publicCase, publicSite, servePhoto } from './admin.js';
 import { recordHit } from './stats.js';
@@ -42,6 +43,7 @@ export default {
       if (cm) return await publicCase(env, Number(cm[1]));
       if (path === '/api/site') return await publicSite(env);
       if (path === '/api/hit') return await recordHit(request, env);
+      if (path === '/api/erp/inquiry-status') return await erpStatusIn(request, env, ensureSchema);
       if (path.startsWith('/api/admin/')) return await handleAdmin(request, env, path);
       if (path.startsWith('/photos/')) return await servePhoto(request, env, path);
       if (path.startsWith('/api/')) return json({ ok: false, error: 'Not found' }, 404);

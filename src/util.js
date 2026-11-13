@@ -124,6 +124,10 @@ const MIGRATIONS = [
   'ALTER TABLE inquiries ADD COLUMN erp_error TEXT',
   'ALTER TABLE inquiries ADD COLUMN erp_id TEXT',
   'ALTER TABLE inquiries ADD COLUMN erp_at TEXT',
+  // 업무앱 → 홈페이지 문의 상태 (2026-11-13, 연결 약속 3-3): 상태 4가지 new 신규 · done 처리완료 · hold 보류 · trash 휴지통
+  'ALTER TABLE inquiries ADD COLUMN erp_status_at TEXT', // 업무앱이 상태를 바꾼 시각(늦게 온 옛 상태가 덮어쓰지 않게)
+  'ALTER TABLE inquiries ADD COLUMN status_by TEXT',     // 'erp' = 업무앱이 바꿈, 그 밖 = 관리자
+  "UPDATE inquiries SET status = 'done' WHERE status = 'progress'", // 옛 '처리중' → 처리완료 (과장 결정 2026-11-13)
 ];
 
 // 설치사례 분류 (제품소개 4종과 같음)
@@ -144,7 +148,7 @@ const INDEXES = [
   'CREATE INDEX IF NOT EXISTS idx_visits_day ON visits (day, at)',
 ];
 // 표 구조를 바꿀 때만 이 값을 올림 → 같으면 서버가 새로 뜰 때마다 점검을 반복하지 않음
-const SCHEMA_VERSION = '2026-11-13a';
+const SCHEMA_VERSION = '2026-11-13b';
 
 let schemaReady = false;
 export async function ensureSchema(env) {

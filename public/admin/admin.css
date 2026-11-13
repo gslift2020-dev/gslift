@@ -48,6 +48,9 @@ input:focus,textarea:focus{outline:2px solid var(--blue-2);outline-offset:1px}
 .inq .warn{color:#8A1F1F;font-size:13px}
 .st{font-size:12px;font-weight:700;border-radius:999px;padding:3px 9px;align-self:start}
 .st-new{background:#FDEBE3;color:#9A3412}.st-progress{background:#FEF3C7;color:#854D0E}.st-done{background:#E6F4EA;color:#1E5A32}
+.st-hold{background:#FEF3C7;color:#854D0E}.st-trash{background:#ECEFF4;color:#5B6576}
+.st .st-by{display:block;font-size:11px;font-weight:500;opacity:.8;margin-top:1px}
+.inq.trash{opacity:.7}
 
 /* 편집기 */
 .editor{border-color:#B9C8E4;box-shadow:0 10px 30px rgba(6,38,86,.08)}

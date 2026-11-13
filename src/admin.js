@@ -24,7 +24,7 @@ const MAX_PHOTO_BYTES = 4 * 1024 * 1024;
 const MAX_PHOTOS_PER_CASE = 20;
 const MAX_SLIDES = 10;
 
-const STATUSES = ['new', 'progress', 'done'];
+const STATUSES = ['new', 'done', 'hold', 'trash']; // 신규 · 처리완료 · 보류 · 휴지통 (2026-11-13, 옛 처리중은 처리완료로)
 // 홈페이지에 보이는 분류 (src/util.js CATS) — 없앤 분류의 글은 홈페이지에서 숨김
 const PUB_CAT = "category IN (" + Object.keys(CATS).map((c) => "'" + c + "'").join(', ') + ")";
 
@@ -183,7 +183,7 @@ async function listInquiries(env) {
   await ensureSchema(env);
   await purgeOldInquiries(env);
   const { results } = await env.DB.prepare(
-    'SELECT id, created_at, company, name, phone, product, message, spec, photos, memo, status, email_sent, email_error, erp_sent, erp_error, erp_id, erp_at FROM inquiries ORDER BY id DESC LIMIT 1000'
+    'SELECT id, created_at, company, name, phone, product, message, spec, photos, memo, status, email_sent, email_error, erp_sent, erp_error, erp_id, erp_at, erp_status_at, status_by FROM inquiries ORDER BY id DESC LIMIT 1000'
   ).all();
   const parse = (s, d) => { try { return JSON.parse(s || '') || d; } catch { return d; } };
   return json({
@@ -213,11 +213,12 @@ async function resendInquiryToErp(env, id) {
   return json({ ok: res.ok, erp_sent: sent, erp_error: err, erp_id: eid, erp_at: at, dup: !!res.dup, error: res.ok ? undefined : err });
 }
 async function setInquiryStatus(request, env, id) {
+  await ensureSchema(env);
   let body = {};
   try { body = await request.json(); } catch {}
   if ('status' in body) {
     if (!STATUSES.includes(body.status)) return json({ ok: false, error: '잘못된 상태값입니다.' }, 400);
-    await env.DB.prepare('UPDATE inquiries SET status = ? WHERE id = ?').bind(body.status, id).run();
+    await env.DB.prepare('UPDATE inquiries SET status = ?, status_by = NULL WHERE id = ?').bind(body.status, id).run();
   }
   if ('memo' in body) await env.DB.prepare('UPDATE inquiries SET memo = ? WHERE id = ?').bind(clean(body.memo, 3000), id).run();
   return json({ ok: true });
