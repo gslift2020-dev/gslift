@@ -93,20 +93,20 @@ async function sendMail(env, row, spec, photos) {
   if (visitLine(spec)) lines.push(['방문 이력', visitLine(spec)]);
   const sr = specRows(spec);
   const table = (rows) => `<table style="border-collapse:collapse">${rows
-    .map(([k, v]) => `<tr><td style="padding:6px 14px 6px 0;color:#4A5A78;white-space:nowrap">${k}</td><td style="padding:6px 0"><b>${esc(v)}</b></td></tr>`)
+    .map(([k, v]) => `<tr><td style="padding:7px 14px 7px 0;color:#4A5A78;white-space:nowrap;vertical-align:top;line-height:1.5">${k}</td><td style="padding:7px 0;vertical-align:top;line-height:1.5"><b>${esc(v)}</b></td></tr>`)
     .join('')}</table>`;
-  const html = `<div style="font-family:sans-serif;font-size:15px;color:#0F1E3A">
+  const html = `<div style="font-family:sans-serif;font-size:15px;line-height:1.6;color:#0F1E3A">
 <h2 style="color:#063678;margin:0 0 12px">홈페이지 견적·상담 문의 #${row.id}</h2>
 <p style="margin:0 0 16px;padding:12px 14px;background:#FFF7E6;border:1px solid #F3D58A;border-radius:8px">이 문의는 <b>거산리프트 홈페이지 관리자 화면</b>에서 확인·처리합니다.<br>
 <a href="${adminUrl}" style="display:inline-block;margin-top:8px;background:#063678;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none;font-weight:700">관리자 화면에서 이 문의 보기 (#${row.id})</a><br>
 <span style="font-size:13px;color:#4A5A78">주소: ${adminUrl} — 비밀번호로 로그인하면 이 문의로 바로 이동합니다.</span></p>
 ${table(lines)}
 ${sr.length ? `<h3 style="color:#063678;margin:18px 0 6px;font-size:16px">고객이 적은 리프트 사양</h3>${table(sr)}` : ''}
-<div style="margin-top:16px;padding:14px;background:#F2F5FB;border-radius:8px;white-space:pre-wrap">${esc(row.message || '(내용 없음)')}</div>
-${photos.length ? `<p style="color:#4A5A78">현장 사진 ${photos.length}장이 첨부되어 있습니다.</p>` : ''}
-<p style="margin-top:16px"><a href="tel:${esc(row.phone)}" style="background:#063678;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none">${esc(row.phone)} 전화하기</a></p>
-${spec.email ? `<p style="color:#4A5A78;font-size:13px">이 메일에서 '답장'을 누르면 고객 이메일(${esc(spec.email)})로 바로 보내집니다.</p>` : ''}
-<p style="color:#4A5A78;font-size:13px;margin-top:16px">관리자 화면: <a href="${adminUrl}">${adminUrl}</a></p>
+<div style="margin-top:18px;padding:14px;background:#F2F5FB;border-radius:8px;white-space:pre-wrap;line-height:1.6">${esc(row.message || '(내용 없음)')}</div>
+${photos.length ? `<p style="color:#4A5A78;margin:14px 0 0">현장 사진 ${photos.length}장이 첨부되어 있습니다.</p>` : ''}
+<p style="margin:22px 0 24px"><a href="tel:${esc(row.phone)}" style="display:inline-block;background:#063678;color:#fff;padding:11px 18px;border-radius:6px;text-decoration:none;font-weight:700;line-height:1.4">${esc(row.phone)} 전화하기</a></p>
+${spec.email ? `<p style="color:#4A5A78;font-size:13px;margin:0 0 10px;line-height:1.6">이 메일에서 '답장'을 누르면 고객 이메일(${esc(spec.email)})로 바로 보내집니다.</p>` : ''}
+<p style="color:#4A5A78;font-size:13px;margin:16px 0 0;line-height:1.6">관리자 화면: <a href="${adminUrl}">${adminUrl}</a></p>
 </div>`;
   try {
     const res = await fetch('https://api.resend.com/emails', {
