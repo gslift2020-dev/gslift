@@ -8052,6 +8052,61 @@
      "visible": false
     }
    ]
+  },
+  {
+   "id": "app-261112-04",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 공장 실내 · 철망 승강로 · 양개 도어+셔터",
+     "site": "전북 익산",
+     "body": "공장 안에 철망 승강로로 세운 2개 층 화물용 리프트입니다. 아래층과 위층 승강장을 잇습니다.\n\n승강장 바깥은 가운데가 갈라져 양옆으로 여는 철망 양개 도어로 마감했고, 그 안쪽에 셔터를 달았습니다. 아래층 입구에는 진입판을 깔았습니다.",
+     "photos": [
+      "imports/app/261112-04-01.webp",
+      "imports/app/261112-04-02.webp",
+      "imports/app/261112-04-03.webp",
+      "imports/app/261112-04-04.webp",
+      "imports/app/261112-04-05.webp"
+     ],
+     "category": "fl",
+     "date": "2026-11",
+     "tags": [
+      "in",
+      "mesh",
+      "swing",
+      "shutter",
+      "mezz",
+      "factory",
+      "ramp"
+     ],
+     "note": "앱 현장 261112-04",
+     "visible": false
+    }
+   ]
+  },
+  {
+   "id": "app-261112-05",
+   "cases": [
+    {
+     "title": "화물용 리프트(F/L) · 건물 실내 · 양개 도어+셔터",
+     "site": "경기 시흥",
+     "body": "건물 안 복도 벽에 맞춰 넣은 2개 층 화물용 리프트입니다.\n\n승강장은 가운데가 갈라져 양옆으로 여는 양개 도어로 마감했고, 문을 열면 안쪽에 셔터가 있습니다. 문 위에는 경광등, 옆에는 호출 버튼을 달았습니다.",
+     "photos": [
+      "imports/app/261112-05-01.webp",
+      "imports/app/261112-05-02.webp",
+      "imports/app/261112-05-03.webp"
+     ],
+     "category": "fl",
+     "date": "2026-10",
+     "tags": [
+      "in",
+      "swing",
+      "shutter",
+      "mezz"
+     ],
+     "note": "앱 현장 261112-05",
+     "visible": false
+    }
+   ]
   }
  ]
 }
