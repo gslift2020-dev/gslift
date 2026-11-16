@@ -604,21 +604,34 @@ export async function publicCases(request, env) {
     return json({ ok: true, items, counts: await catCounts(env, true) }, 200, hdr);
   }
   if (url.searchParams.has('near')) return similarCases(env, url, hdr);
-  const w = caseWhere(url, true), { limit, offset } = pageArgs(url, 24, 60);
   // facet=1: 목록 페이지가 꼬리표 버튼 개수도 함께 받음 (첫 화면 '같은 분류 다른 사례'는 안 받음)
-  const wantFacet = url.searchParams.get('facet') === '1';
+  if (url.searchParams.get('facet') === '1') return json(await publicList(env, url), 200, hdr);
+  const w = caseWhere(url, true), { limit, offset } = pageArgs(url, 24, 60);
+  const [{ results }, total] = await Promise.all([
+    env.DB.prepare(`SELECT ${PUB_COLS} FROM cases ${w.sql} ${CASE_ORDER} LIMIT ? OFFSET ?`).bind(...w.args, limit, offset).all(),
+    env.DB.prepare(`SELECT COUNT(*) AS n FROM cases ${w.sql}`).bind(...w.args).first(),
+  ]);
+  const photos = await casePhotos(env, results.map((r) => r.id));
+  return json({ ok: true, items: results.map((r) => listItem(r, photos[r.id])).filter((r) => r.cover), total: total.n, counts: await catCounts(env, true) }, 200, hdr);
+}
+
+function listItem(r, photos) {
+  const row = publicRow(r, photos);
+  return { id: row.id, title: row.title, site: row.site, cat: row.cat, date: row.date, cover: row.photos[0] || '', count: row.photos.length, tags: row.tags };
+}
+
+// 설치사례 목록 한 쪽 + 분류·꼬리표 개수 (GET /api/cases?facet=1 과 cases.html 서버 그리기가 같이 씀, 2026-11-16)
+// DB: 목록 1번(그 쪽 글) + 개수 1번 + 글 표 1번 훑기(분류·꼬리표 개수) + 사진(그 쪽 글만)
+export async function publicList(env, url) {
+  const w = caseWhere(url, true), { limit, offset } = pageArgs(url, 24, 60);
   const [{ results }, total, facet] = await Promise.all([
     env.DB.prepare(`SELECT ${PUB_COLS} FROM cases ${w.sql} ${CASE_ORDER} LIMIT ? OFFSET ?`).bind(...w.args, limit, offset).all(),
     env.DB.prepare(`SELECT COUNT(*) AS n FROM cases ${w.sql}`).bind(...w.args).first(),
-    wantFacet ? facetCounts(env, url) : null,
+    facetCounts(env, url),
   ]);
   const photos = await casePhotos(env, results.map((r) => r.id));
-  const items = results.map((r) => {
-    const row = publicRow(r, photos[r.id]);
-    return { id: row.id, title: row.title, site: row.site, cat: row.cat, date: row.date, cover: row.photos[0] || '', count: row.photos.length, tags: row.tags };
-  }).filter((r) => r.cover);
-  if (facet) return json({ ok: true, items, total: total.n, counts: facet.counts, tagCounts: facet.tagCounts, tagGroups: TAG_GROUPS }, 200, hdr);
-  return json({ ok: true, items, total: total.n, counts: await catCounts(env, true) }, 200, hdr);
+  const items = results.map((r) => listItem(r, photos[r.id])).filter((r) => r.cover);
+  return { ok: true, items, total: total.n, counts: facet.counts, tagCounts: facet.tagCounts, tagGroups: TAG_GROUPS };
 }
 
 // 상세 페이지 아래 '비슷한 설치사례' (2026-11-13)

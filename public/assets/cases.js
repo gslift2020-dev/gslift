@@ -68,12 +68,32 @@
   var lastCounts = null;
   function drawTabs(counts) {
     counts = lastCounts = counts || lastCounts;
-    $$('#clTabs button').forEach(function (t) {
+    $$('#clTabs [data-cat]').forEach(function (t) {
       var on = t.dataset.cat === st.cat;
       t.classList.toggle('on', on); t.setAttribute('aria-selected', on);
       $('i', t).textContent = counts && counts[t.dataset.cat] != null ? counts[t.dataset.cat] : '';
     });
     if (counts && counts.all) $('#clTotal').textContent = '지금까지 ' + counts.all + '건의 사례를 올렸습니다.';
+    // 휴대폰: 지금 분류 탭이 탭 줄 밖에 있으면 보이게 밀어 둠 (페이지는 움직이지 않음)
+    var on = $('#clTabs .on'), bar = $('#clTabs');
+    if (on && bar.scrollWidth > bar.clientWidth) {
+      var l = on.getBoundingClientRect().left - bar.getBoundingClientRect().left + bar.scrollLeft, r = l + on.offsetWidth;
+      if (l < bar.scrollLeft || r > bar.scrollLeft + bar.clientWidth) bar.scrollLeft = Math.max(0, l - 12);
+    }
+  }
+
+  // 큰 제목·창 제목: 페이지 안에서 분류·꼬리표를 바꿔도 서버가 처음 넣은 것과 같은 규칙으로 (2026-11-16)
+  var CO = (document.title.split(' | ')[1]) || '거산리프트';
+  function drawHead(d) {
+    var cn = st.cat !== 'all' ? CATS[st.cat] : '';
+    var tn = st.tags.map(function (k) { return tagName[k]; }).filter(Boolean);
+    var catTotal = d.counts ? (cn ? d.counts[st.cat] : d.counts.all) : d.total;
+    var h1 = tn.length ? (cn ? cn + ' ' : '') + '설치사례 · ' + tn.join(' · ') : cn ? cn + ' 설치사례' : '설치사례';
+    var name = st.q ? '"' + st.q + '" 설치사례 검색 ' + d.total + '건'
+      : tn.length ? (cn ? cn + ' · ' : '') + tn.join(' · ') + ' 설치사례 ' + d.total + '건'
+      : cn ? cn + ' 설치사례 ' + catTotal + '건' : '설치사례 전체 ' + catTotal + '건';
+    $('.cl-hero h1').textContent = h1;
+    document.title = name + (st.page > 1 ? ' (' + st.page + '쪽)' : '') + ' | ' + CO;
   }
 
   /* 상황별로 찾기 */
@@ -196,7 +216,11 @@
     drawTabs(null);
     var url = '/api/cases?facet=1&limit=' + PAGE + '&offset=' + (st.page - 1) * PAGE +
       (st.cat !== 'all' ? '&cat=' + st.cat : '') + (st.tags.length ? '&tag=' + st.tags.join(',') : '') + (st.q ? '&q=' + encodeURIComponent(st.q) : '');
-    fetch(url).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }).then(function (d) {
+    // 서버가 HTML과 함께 담아 준 목록(같은 주소일 때 처음 한 번만) → /api/cases를 다시 부르지 않음 (2026-11-16)
+    var pre = window.GS_LIST; window.GS_LIST = null;
+    var got = pre && pre.d && pre.d.ok && pre.key === urlOf() ? Promise.resolve(pre.d)
+      : fetch(url).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+    got.then(function (d) {
       if (my !== req) return; // 더 최근 요청이 있으면 무시
       loadingEl.hidden = true; grid.classList.remove('busy');
       if (!d || !d.ok) { grid.innerHTML = ''; pager.hidden = true; empty.textContent = '목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'; empty.hidden = false; return; }
@@ -207,7 +231,7 @@
         groups = d.tagGroups;
         groups.forEach(function (g) { g.tags.forEach(function (t) { tagName[t.k] = t.n; }); });
       }
-      drawTabs(d.counts); drawTags(d.tagCounts);
+      drawTabs(d.counts); drawTags(d.tagCounts); drawHead(d);
       grid.innerHTML = '';
       d.items.forEach(function (c) { grid.appendChild(card(c)); });
       drawPager(d.total);
@@ -221,8 +245,13 @@
     });
   }
 
-  $$('#clTabs button').forEach(function (t) {
-    t.addEventListener('click', function () { if (st.cat === t.dataset.cat) return; st.cat = t.dataset.cat; st.page = 1; go(true); });
+  // 분류 탭은 링크(검색 로봇이 분류별 목록을 따라가게, 2026-11-16) — 누르면 지금처럼 페이지 안에서 바꿈. Ctrl·가운데 클릭은 새 탭
+  $$('#clTabs [data-cat]').forEach(function (t) {
+    t.addEventListener('click', function (e) {
+      if (e.ctrlKey || e.metaKey || e.shiftKey || e.button > 0) return;
+      e.preventDefault();
+      if (st.cat === t.dataset.cat) return; st.cat = t.dataset.cat; st.page = 1; go(true);
+    });
   });
   var qt;
   $('#clQ').addEventListener('input', function () {

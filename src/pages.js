@@ -5,8 +5,8 @@
 // 설정을 못 읽으면 원래 파일을 그대로 보여줌 (홈페이지가 멈추지 않게)
 import { esc, ensureSchema, CATS } from './util.js';
 import { siteData } from './site.js';
-import { caseMeta, caseIdsForSitemap } from './admin.js';
-import { TAGS } from './tags.js';
+import { caseMeta, caseIdsForSitemap, publicList } from './admin.js';
+import { TAGS, normTags } from './tags.js';
 
 // 정식 주소: 이 도메인들에서는 검색 허용, 그 외(임시 주소)는 검색 차단
 const LIVE_HOSTS = ['gslift.kr', 'www.gslift.kr'];
@@ -79,7 +79,8 @@ function setMeta(html, prop, content) {
   const attr = prop.startsWith('og:') ? 'property' : 'name';
   const re = new RegExp('<meta ' + attr + '="' + prop.replace(/[.:]/g, '\\$&') + '" content="[^"]*">');
   const tag = '<meta ' + attr + '="' + prop + '" content="' + esc(content) + '">';
-  return re.test(html) ? html.replace(re, tag) : html.replace('</head>', tag + '\n</head>');
+  // 바꿀 글에 $가 있어도 그대로 들어가게 함수로 바꿈
+  return re.test(html) ? html.replace(re, () => tag) : html.replace('</head>', () => tag + '\n</head>');
 }
 
 // 설치사례 상세 내용 (case.js render()와 같은 모양 — 화면이 그려진 뒤 case.js가 같은 내용으로 다시 그림)
@@ -116,6 +117,92 @@ function caseHtml(c, co) {
     '<a class="btn btn-white" href="/?to=contact&amp;product=' + esc(c.cat) + '">견적 문의하기</a>' +
     (tel ? '<a class="btn btn-ghost" href="tel:' + esc(tel.replace(/[^0-9+]/g, '')) + '">' + esc(tel) + ' 전화</a>' : '') + '</div></div></div>';
   return h;
+}
+
+// ---------- 설치사례 목록(cases.html) 서버 그리기 (2026-11-16) ----------
+// 구글이 분류별 목록(?cat=fl·tl·st)을 모두 같은 페이지로 보고 다른 주소를 대표로 골라서(서치 콘솔 '중복 페이지 —
+// 사용자와 다른 표준') 분류마다 제목·설명·큰 제목·목록 1쪽 카드·쪽 번호를 HTML에 바로 넣는다.
+// 같은 자료를 window.GS_LIST로 담아 두면 cases.js가 처음 한 번은 /api/cases를 부르지 않음 → DB 읽기는 늘지 않고 옮겨질 뿐
+const LIST_PAGE = 20; // cases.js PAGE와 같게
+function listState(url) {
+  const p = url.searchParams;
+  const cat = CATS[p.get('cat')] ? p.get('cat') : 'all';
+  const tags = normTags(p.get('tag')).slice(0, 6);
+  const q = String(p.get('q') || '').trim().slice(0, 40);
+  const page = Math.max(parseInt(p.get('page'), 10) || 1, 1);
+  return { cat, tags, q, page };
+}
+// cases.js urlOf()와 같은 순서 (cat → tag → q → page)
+function listUrl(st, page) {
+  const a = [];
+  if (st.cat !== 'all') a.push('cat=' + st.cat);
+  if (st.tags.length) a.push('tag=' + st.tags.join(','));
+  if (st.q) a.push('q=' + encodeURIComponent(st.q));
+  if (page > 1) a.push('page=' + page);
+  return '/cases.html' + (a.length ? '?' + a.join('&') : '');
+}
+function listCard(c, k) {
+  return '<a class="cl-card" href="/case.html?id=' + c.id + '"><div class="ph"><img src="' + esc(c.cover) + '" alt="' + esc(c.title) + '"' + (k < 4 ? '' : ' loading="lazy"') + ' width="900" height="1200">' +
+    (c.count > 1 ? '<span class="cnt">사진 ' + c.count + '</span>' : '') + (c.date ? '<span class="when">' + esc(c.date) + ' 설치</span>' : '') +
+    '</div><b>' + esc(c.title) + '</b><small>' + esc(c.site || CATS[c.cat] || '') + '</small></a>';
+}
+function listPager(st, total) {
+  const last = Math.max(Math.ceil(total / LIST_PAGE), 1);
+  if (last <= 1) return '';
+  const cur = Math.min(st.page, last), out = [];
+  const a = (label, p, aria) => '<a class="pg" href="' + esc(listUrl(st, p)) + '" data-page="' + p + '" aria-label="' + aria + '">' + label + '</a>';
+  if (cur > 1) out.push(a('이전', cur - 1, '이전 페이지'));
+  let gap = false;
+  for (let p = 1; p <= last; p++) {
+    if (p === 1 || p === last || Math.abs(p - cur) <= 2) {
+      gap = false;
+      out.push(p === cur ? '<span class="pg cur" aria-current="page">' + p + '</span>' : a(String(p), p, p + '페이지'));
+    } else if (!gap) { gap = true; out.push('<span class="pg gap" aria-hidden="true">…</span>'); }
+  }
+  if (cur < last) out.push(a('다음', cur + 1, '다음 페이지'));
+  return out.join('');
+}
+// 목록 페이지 채우기 → { html, title, desc, canonPath(null이면 검색 제외), cover }
+function fillList(html, st, d, coName) {
+  const cn = st.cat !== 'all' ? CATS[st.cat] : '';
+  const tagN = st.tags.map((k) => TAGS[k]).filter(Boolean);
+  const catTotal = st.cat !== 'all' ? d.counts[st.cat] : d.counts.all;
+  const last = Math.max(Math.ceil(d.total / LIST_PAGE), 1);
+  const pg = st.page > 1 ? ' (' + st.page + '쪽)' : '';
+  // 제목·큰 제목
+  let name, h1;
+  if (tagN.length) { name = (cn ? cn + ' · ' : '') + tagN.join(' · ') + ' 설치사례 ' + d.total + '건'; h1 = (cn ? cn + ' ' : '') + '설치사례 · ' + tagN.join(' · '); }
+  else if (cn) { name = cn + ' 설치사례 ' + catTotal + '건'; h1 = cn + ' 설치사례'; }
+  else { name = '설치사례 전체 ' + d.counts.all + '건'; h1 = '설치사례'; }
+  if (st.q) { name = '"' + st.q + '" 설치사례 검색 ' + d.total + '건'; }
+  const title = name + pg + ' | ' + coName;
+  // 설명: 분류마다 다르게 — 많이 쓰인 조건(꼬리표) 3개를 개수와 함께
+  const top = st.q ? [] : Object.entries(d.tagCounts || {}).filter(([k]) => TAGS[k] && !st.tags.includes(k)).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, n]) => TAGS[k] + ' ' + n + '건');
+  const what = cn || '화물용 리프트(F/L)·테이블 리프트(T/L)·스태커';
+  const desc = coName + '가 직접 설계·제작·설치한 ' + what + (tagN.length ? ' 중 ' + tagN.join('·') + ' 조건' : '') + ' 현장 ' + (tagN.length || st.q ? d.total : catTotal) + '건' + pg + '. ' +
+    (top.length ? top.join(' · ') + ' 등 ' : '') + '현장 사진과 사양을 조건별로 볼 수 있습니다.';
+  html = html.replace(/<title>[^<]*<\/title>/, () => '<title>' + esc(title) + '</title>');
+  html = setMeta(html, 'description', desc);
+  html = setMeta(html, 'og:title', title);
+  html = setMeta(html, 'og:description', desc);
+  html = html.replace('<h1>설치사례</h1>', () => '<h1>' + esc(h1) + '</h1>');
+  // 현재 위치: 홈 › 설치사례 › 화물용 리프트(F/L)
+  if (cn) html = html.replace('<span>설치사례</span></nav>', '<a href="/cases.html">설치사례</a><span aria-hidden="true">›</span><span>' + esc(cn) + '</span></nav>');
+  html = html.replace('<span id="clTotal"></span>', '<span id="clTotal">' + (cn ? esc(cn) + ' ' + catTotal + '건 · ' : '') + '지금까지 ' + d.counts.all + '건의 사례를 올렸습니다.</span>');
+  // 분류 탭: 지금 분류 표시 + 개수
+  html = html.replace(/<a role="tab" data-cat="(\w+)" href="([^"]*)"[^>]*>([^<]*)<i><\/i><\/a>/g, (m, c, href, label) =>
+    '<a role="tab" data-cat="' + c + '" href="' + href + '"' + (c === st.cat ? ' class="on" aria-selected="true"' : ' aria-selected="false"') + '>' + label + '<i>' + (d.counts[c] != null ? d.counts[c] : '') + '</i></a>');
+  // 목록 1쪽 카드 + 쪽 번호 + 건수
+  if (d.items.length) {
+    html = html.replace('<div class="cl-grid" id="clGrid" aria-live="polite"></div>', '<div class="cl-grid" id="clGrid" aria-live="polite">' + d.items.map(listCard).join('') + '</div>');
+    const from = (Math.min(st.page, last) - 1) * LIST_PAGE + 1;
+    html = html.replace('<span id="clPageInfo"></span>', '<span id="clPageInfo">' + (d.total <= LIST_PAGE ? d.total + '건' : d.total + '건 중 ' + from + '–' + Math.min(from + LIST_PAGE - 1, d.total) + '번째') + '</span>');
+    const pager = listPager(st, d.total);
+    if (pager) html = html.replace('<nav class="cl-pager" id="clPager" aria-label="설치사례 페이지" hidden></nav>', '<nav class="cl-pager" id="clPager" aria-label="설치사례 페이지">' + pager + '</nav>');
+  }
+  // 대표 주소: 분류·꼬리표 1개·쪽은 각자 자기 주소 / 검색어·꼬리표 여러 개·없는 쪽은 검색 제외(조합이 끝없이 많음)
+  const canonPath = st.q || st.tags.length > 1 || (st.page > last) || !d.items.length ? null : listUrl(st, st.page);
+  return { html, canonPath, cover: d.items[0] && d.items[0].cover };
 }
 
 export async function servePage(request, env) {
@@ -195,11 +282,27 @@ export async function servePage(request, env) {
         if (c.photos[0]) html = setMeta(html, 'og:image', origin + c.photos[0]);
       }
     } else if (file === '/cases.html') {
-      const cat = url.searchParams.get('cat');
-      if (CATS[cat]) canon += '?cat=' + cat;
+      const st = listState(url);
+      const cat = st.cat !== 'all' ? st.cat : '';
+      if (cat) canon += '?cat=' + cat;
+      // HEAD(내용 없이 머리만 묻기)는 DB를 읽지 않음
+      if (request.method === 'GET') {
+        const api = new URL('/api/cases?facet=1&limit=' + LIST_PAGE + '&offset=' + (st.page - 1) * LIST_PAGE, origin);
+        if (cat) api.searchParams.set('cat', cat);
+        if (st.tags.length) api.searchParams.set('tag', st.tags.join(','));
+        if (st.q) api.searchParams.set('q', st.q);
+        const d = await publicList(env, api);
+        const r = fillList(html, st, d, co.name || '거산리프트');
+        html = r.html;
+        if (r.canonPath) canon = origin + r.canonPath; else noindex = true;
+        if (r.cover) html = setMeta(html, 'og:image', origin + r.cover);
+        // cases.js가 처음 한 번은 이 자료를 씀 (key가 지금 주소와 같을 때만)
+        head.push('<script>window.GS_LIST=' + JSON.stringify({ key: listUrl(st, st.page), d }).replace(/</g, '\\u003c') + '</script>');
+      }
     }
     if (file === '/') head.push(jsonLd(co, live ? 'https://' + MAIN_HOST : origin));
-    head.push('<link rel="canonical" href="' + esc(live ? canon.replace(origin, 'https://' + MAIN_HOST) : canon) + '">');
+    // 검색 제외 페이지에는 대표 주소를 넣지 않음(두 신호가 서로 어긋나지 않게)
+    if (!noindex) head.push('<link rel="canonical" href="' + esc(live ? canon.replace(origin, 'https://' + MAIN_HOST) : canon) + '">');
     head.push('<meta property="og:url" content="' + esc(canon) + '">');
     if (co.naverVerify) head.push('<meta name="naver-site-verification" content="' + esc(co.naverVerify) + '">');
     if (co.googleVerify) head.push('<meta name="google-site-verification" content="' + esc(co.googleVerify) + '">');

@@ -49,7 +49,7 @@
 .cl-hero{position:relative;overflow:hidden;background:linear-gradient(120deg,var(--navy),#0B3F8C);color:#fff;padding:36px 0 56px}
 .cl-hero .bg-emblem{right:-90px;bottom:-120px;width:380px;opacity:.08}
 .cl-hero .crumb,.cl-hero .crumb a{color:var(--sky-2)}
-.cl-hero h1{font-size:clamp(32px,4vw,46px);margin:6px 0 10px}
+.cl-hero h1{font-size:clamp(32px,4vw,46px);margin:6px 0 10px;word-break:keep-all}
 .cl-hero p{color:var(--sky-2);font-size:16px;max-width:640px}
 .cl-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px 24px;margin:-26px 0 28px;position:relative;z-index:1;background:#fff;border-radius:18px;padding:14px;box-shadow:0 12px 34px rgba(6,38,86,.1)}
 .cl-bar .case-tabs{margin:0}

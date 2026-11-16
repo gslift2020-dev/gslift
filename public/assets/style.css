@@ -332,10 +332,10 @@ th:last-child,td:last-child{text-align:right}
 /* 설치사례 분류 탭 */
 .case-tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:20px;scrollbar-width:none}
 .case-tabs::-webkit-scrollbar{display:none}
-.case-tabs button{flex-shrink:0;display:inline-flex;align-items:center;gap:6px;border:1px solid #C6D1E4;background:#fff;color:var(--ink);border-radius:999px;padding:10px 16px;font-size:15px;font-weight:600;cursor:pointer;min-height:44px;transition:background .2s,color .2s,border-color .2s}
-.case-tabs button i{font-style:normal;font-size:12px;font-weight:700;background:var(--bg-soft);color:var(--muted);border-radius:999px;padding:1px 8px;min-width:22px;text-align:center}
-.case-tabs button.on{background:var(--blue);border-color:var(--blue);color:#fff}
-.case-tabs button.on i{background:rgba(255,255,255,.2);color:#fff}
+.case-tabs button,.case-tabs a[data-cat]{flex-shrink:0;display:inline-flex;align-items:center;gap:6px;border:1px solid #C6D1E4;background:#fff;color:var(--ink);border-radius:999px;padding:10px 16px;font-size:15px;font-weight:600;cursor:pointer;min-height:44px;transition:background .2s,color .2s,border-color .2s;text-decoration:none}
+.case-tabs button i,.case-tabs a[data-cat] i{font-style:normal;font-size:12px;font-weight:700;background:var(--bg-soft);color:var(--muted);border-radius:999px;padding:1px 8px;min-width:22px;text-align:center}
+.case-tabs button.on,.case-tabs a[data-cat].on{background:var(--blue);border-color:var(--blue);color:#fff}
+.case-tabs button.on i,.case-tabs a[data-cat].on i{background:rgba(255,255,255,.2);color:#fff}
 .case-empty{color:var(--muted);padding:40px 4px;margin:0}
 .lb-more{display:inline-flex;align-items:center;gap:6px;background:#fff;color:var(--navy);font-weight:700;padding:12px 22px;border-radius:999px;min-height:46px}
 .lb-more:hover{background:#E6ECF7;color:var(--navy)}
