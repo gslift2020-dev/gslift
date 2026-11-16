@@ -377,8 +377,8 @@ th:last-child,td:last-child{text-align:right}
 
 /* 문의: 사양 + 사진 */
 .spec-set{border:1px solid var(--line);border-radius:12px;padding:16px 16px 18px;margin:0;background:var(--bg-soft)}
-.spec-set legend{font-weight:700;font-size:15px;padding:0 6px}
-.spec-set legend small{font-weight:400;color:var(--muted);font-size:13px;margin-left:6px}
+.spec-set > legend{font-weight:700;font-size:15px;padding:0 6px}
+.spec-set > legend small{font-weight:400;color:var(--muted);font-size:13px;margin-left:6px}
 .spec-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
 .spec-grid .wide{grid-column:1/-1}
 .form .spec-grid select,.form .spec-grid input{height:46px}
@@ -568,7 +568,7 @@ body.gv-on .bento .opt img{transition:none}
 .dir-set{border:0;margin:0;padding:0;min-width:0}
 .dir-set legend{font-weight:500;font-size:14px;padding:0;margin-bottom:6px}
 .dir-set legend small,.form .hint,.indoor-l small{font-weight:400;color:var(--muted);font-size:12.5px}
-.dir-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:8px}
+.dir-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:8px;clear:both}
 .form .dir-opt{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;padding:10px 8px;border:1.5px solid #C6D1E4;border-radius:10px;background:#fff;cursor:pointer;font-size:13.5px;color:var(--blue);line-height:1.35}
 .form .dir-opt input{position:absolute;opacity:0;pointer-events:none}
 .form .dir-opt b{color:var(--ink);font-size:14px}
@@ -702,8 +702,9 @@ body.gv-on .bento .opt img{transition:none}
   .mswipe>*,.mswipe>*.rv,.mswipe>*.lift,.mswipe>*.lift:hover{transform:none!important;opacity:1!important;transition:box-shadow .2s!important}
   .mswipe.rv{transform:none!important;opacity:1!important}
   /* '원하시는 리프트 사양' 제목: 상자 안 맨 위에 두 줄로 반듯하게 */
-  .spec-set legend{float:left;width:100%;padding:0;margin:0 0 12px}
-  .spec-set legend small{display:block;margin:4px 0 0;line-height:1.5}
+  /* 바깥 '원하시는 리프트 사양' 제목에만 (안쪽 '출입방향' 제목까지 떠서 그림 묶음이 폭 0으로 오른쪽 밖에 밀리던 문제, 2026-11-16) */
+  .spec-set > legend{float:left;width:100%;padding:0;margin:0 0 12px}
+  .spec-set > legend small{display:block;margin:4px 0 0;line-height:1.5}
   .spec-set .spec-grid{clear:both}
   /* 사양 펼치기 버튼: 양식의 '보내기' 버튼 모양을 따라가지 않게 */
   .form .spec-toggle{height:auto;min-height:52px;background:#fff;color:var(--navy);border:1.5px dashed #9FB3D6;font-size:15px;font-weight:700}
