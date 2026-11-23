@@ -1,6 +1,6 @@
-import json, time, sys, urllib.request, http.cookiejar
+import json, time, sys, os, urllib.request, http.cookiejar
 from playwright.sync_api import sync_playwright
-BASE='http://localhost:8787'; CT='/tmp/claude-0/-home-claude/4fc16c7d-9cdb-565e-95a5-a802f1b4a34a/scratchpad/ct/'
+BASE='http://localhost:8787'; CT=os.environ.get('CT_DIR','/home/claude/ttdata/ct/')  # 시험 사진 폴더 (README)
 INIT="Object.defineProperty(navigator,'webdriver',{get:()=>false})"
 results=[]; errs=[]
 def check(name, ok, info=''):
@@ -99,7 +99,9 @@ with sync_playwright() as pw:
     # N 휴대폰 화면 전체 흐름
     n0=count(); c,p,posts=ctx(b, mobile=True); fill_min(p)
     check('N 휴대폰: 사양은 접혀 있고 정지 층수만 보임', p.locator('#specMore select[name=load]').is_hidden() and p.locator('select[name=stops]').is_visible() and p.locator('#specToggle').is_visible())
-    check('N 휴대폰: 안내 상자 없음·사진 칸 안내는 있음', p.locator('.photo-one').count()==0 and '사진 한 장만' in p.inner_text('#upDrop'))
+    dt=p.inner_text('.dir-set'); vals=p.eval_on_selector_all('.dir-set input[name=dir]','els=>els.map(e=>e.value)')
+    check('S 출입방향 글(11-23)·값 그대로', '한 층이라도' in dt and '층에 따라' in dt and '1층 앞, 2층 뒤' in dt and '90도 꺾인 문' in dt and vals==['일방향 (모든 층 같은 쪽)','양방향 (앞뒤 관통)','Z방향 (층마다 반대쪽)','직각 방향 (ㄱ자)',''], vals)
+    check('N 휴대폰: 안내 상자 없음·사진 칸 안내는 있음', p.locator('.photo-one').count()==0 and '사진이 없어도' in p.inner_text('#upDrop'))  # 11-16 bb2e1fa 글 바뀜
     p.select_option('select[name=stops]','2개 층')
     p.locator('#specToggle').click(); p.wait_for_timeout(200)
     check('N 휴대폰: 펼치면 사양 칸 보임', p.locator('#specMore select[name=load]').is_visible() and p.get_attribute('#specToggle','aria-expanded')=='true')
