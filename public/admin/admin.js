@@ -144,17 +144,17 @@
         '<div><div class="who">#' + x.id + ' ' + esc(x.company || '(회사명 없음)') + ' · ' + esc(x.name) + '</div>' +
         '<div class="meta">' + esc(x.created_at) + ' · ' + esc(x.product || '-') + (x.photos && x.photos.length ? ' · 사진 ' + x.photos.length + '장' : '') + '</div></div>' +
         '<span class="st st-' + esc(x.status) + '">' + (STATUS[x.status] || esc(x.status)) + (x.status_by === 'erp' ? '<small class="st-by">업무앱에서' + (x.erp_status_at ? ' · ' + erpWhen(x.erp_status_at) : '') + '</small>' : '') + '</span>' +
-        (spec ? '<div class="ispec">' + spec + '</div>' : '') +
+        '<div class="inq-main">' + (spec ? '<div class="ispec">' + spec + '</div>' : '') +
         (x.visitor ? '<div class="ivisit"><button type="button" class="link vwho" data-uid="' + esc(x.visitor.uid) + '" data-from="' + esc(x.visitor.from) + '" data-inqid="' + x.id + '">이 손님 방문 모두 보기</button></div>' : '') +
         '<div class="body">' + esc(x.message) + '</div>' +
-        (photos ? '<div class="iphotos">' + photos + '</div>' : '') +
-        '<label class="memo">내부 메모 <small>(고객에게 보이지 않음 · 입력 후 다른 곳을 누르면 저장)</small><textarea rows="2" data-memo="' + x.id + '" placeholder="예) 10/15 현장 방문 예정, 견적 1,800만원 제출">' + esc(x.memo || '') + '</textarea></label>' +
+        (photos ? '<div class="iphotos">' + photos + '</div>' : '') + '</div>' +
+        '<div class="inq-side"><label class="memo">내부 메모 <small>(고객에게 보이지 않음 · 입력 후 다른 곳을 누르면 저장)</small><textarea rows="2" data-memo="' + x.id + '" placeholder="예) 10/15 현장 방문 예정, 견적 1,800만원 제출">' + esc(x.memo || '') + '</textarea></label>' +
         '<div class="acts"><a class="tel btn" href="tel:' + esc(x.phone) + '">' + PHONE_IC + esc(x.phone) + ' 전화</a>' +
         '<div class="seg" data-id="' + x.id + '" role="group" aria-label="처리 상태">' + opts + '</div>' +
         (x.email_sent ? '' : '<span class="warn">알림 메일 미발송' + (x.email_error ? ': ' + esc(x.email_error) : '') + '</span>') +
         erpTag(x) +
         moreMenu('<button type="button" class="del" data-del="' + x.id + '">완전히 지우기…</button>') +
-        '</div></article>';
+        '</div></div></article>';
     }).join('');
   }
   // 업무앱이 바꾼 시각 (UTC ISO → 한국 M/D HH:MM)
@@ -643,8 +643,11 @@
       $('#caseMore').hidden = cases.length >= caseTotal;
       if (!list.length) { $('#caseList').innerHTML = '<p class="empty">' + (caseQ ? '찾는 글이 없습니다.' : caseFilter === 'all' ? '아직 올린 글이 없습니다. "새 글 쓰기"를 눌러 시작하세요.' : '이 분류에 올린 글이 없습니다.') + '</p>'; return; }
       $('#caseList').innerHTML = list.map(function (c) {
-        var cover = c.photos[0] ? c.photos[0].img : '';
-        return '<article class="post' + (c.visible ? '' : ' hidden') + (c.pinned ? ' pinned' : '') + '"><div class="ph"><img src="' + esc(cover) + '" alt="" loading="lazy"><span class="cnt">사진 ' + c.photos.length + '장</span>' + (c.pinned ? '<span class="pin">📌 맨 앞 고정</span>' : c.sunk ? '<span class="pin sunk">⬇ 맨 뒤</span>' : '') + '</div>' +
+        var n = c.photos.length;
+        var strip = c.photos.map(function (p, i) { return '<img src="' + esc(p.img) + '" alt="' + (i + 1) + '번 사진" loading="lazy" draggable="false">'; }).join('');
+        return '<article class="post' + (c.visible ? '' : ' hidden') + (c.pinned ? ' pinned' : '') + '"><div class="ph"><div class="strip">' + strip + '</div>' +
+          (n > 1 ? '<button type="button" class="nav prev" data-nav="-1" aria-label="이전 사진" disabled>‹</button><button type="button" class="nav next" data-nav="1" aria-label="다음 사진">›</button>' : '') +
+          '<span class="cnt">' + (n > 1 ? '1 / ' + n : '사진 ' + n + '장') + '</span>' + (c.pinned ? '<span class="pin">📌 맨 앞 고정</span>' : c.sunk ? '<span class="pin sunk">⬇ 맨 뒤</span>' : '') + '</div>' +
           '<span class="pcat">' + esc(CATS[c.cat] || '') + '</span><div class="t">' + esc(c.title) + (c.visible ? '' : ' (숨김)') + '</div><div class="s">' + esc([c.site, c.taken_at ? '설치 ' + c.taken_at.slice(0, 7) : '등록 ' + (c.created_at || '').slice(0, 10)].filter(Boolean).join(' · ')) + '</div>' + (c.note ? '<div class="s note">🔒 ' + esc(c.note) + '</div>' : '') +
           '<div class="s tags">' + ((c.tags || []).length ? c.tags.map(function (k) { return '#' + esc(tagLabel[k] || k); }).join(' ') : '꼬리표 없음') + '</div>' +
           '<div class="a"><button type="button" class="link" data-act="edit" data-id="' + c.id + '">고치기</button>' +
@@ -656,6 +659,36 @@
       }).join('');
     }
   }
+  // 사진 넘겨 보기: 화살표 누르기 · 손가락으로 밀기 · PC 마우스로 끌기 (사진은 처음 보일 때만 받음 — 서버 DB 읽기 없음)
+  function stripGo(strip, i) { var n = strip.children.length; i = Math.max(0, Math.min(n - 1, i)); strip.scrollTo({ left: i * strip.clientWidth, behavior: 'smooth' }); }
+  function stripIdx(strip) { return Math.round(strip.scrollLeft / Math.max(1, strip.clientWidth)); }
+  function stripMark(strip) {
+    var ph = strip.parentNode, n = strip.children.length, i = stripIdx(strip); if (n < 2) return;
+    $('.cnt', ph).textContent = (i + 1) + ' / ' + n;
+    $('.prev', ph).disabled = i <= 0; $('.next', ph).disabled = i >= n - 1;
+  }
+  $('#caseList').addEventListener('scroll', function (e) { if (e.target.classList && e.target.classList.contains('strip')) stripMark(e.target); }, true);
+  $('#caseList').addEventListener('click', function (e) {
+    var nv = e.target.closest('[data-nav]'); if (!nv) return;
+    var strip = $('.strip', nv.parentNode); stripGo(strip, stripIdx(strip) + +nv.dataset.nav);
+  });
+  (function () {   // PC: 사진을 마우스로 잡아 끌어 넘기기
+    var drag = null;
+    $('#caseList').addEventListener('pointerdown', function (e) {
+      var st = e.target.closest('.strip'); if (!st || e.pointerType !== 'mouse' || e.button !== 0 || st.children.length < 2) return;
+      drag = { st: st, x: e.clientX, left: st.scrollLeft, moved: false }; st.classList.add('dragging');
+    });
+    window.addEventListener('pointermove', function (e) {
+      if (!drag) return; var dx = e.clientX - drag.x; if (Math.abs(dx) > 3) drag.moved = true;
+      drag.st.scrollLeft = drag.left - dx;
+    });
+    window.addEventListener('pointerup', function (e) {
+      if (!drag) return; var d = drag, dx = e.clientX - d.x; drag = null; d.st.classList.remove('dragging');
+      var i = Math.round(d.left / Math.max(1, d.st.clientWidth));
+      if (dx < -40) i++; else if (dx > 40) i--;
+      stripGo(d.st, i);
+    });
+  })();
   $('#caseList').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-act]'); if (!b) return;
     var m = b.closest('details.more'); if (m) m.open = false;
