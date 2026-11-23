@@ -100,7 +100,10 @@ with sync_playwright() as pw:
     n0=count(); c,p,posts=ctx(b, mobile=True); fill_min(p)
     check('N 휴대폰: 사양은 접혀 있고 정지 층수만 보임', p.locator('#specMore select[name=load]').is_hidden() and p.locator('select[name=stops]').is_visible() and p.locator('#specToggle').is_visible())
     dt=p.inner_text('.dir-set'); vals=p.eval_on_selector_all('.dir-set input[name=dir]','els=>els.map(e=>e.value)')
-    check('S 출입방향 글(11-23)·값 그대로', '한 층이라도' in dt and '층에 따라' in dt and '1층 앞, 2층 뒤' in dt and '90도 꺾인 문' in dt and vals==['일방향 (모든 층 같은 쪽)','양방향 (앞뒤 관통)','Z방향 (층마다 반대쪽)','직각 방향 (ㄱ자)',''], vals)
+    check('S 출입방향 글·값(11-23 직관통형)', '한 층이라도' in dt and '층에 따라' in dt and '1층 앞, 2층 뒤' in dt and '직관통형' in dt and '90도로 꺾여' in dt and '직각' not in dt and vals==['일방향 (모든 층 같은 쪽)','양방향 (앞뒤 관통)','Z방향 (층마다 반대쪽)','직관통형 (ㄱ자)',''] and p.locator('.dir-opt:has(input[value="직관통형 (ㄱ자)"]) svg rect').count()==1, vals)
+    c.close(); n0=count(); c,p,posts=ctx(b); fill_min(p); p.locator('.dir-opt:has(input[value="직관통형 (ㄱ자)"])').click(); m=submit(p)
+    it=inquiries()[0]; check('S2 직관통형 골라 접수 → 값 그대로', OKMSG in m and count()==n0+1 and dict(it['spec']).get('출입방향')=='직관통형 (ㄱ자)', dict(it['spec']).get('출입방향'))
+    c.close(); n0=count(); c,p,posts=ctx(b, mobile=True); fill_min(p)
     check('N 휴대폰: 안내 상자 없음·사진 칸 안내는 있음', p.locator('.photo-one').count()==0 and '사진이 없어도' in p.inner_text('#upDrop'))  # 11-16 bb2e1fa 글 바뀜
     p.select_option('select[name=stops]','2개 층')
     p.locator('#specToggle').click(); p.wait_for_timeout(200)
