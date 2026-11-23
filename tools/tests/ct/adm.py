@@ -1,0 +1,16 @@
+from playwright.sync_api import sync_playwright
+with sync_playwright() as pw:
+    b=pw.chromium.launch(); c=b.new_context(extra_http_headers={'cf-connecting-ip':'8.8.8.1'}); p=c.new_page()
+    errs=[]; p.on('pageerror',lambda e:errs.append(str(e))); dialogs=[]; p.on('dialog',lambda d:(dialogs.append(d.message),d.dismiss()))
+    p.goto('http://localhost:8787/admin/#inq-20'); p.wait_for_timeout(800)
+    p.fill('input[type=password]','testpass123'); p.keyboard.press('Enter'); p.wait_for_timeout(2500)
+    a=p.locator('#inq-20')
+    print('deep link opened #inq-20:', a.count()==1 and a.is_visible(), '| in view:', p.evaluate("(()=>{const r=document.getElementById('inq-20').getBoundingClientRect();return r.top>=-5&&r.top<innerHeight})()"))
+    print('injected img/script/b elements:', a.locator('img[src=x], script, b').count())
+    print('text shows tags literally:', '<img src=x onerror=alert(1)>' in a.inner_text(), '<b>이름</b>' in a.inner_text())
+    print('운행 높이 for "abc":', [l for l in a.inner_text().split('\n') if '운행' in l or '정지' in l])
+    p.goto('http://localhost:8787/admin/#inq-12'); p.wait_for_timeout(1500)
+    print('hash change to #inq-12 visible:', p.locator('#inq-12').is_visible())
+    t=p.locator('#inq-12').inner_text(); print('#inq-12 shows email/Z/천공/피트:', all(k in t for k in ['kim@test.co.kr','Z방향','공사 중','이미 파 놓음']), '| photos:', p.locator('#inq-12 img').count())
+    print('page errors:', errs, '| dialogs:', dialogs)
+    b.close()
