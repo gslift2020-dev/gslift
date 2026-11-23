@@ -660,7 +660,12 @@
     }
   }
   // 사진 넘겨 보기: 화살표 누르기 · 손가락으로 밀기 · PC 마우스로 끌기 (사진은 처음 보일 때만 받음 — 서버 DB 읽기 없음)
-  function stripGo(strip, i) { var n = strip.children.length; i = Math.max(0, Math.min(n - 1, i)); strip.scrollTo({ left: i * strip.clientWidth, behavior: 'smooth' }); }
+  function stripGo(strip, i) {
+    var n = strip.children.length; i = Math.max(0, Math.min(n - 1, i));
+    var to = i * strip.clientWidth; strip.scrollTo({ left: to, behavior: 'smooth' });
+    // 화면이 느리게 그려지는 때(창이 가려짐 등) 부드럽게 넘기기가 안 움직이면 바로 그 사진으로
+    setTimeout(function () { if (Math.abs(strip.scrollLeft - to) > 2) { strip.scrollLeft = to; stripMark(strip); } }, 600);
+  }
   function stripIdx(strip) { return Math.round(strip.scrollLeft / Math.max(1, strip.clientWidth)); }
   function stripMark(strip) {
     var ph = strip.parentNode, n = strip.children.length, i = stripIdx(strip); if (n < 2) return;
