@@ -24,6 +24,10 @@
   function say(el, text, kind) { el.textContent = text || ''; el.className = 'msg ' + (kind || ''); }
   function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
   function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+  // ⋯ 메뉴 (되돌릴 수 없는 일·가끔 쓰는 일은 여기 안에)
+  var MORE_IC = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>';
+  var PHONE_IC = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
+  function moreMenu(items) { return '<details class="more"><summary class="btn ghost icon" aria-label="더 보기" title="더 보기">' + MORE_IC + '</summary><div class="pop">' + items + '</div></details>'; }
   function move(arr, from, to) { var x = arr.splice(from, 1)[0]; arr.splice(to, 0, x); }
 
   /* ================= 로그인·탭 ================= */
@@ -56,16 +60,37 @@
     }).catch(function () { btn.disabled = false; say(msg, '연결 오류', 'err'); });
   });
   $('#logoutBtn').addEventListener('click', function () { api('/api/admin/logout', { method: 'POST' }).then(showLogin); });
-  $$('.tabs button').forEach(function (b) {
+  // 메뉴 5개 (2026-11-23 안 B): 한눈에 · 문의 · 설치사례(+여러 현장 올리기) · 방문 기록 · 홈페이지 내용(공지·첫 화면 사진·유튜브·자주 묻는 질문·회사 정보)
+  $$('.menu button').forEach(function (b) {
     b.addEventListener('click', function () { openTab(b.dataset.tab); });
   });
+  var SITE_SUBS = ['notice', 'hero', 'yt', 'faq', 'co'];
   function openTab(tab) {
-    $$('.tabs button').forEach(function (x) { var on = x.dataset.tab === tab; x.classList.toggle('on', on); x.setAttribute('aria-selected', on); });
-    ['dash', 'inq', 'cases', 'bulk', 'notice', 'hero', 'yt', 'faq', 'co'].forEach(function (t) { $('#tab-' + t).hidden = tab !== t; });
+    if (SITE_SUBS.indexOf(tab) >= 0) { openSite(tab); tab = 'site'; }
+    var menu = tab === 'bulk' ? 'cases' : tab;   // 여러 현장 올리기는 설치사례 안의 화면
+    $$('.menu button').forEach(function (x) { var on = x.dataset.tab === menu; x.classList.toggle('on', on); x.setAttribute('aria-selected', on); });
+    ['dash', 'inq', 'cases', 'bulk', 'visits', 'site'].forEach(function (t) { $('#tab-' + t).hidden = tab !== t; });
     if (tab === 'cases' && !loaded.cases) { loaded.cases = 1; loadCases(true); impCheck(); }
-    if (tab === 'notice' && !loaded.notice) { loaded.notice = 1; loadNotices(); }
+    if (tab === 'site' && !loaded.site) { loaded.site = 1; openSite(siteSub); }
     if (tab === 'dash') loadDash();
+    if (tab === 'visits') loadVisitTab();
+    window.scrollTo(0, 0);
   }
+  // 홈페이지 내용 안의 칸 고르기
+  var siteSub = 'notice';
+  function openSite(sub) {
+    siteSub = sub;
+    $$('#siteSeg button').forEach(function (x) { x.classList.toggle('on', x.dataset.sub === sub); });
+    SITE_SUBS.forEach(function (t) { $('#tab-' + t).hidden = t !== sub; });
+    if (sub === 'notice' && !loaded.notice) { loaded.notice = 1; loadNotices(); }
+  }
+  $$('#siteSeg button').forEach(function (b) { b.addEventListener('click', function () { openSite(b.dataset.sub); }); });
+  // 다른 화면으로 가는 단추 (data-go="visits" 등)
+  document.addEventListener('click', function (e) {
+    var g = e.target.closest && e.target.closest('[data-go]'); if (g) openTab(g.dataset.go);
+    // ⋯ 메뉴: 바깥을 누르면 닫기
+    $$('details.more[open]').forEach(function (d) { if (!d.contains(e.target)) d.open = false; });
+  });
 
   /* ================= 문의 ================= */
   var inquiries = [], filter = 'all', erpOn = false;
@@ -96,7 +121,10 @@
     var d30 = new Date(Date.now() + 9 * 3600 * 1000 - 30 * 864e5).toISOString().replace('T', ' ').slice(0, 19);
     var n = inquiries.filter(function (x) { return x.status === 'new'; }).length;
     $('#newCount').hidden = !n; $('#newCount').textContent = n;
-    $('#kNew').textContent = n;
+    $$('#filters button').forEach(function (b) {   // 칩 옆 개수 ('전체'는 휴지통 뺌)
+      var f = b.dataset.f, c = inquiries.filter(function (x) { return f === 'all' ? x.status !== 'trash' : x.status === f; }).length;
+      $('i', b).textContent = c;
+    });
     var live = inquiries.filter(function (x) { return x.status !== 'trash'; }); // 숫자에서 휴지통(스팸·영업 전화 등) 뺌
     $('#kMonth').textContent = live.filter(function (x) { return (x.created_at || '').slice(0, 7) === month; }).length;
     $('#k30').textContent = live.filter(function (x) { return (x.created_at || '') > d30; }).length;
@@ -109,7 +137,7 @@
     });
     if (!rows.length) { $('#inqList').innerHTML = '<p class="empty">해당하는 문의가 없습니다.</p>'; return; }
     $('#inqList').innerHTML = rows.map(function (x) {
-      var opts = Object.keys(STATUS).map(function (k) { return '<option value="' + k + '"' + (k === x.status ? ' selected' : '') + '>' + STATUS[k] + '</option>'; }).join('');
+      var opts = Object.keys(STATUS).map(function (k) { return '<button type="button" data-st="' + k + '"' + (k === x.status ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"') + '>' + STATUS[k] + '</button>'; }).join('');
       var spec = (x.spec || []).map(function (r) { return '<div' + (r[0] === '방문 이력' ? ' class="wide"' : '') + '><small>' + esc(r[0]) + '</small><b>' + esc(r[1]) + '</b></div>'; }).join('');
       var photos = (x.photos || []).map(function (u, i) { return '<a href="' + esc(u) + '" target="_blank" rel="noopener" aria-label="현장 사진 ' + (i + 1) + ' 크게 보기"><img src="' + esc(u) + '" alt="" loading="lazy"></a>'; }).join('');
       return '<article class="inq ' + esc(x.status) + '" id="inq-' + x.id + '">' +
@@ -121,11 +149,11 @@
         '<div class="body">' + esc(x.message) + '</div>' +
         (photos ? '<div class="iphotos">' + photos + '</div>' : '') +
         '<label class="memo">내부 메모 <small>(고객에게 보이지 않음 · 입력 후 다른 곳을 누르면 저장)</small><textarea rows="2" data-memo="' + x.id + '" placeholder="예) 10/15 현장 방문 예정, 견적 1,800만원 제출">' + esc(x.memo || '') + '</textarea></label>' +
-        '<div class="acts"><a class="tel" href="tel:' + esc(x.phone) + '">' + esc(x.phone) + ' 전화</a>' +
-        '<label style="flex-direction:row;align-items:center;gap:6px;font-weight:500">상태 <select data-id="' + x.id + '" aria-label="처리 상태">' + opts + '</select></label>' +
+        '<div class="acts"><a class="tel btn" href="tel:' + esc(x.phone) + '">' + PHONE_IC + esc(x.phone) + ' 전화</a>' +
+        '<div class="seg" data-id="' + x.id + '" role="group" aria-label="처리 상태">' + opts + '</div>' +
         (x.email_sent ? '' : '<span class="warn">알림 메일 미발송' + (x.email_error ? ': ' + esc(x.email_error) : '') + '</span>') +
         erpTag(x) +
-        '<button type="button" class="link del" data-del="' + x.id + '">삭제</button>' +
+        moreMenu('<button type="button" class="del" data-del="' + x.id + '">완전히 지우기…</button>') +
         '</div></article>';
     }).join('');
   }
@@ -158,17 +186,16 @@
     });
   });
   // 처리 상태 바꾸기 (신규 → 처리중 → 완료)
-  $('#inqList').addEventListener('change', function (e) {
-    var sel = e.target; if (!sel.dataset || !sel.dataset.id || sel.tagName !== 'SELECT') return;
-    var id = +sel.dataset.id, it = inquiries.filter(function (x) { return x.id === id; })[0], prev = it && it.status;
-    sel.disabled = true;
-    api('/api/admin/inquiries/' + id, { method: 'POST', json: { status: sel.value } }).then(function (d) {
-      sel.disabled = false;
-      if (!d.ok) { sel.value = prev; return alert(d.error || '상태를 바꾸지 못했습니다.'); }
-      if (it) it.status = sel.value;
+  $('#inqList').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-st]'); if (!b || b.classList.contains('on')) return;
+    var seg = b.parentNode, id = +seg.dataset.id, it = inquiries.filter(function (x) { return x.id === id; })[0], st = b.dataset.st;
+    $$('button', seg).forEach(function (x) { x.disabled = true; });
+    api('/api/admin/inquiries/' + id, { method: 'POST', json: { status: st } }).then(function (d) {
+      if (!d.ok) { $$('button', seg).forEach(function (x) { x.disabled = false; }); return alert(d.error || '상태를 바꾸지 못했습니다.'); }
+      if (it) it.status = st;
       renderInquiries();
       $('#dNew').textContent = inquiries.filter(function (x) { return x.status === 'new'; }).length;
-    }, function () { sel.disabled = false; sel.value = prev; alert('연결 오류로 상태를 바꾸지 못했습니다.'); });
+    }, function () { $$('button', seg).forEach(function (x) { x.disabled = false; }); alert('연결 오류로 상태를 바꾸지 못했습니다.'); });
   });
   $('#inqList').addEventListener('click', function (e) {
     var b = e.target.closest('[data-del]'); if (!b) return;
@@ -620,17 +647,18 @@
         return '<article class="post' + (c.visible ? '' : ' hidden') + (c.pinned ? ' pinned' : '') + '"><div class="ph"><img src="' + esc(cover) + '" alt="" loading="lazy"><span class="cnt">사진 ' + c.photos.length + '장</span>' + (c.pinned ? '<span class="pin">📌 맨 앞 고정</span>' : c.sunk ? '<span class="pin sunk">⬇ 맨 뒤</span>' : '') + '</div>' +
           '<span class="pcat">' + esc(CATS[c.cat] || '') + '</span><div class="t">' + esc(c.title) + (c.visible ? '' : ' (숨김)') + '</div><div class="s">' + esc([c.site, c.taken_at ? '설치 ' + c.taken_at.slice(0, 7) : '등록 ' + (c.created_at || '').slice(0, 10)].filter(Boolean).join(' · ')) + '</div>' + (c.note ? '<div class="s note">🔒 ' + esc(c.note) + '</div>' : '') +
           '<div class="s tags">' + ((c.tags || []).length ? c.tags.map(function (k) { return '#' + esc(tagLabel[k] || k); }).join(' ') : '꼬리표 없음') + '</div>' +
-          '<div class="a"><button type="button" class="link" data-act="edit" data-id="' + c.id + '">수정</button>' +
-          '<button type="button" class="link" data-act="pin" data-id="' + c.id + '" data-v="' + c.pinned + '">' + (c.pinned ? '고정 풀기' : '맨 앞 고정') + '</button>' +
-          '<button type="button" class="link" data-act="sink" data-id="' + c.id + '" data-v="' + c.sunk + '">' + (c.sunk ? '순서 원래대로' : '맨 뒤로') + '</button>' +
-          '<a class="link" href="/case.html?id=' + c.id + '" target="_blank" rel="noopener">보기</a>' +
-          '<button type="button" class="link" data-act="toggle" data-id="' + c.id + '" data-v="' + c.visible + '">' + (c.visible ? '숨기기' : '보이기') + '</button>' +
-          '<button type="button" class="link del" data-act="del" data-id="' + c.id + '">삭제</button></div></article>';
+          '<div class="a"><button type="button" class="link" data-act="edit" data-id="' + c.id + '">고치기</button>' +
+          moreMenu('<a href="/case.html?id=' + c.id + '" target="_blank" rel="noopener">홈페이지에서 보기</a>' +
+          '<button type="button" data-act="pin" data-id="' + c.id + '" data-v="' + c.pinned + '">' + (c.pinned ? '고정 풀기' : '맨 앞 고정') + '</button>' +
+          '<button type="button" data-act="sink" data-id="' + c.id + '" data-v="' + c.sunk + '">' + (c.sunk ? '순서 원래대로' : '맨 뒤로') + '</button>' +
+          '<button type="button" data-act="toggle" data-id="' + c.id + '" data-v="' + c.visible + '">' + (c.visible ? '숨기기' : '보이기') + '</button>' +
+          '<button type="button" class="del" data-act="del" data-id="' + c.id + '">완전히 지우기…</button>') + '</div></article>';
       }).join('');
     }
   }
   $('#caseList').addEventListener('click', function (e) {
-    var b = e.target.closest('button'); if (!b) return;
+    var b = e.target.closest('button[data-act]'); if (!b) return;
+    var m = b.closest('details.more'); if (m) m.open = false;
     var id = +b.dataset.id, post = cases.filter(function (c) { return c.id === id; })[0];
     if (b.dataset.act === 'edit') openEditor(post);
     else if (b.dataset.act === 'toggle') api('/api/admin/cases/' + id + '/visible', { method: 'POST', json: { visible: b.dataset.v !== '1' } }).then(function () { loadCases(true); });
@@ -749,7 +777,13 @@
       $('#dMobile').textContent = d.mobileShare == null ? '' : '휴대폰 ' + d.mobileShare + '% · PC ' + (100 - d.mobileShare) + '%';
       drawChart(d.days); drawSources(d.sources); drawPages(d.pages);
     });
-    loadVisits(); loadStaff(); loadGsc();
+    loadGsc();
+  }
+  // 방문 기록 (2026-11-23 — 한눈에 보기에서 옮김: 관리자를 열 때마다 방문 목록을 읽지 않음)
+  var visitAt = 0;
+  function loadVisitTab() {
+    if (Date.now() - visitAt < 20000) return; visitAt = Date.now();
+    loadVisits(); loadStaff();
   }
 
   /* ---------- 같은 손님의 방문 모두 보기 (재방문 구분) ---------- */

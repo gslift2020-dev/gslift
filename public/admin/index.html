@@ -6,43 +6,43 @@
 <meta name="robots" content="noindex, nofollow">
 <title>관리자 | 거산리프트</title>
 <link rel="icon" href="/favicon.png">
-<link rel="stylesheet" href="/admin/admin.css?v=7181dbab">
+<link rel="preload" href="/admin/fonts/Pretendard-Regular.subset.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/admin/admin.css?v=f51bb23f">
 </head>
 <body>
 
-<header class="top">
-<div class="wrap">
-<a href="/" class="brand" target="_blank" rel="noopener"><img src="/assets/img/logo.webp" alt="거산리프트 홈페이지 열기" width="600" height="256"><span>관리자</span></a>
-<button type="button" class="link" id="logoutBtn" hidden>로그아웃</button>
-</div>
-</header>
-
 <!-- 로그인 -->
-<main id="loginView" class="wrap narrow" hidden>
+<main id="loginView" class="login" hidden>
 <form id="loginForm" class="panel">
-<h1>관리자 로그인</h1>
+<a href="/" class="brand" target="_blank" rel="noopener"><img src="/assets/img/logo.webp" alt="거산리프트 홈페이지 열기" width="600" height="256"><span class="mark">관리자</span></a>
+<h1 class="h1">관리자 로그인</h1>
 <label>비밀번호<input type="password" name="password" autocomplete="current-password" required></label>
 <button type="submit" class="btn">로그인</button>
 <p class="msg" id="loginMsg" role="status" aria-live="polite"></p>
 </form>
 </main>
 
-<!-- 관리 화면 -->
-<main id="appView" class="wrap" hidden>
-<nav class="tabs" role="tablist" aria-label="관리 메뉴">
-<button type="button" role="tab" class="on" data-tab="dash" aria-selected="true">한눈에 보기</button>
-<button type="button" role="tab" data-tab="inq" aria-selected="false">문의 <b id="newCount" class="badge" hidden></b></button>
-<button type="button" role="tab" data-tab="cases" aria-selected="false">설치사례</button>
-<button type="button" role="tab" data-tab="bulk" aria-selected="false">사진 대량 올리기</button>
-<button type="button" role="tab" data-tab="notice" aria-selected="false">공지사항</button>
-<button type="button" role="tab" data-tab="hero" aria-selected="false">메인 화면 사진</button>
-<button type="button" role="tab" data-tab="yt" aria-selected="false">유튜브 영상</button>
-<button type="button" role="tab" data-tab="faq" aria-selected="false">자주 묻는 질문</button>
-<button type="button" role="tab" data-tab="co" aria-selected="false">회사 정보</button>
+<!-- 관리 화면 (2026-11-23 안 B: 메뉴 5개 — 업무앱과 같은 '조용한 도구형') -->
+<div id="appView" class="shell" hidden>
+<nav class="side" aria-label="관리 메뉴">
+<a href="/" class="brand" target="_blank" rel="noopener"><img src="/assets/img/logo.webp" alt="거산리프트 홈페이지 열기" width="600" height="256"><span class="mark">관리자</span></a>
+<div class="menu" role="tablist">
+<button type="button" role="tab" class="on" data-tab="dash" aria-selected="true"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg><span class="lg">한눈에 보기</span><span class="sm">한눈에</span></button>
+<button type="button" role="tab" data-tab="inq" aria-selected="false"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg><span>문의</span><b id="newCount" class="badge" hidden></b></button>
+<button type="button" role="tab" data-tab="cases" aria-selected="false"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg><span>설치사례</span></button>
+<button type="button" role="tab" data-tab="visits" aria-selected="false"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><span>방문 기록</span></button>
+<button type="button" role="tab" data-tab="site" aria-selected="false"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg><span class="lg">홈페이지 내용</span><span class="sm">홈페이지</span></button>
+</div>
+<div class="side-foot">
+<a class="mi" href="/" target="_blank" rel="noopener" aria-label="홈페이지 열기"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg><span>홈페이지 열기</span></a>
+<button type="button" class="mi" id="logoutBtn" hidden aria-label="로그아웃"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg><span>로그아웃</span></button>
+</div>
 </nav>
 
+<main class="content">
 <!-- ===== 한눈에 보기 ===== -->
 <section id="tab-dash" role="tabpanel">
+<div class="head"><h1 class="h1">한눈에 보기</h1></div>
 <div class="kpis" id="dashKpis">
 <div class="kpi"><small>오늘 방문자</small><b id="dToday">-</b><span class="sub" id="dTodayPv"></span></div>
 <div class="kpi"><small>어제 방문자</small><b id="dYest">-</b></div>
@@ -57,7 +57,7 @@
 <div id="vTable" hidden></div>
 </div>
 <div class="dash-2">
-<div class="panel"><h2>어디서 들어왔나 · 문의 <small>(최근 30일 · 괄호는 방문 대비 문의 비율 · '첫 경로' = 다시 와서 문의한 손님을 처음 들어온 경로로 센 문의 수, 11/12~)</small></h2><div id="dSources" class="hbars"><p class="empty">아직 기록이 없습니다.</p></div>
+<div class="panel"><h2>어디서 들어왔나 · 문의 <small>최근 30일 · 괄호 = 방문 대비 문의 비율 · '첫 경로' = 다시 와서 문의한 손님을 처음 경로로 센 수(11/12~)</small></h2><div id="dSources" class="hbars"><p class="empty">아직 기록이 없습니다.</p></div>
 <details class="srchelp"><summary>홍보물별로 따로 세는 주소</summary><p>홍보물마다 주소 끝에 이름표를 붙이면 여기서 따로 셉니다.</p><ul>
 <li>네이버 광고: <code>gslift.kr/?utm_source=naver</code></li><li>카카오 광고: <code>gslift.kr/?utm_source=kakao</code></li>
 <li>명함 QR: <code>gslift.kr/?utm_source=qr</code> · 명함 글자: <code>?utm_source=card</code></li>
@@ -65,87 +65,44 @@
 <li>카톡으로 보낼 때: <code>?utm_source=kakaotalk</code> · 블로그·유튜브: <code>?utm_source=blog</code> · <code>?utm_source=youtube</code></li>
 <li>같은 홍보물 안에서 더 나누려면: <code>&amp;utm_campaign=이름</code> (예: <code>?utm_source=card&amp;utm_campaign=2026명함</code>) → '최근 방문'의 광고 이름표에 보임</li>
 </ul><p>이름표가 없는 카카오톡 앱 안의 방문도 '카카오톡'으로 나눠 셉니다. 2026-10-30 전 '네이버 검색'에는 네이버 블로그·카페에서 온 방문도 섞여 있습니다.</p></details></div>
-<div class="panel"><h2>많이 본 페이지 <small>(최근 30일)</small></h2><ol id="dPages" class="toplist"><li class="empty">아직 기록이 없습니다.</li></ol></div>
+<div class="panel"><h2>많이 본 페이지 <small>최근 30일</small></h2><ol id="dPages" class="toplist"><li class="empty">아직 기록이 없습니다.</li></ol></div>
 </div>
 <div class="panel" id="gscPanel">
 <div class="ph-head"><h2>구글 검색어 <small id="gscRange">(구글 서치 콘솔 · 최근 28일)</small></h2><button type="button" class="link" id="gscRefresh" hidden>새로 고침</button></div>
 <div id="gscBody"><p class="empty">불러오는 중…</p></div>
-<p class="hint">구글은 방문 주소에 검색어를 주지 않아서 '최근 방문'에는 '검색어 비공개'로 나옵니다. 이 표는 구글이 따로 모아 주는 숫자입니다: <b>노출</b> = 구글 검색 결과에 우리 홈페이지가 보인 횟수, <b>클릭</b> = 그중 눌러서 들어온 횟수, <b>순위</b> = 검색 결과에서 평균 몇 번째였는지(1이 맨 위). 자료는 2~3일 늦게 쌓이고, 아주 드문 검색어는 개인정보 보호로 구글이 빼고 줍니다(그래서 표의 합이 위 합계보다 작을 수 있음). 12시간마다 새로 받습니다.</p>
-</div>
-<div class="panel" id="visitPanel">
-<div class="ph-head"><h2>최근 방문 <small>(방문 1건씩 · 30분 안에 이어 본 페이지는 1건 · 90일 보관)</small></h2>
-<div class="seg" id="vRange" role="group" aria-label="기간"><button type="button" data-r="today" class="on">오늘</button><button type="button" data-r="yesterday">어제</button><button type="button" data-r="7d">최근 7일</button></div></div>
-<div class="vfilter"><label>경로 <select id="vSrc" aria-label="경로로 거르기"><option value="">전체</option></select></label>
-<label class="vchk"><input type="checkbox" id="vHideBot" checked> 로봇 의심 숨기기</label><label class="vchk"><input type="checkbox" id="vHideStaff" checked> 직원 숨기기</label></div>
-<p id="vSum" class="vsum"></p>
-<div id="vList" class="vlist"><p class="empty">불러오는 중…</p></div>
-<details class="srchelp"><summary>판정 기준 · 로봇으로 처리한 접속망 (<span id="netCount">0</span>)</summary>
-<ul>
-<li><b>직원</b>: 관리자에 로그인한 적 있는 기기, <code>?gs_staff=1</code>을 연 기기, 등록한 회사 인터넷 → 합계에서 빠짐</li>
-<li><b>로봇 의심</b>: 데이터센터 접속망(Google·Amazon·Microsoft·Tencent 등), 자동 프로그램·로봇 이름, 아주 오래된 크롬, 아래 목록에 등록한 접속망 → 합계에서 빠짐. 아이폰 비공개 릴레이(Cloudflare·Akamai·Fastly + 사파리)는 사람으로 봄</li>
-<li><b>확인 필요</b>: 해외 · 직접 입력 · 1쪽 · 행동 없음 → 합계에는 들어감. 로봇이 맞으면 "이 접속망은 로봇으로 처리"</li>
-<li><b>견적 문의를 했거나 전화번호를 누른 방문은 접속망과 관계없이 사람</b>으로 보고, 그때 합계에 넣습니다.</li>
-<li>"사람으로 표시·로봇으로 표시"는 이 목록의 표시만 바꿉니다(이미 지난 날짜별 합계는 그대로).</li>
-<li><b>재방문</b>(2026-11-12부터): 같은 기기·같은 브라우저로 다시 오면 경로 칸 아래에 "3번째 방문 · 첫 11/4 네이버 광고 '검색어'"가 나옵니다. "이 손님 방문 모두 보기"를 누르면 그 손님의 지난 방문(90일 안)이 보입니다. 회사 PC와 휴대폰, 카톡 안 화면과 크롬은 서로 다른 손님으로 잡혀 실제보다 적게 보입니다. "기록 시작 전에도 옴" = 이 기능을 올리기 전에도 온 적 있는 브라우저.</li>
-<li>행동: 머문 시간은 방문 전체, 스크롤은 처음 들어온 페이지에서 가장 깊이 내려간 정도, 누른 것은 사이트 전체(사례 열어 봄·전화·견적 버튼·견적 양식 입력). '사례 구역 봄'·'견적 구역 봄'은 첫 화면에서 그 구역이 화면 절반 이상을 1초 넘게 차지했다는 뜻(2026-11-11부터 기록). 사이트를 떠날 때 마지막 행동이 빠질 수 있습니다.</li>
-</ul>
-<ul id="netList" class="iplist"></ul>
+<details class="more-help"><summary>노출 · 클릭 · 순위 보는 법</summary><p class="hint">구글은 방문 주소에 검색어를 주지 않아서 '최근 방문'에는 '검색어 비공개'로 나옵니다. 이 표는 구글이 따로 모아 주는 숫자입니다: <b>노출</b> = 구글 검색 결과에 우리 홈페이지가 보인 횟수, <b>클릭</b> = 그중 눌러서 들어온 횟수, <b>순위</b> = 검색 결과에서 평균 몇 번째였는지(1이 맨 위). 자료는 2~3일 늦게 쌓이고, 아주 드문 검색어는 개인정보 보호로 구글이 빼고 줍니다(그래서 표의 합이 위 합계보다 작을 수 있음). 12시간마다 새로 받습니다.</p>
 </details>
-<p class="hint">검색어는 들어온 주소에 담겨 온 경우만 보입니다(네이버·다음은 대부분, 구글은 주지 않음 → 구글 서치 콘솔에서 확인). 지역은 접속 위치로 추정한 대략의 시·도이고, 휴대폰 데이터는 서울·경기로 나오는 경우가 많습니다. 접속망은 통신사·서버 회사 이름이며 IP 주소는 저장하지 않습니다.</p>
 </div>
-
-<div class="panel" id="staffPanel">
-<h2>회사 사람 방문 빼기</h2>
-<div class="staff-grid">
-<div class="staff-box">
-<h3>1. 이 기기 빼기 <small>(휴대폰·PC 브라우저마다)</small></h3>
-<p>이 기기·이 브라우저로 홈페이지를 볼 때 '직원'으로 기록하고 통계에서 뺍니다. <b>관리자에 로그인하면 자동으로 표시</b>되고, 로그아웃해도 계속 빠집니다.</p>
-<p class="staff-state" id="staffState"></p>
-<button type="button" class="btn small" id="staffBtn">이 기기는 통계에서 빼기</button>
-<p class="hint">직원 휴대폰은 아래 주소를 <b>평소 홈페이지를 보는 브라우저</b>(크롬·삼성 인터넷·사파리)에서 한 번 열면 됩니다. 카카오톡으로 받은 링크는 카톡 안 브라우저에만 적용되므로, 카톡 안과 바깥 브라우저 둘 다 한 번씩 여는 것이 좋습니다.<br><code>gslift.kr/?gs_staff=1</code> · 다시 넣기: <code>gslift.kr/?gs_staff=0</code><br>브라우저 방문 기록·사이트 데이터를 지우면 풀리므로 다시 열어야 합니다.</p>
-</div>
-<div class="staff-box">
-<h3>2. 회사 인터넷 빼기 <small>(사무실·공장 와이파이)</small></h3>
-<p>회사 와이파이·유선 인터넷으로 들어온 방문은 기기와 상관없이 모두 뺍니다. 사무실·공장에서 이 화면을 열고 아래 버튼을 누르세요. 휴대폰 데이터(LTE·5G)로 볼 때는 이 방법으로 빠지지 않으니 1번도 함께 하세요.</p>
-<p class="staff-state" id="ipState"></p>
-<div class="staff-add"><input type="text" id="ipName" maxlength="30" placeholder="이름 (예: 김포 사무실 와이파이)" aria-label="인터넷 이름"><button type="button" class="btn small" id="ipAdd">지금 이 인터넷 주소 등록</button></div>
-<ul id="ipList" class="iplist"></ul>
-<p class="hint">통신사가 회사 인터넷 주소를 가끔 바꿉니다. 회사에서 본 방문이 다시 목록에 보이면 한 번 더 등록하세요. 등록 후 반영까지 최대 5분 걸립니다.</p>
-</div>
-</div>
-</div>
-
-<p class="hint">같은 날 같은 기기는 1명으로 셉니다. 관리자로 로그인한 상태의 방문, 검색엔진 로봇, 위에서 뺀 회사 기기·인터넷은 세지 않습니다. 더 자세한 통계는 Cloudflare → Web Analytics에서 볼 수 있습니다.</p>
+<div class="moved"><span>최근 방문(1건씩) · 판정 기준 · 회사 사람 방문 빼기는 <b>방문 기록</b>에 있습니다.</span><button type="button" class="link" data-go="visits">방문 기록 열기</button></div>
 </section>
 
 <!-- ===== 문의 ===== -->
 <section id="tab-inq" role="tabpanel" hidden>
-<div class="kpis" id="kpis">
-<div class="kpi warn"><small>처리 안 한 신규 문의</small><b id="kNew">-</b></div>
-<div class="kpi"><small>이번 달 문의</small><b id="kMonth">-</b></div>
-<div class="kpi"><small>지난 30일 문의</small><b id="k30">-</b></div>
-<div class="kpi"><small>전체 문의</small><b id="kAll">-</b></div>
-</div>
-<div class="bar">
-<input type="search" id="inqSearch" class="search" placeholder="회사명·이름·연락처·내용으로 검색" aria-label="문의 검색">
-<button type="button" class="link" id="csvBtn">엑셀로 내려받기</button>
-</div>
+<div class="head"><h1 class="h1">문의</h1><span class="sumline">이번 달 <b id="kMonth">-</b>건 · 지난 30일 <b id="k30">-</b>건 · 전체 <b id="kAll">-</b>건 <small>(휴지통 뺌)</small></span></div>
 <div class="bar">
 <div class="filters" id="filters">
-<button type="button" class="on" data-f="all">전체</button>
-<button type="button" data-f="new">신규</button>
-<button type="button" data-f="done">처리완료</button>
-<button type="button" data-f="hold">보류</button>
-<button type="button" data-f="trash">휴지통</button>
+<button type="button" class="on" data-f="all">전체 <i></i></button>
+<button type="button" data-f="new">신규 <i id="kNew"></i></button>
+<button type="button" data-f="done">처리완료 <i></i></button>
+<button type="button" data-f="hold">보류 <i></i></button>
+<button type="button" data-f="trash">휴지통 <i></i></button>
 </div>
-<button type="button" class="link" id="reloadInq">새로고침</button>
+<span class="grow"></span>
+<input type="search" id="inqSearch" class="search" placeholder="회사명·이름·연락처·내용으로 찾기" aria-label="문의 찾기">
+<button type="button" class="btn ghost" id="csvBtn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>엑셀 받기</button>
+<button type="button" class="btn ghost icon" id="reloadInq" aria-label="새로고침" title="새로고침"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg></button>
 </div>
 <div id="inqList" class="list"><p class="empty">불러오는 중…</p></div>
 </section>
 
 <!-- ===== 설치사례 ===== -->
 <section id="tab-cases" role="tabpanel" hidden>
-<div class="bar"><h2>설치사례 글</h2><button type="button" class="btn small" id="newCaseBtn">+ 새 글 쓰기</button></div>
+<div class="head"><h1 class="h1">설치사례</h1></div>
+<div class="bar">
+<button type="button" class="btn" id="newCaseBtn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>새 글 쓰기</button>
+<button type="button" class="btn ghost" data-go="bulk"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>여러 현장 한꺼번에 올리기</button>
+<button type="button" class="btn ghost" id="impGo" title="Claude가 정리해 둔 설치사례를 홈페이지에 올립니다. 끝날 때까지 자동으로 이어서 올리니 창을 닫지 마세요.">가져오기 실행</button><span class="msg" id="impMsg"></span>
+</div>
 
 <form id="caseForm" class="panel editor" hidden novalidate>
 <div class="ed-head"><h2 id="caseFormTitle">새 설치사례</h2><button type="button" class="link" id="caseCancel">닫기</button></div>
@@ -202,24 +159,24 @@
 
 <div class="bar">
 <div class="filters" id="caseFilters"><button type="button" class="on" data-f="all">전체 <i></i></button><button type="button" data-f="fl">화물용(F/L) <i></i></button><button type="button" data-f="tl">테이블(T/L) <i></i></button><button type="button" data-f="st">스태커 <i></i></button></div>
-<input type="search" id="caseSearch" class="search" placeholder="제목·현장명으로 찾기" aria-label="설치사례 검색" style="max-width:280px">
+<span class="grow"></span>
+<input type="search" id="caseSearch" class="search" placeholder="제목·현장명으로 찾기" aria-label="설치사례 찾기">
 </div>
-<div class="bar"><p class="hint" style="margin:0">📌 <b>맨 앞 고정</b>을 누르면 홈페이지 설치사례 맨 앞에 나옵니다. 나머지는 설치 날짜 최신순입니다.</p>
-<label class="check" style="font-weight:500;font-size:14px"><input type="checkbox" id="hideSamples"> 홈페이지의 기본 예시 사례 12개 숨기기</label></div>
-<div class="notes-bulk imp-box"><div class="row-inline"><b>📥 Claude가 준비한 설치사례 가져오기</b> <span class="msg" id="impMsg"></span></div>
-<p class="hint" style="margin:6px 0">Claude가 정리해 둔 설치사례를 홈페이지에 올립니다. 누르면 끝날 때까지 자동으로 이어서 올리니 창을 닫지 마세요.</p>
-<button type="button" class="btn small" id="impGo">가져오기 실행</button></div>
-<details class="notes-bulk"><summary>🔒 내부 메모 한꺼번에 넣기 <small>(Claude가 드린 목록을 붙여넣기)</small></summary>
+<p class="hint">맨 앞 고정 글이 홈페이지 설치사례 맨 앞에 나오고, 나머지는 설치 날짜 최신순입니다. 「가져오기 실행」은 Claude가 준비한 설치사례를 올립니다(끝날 때까지 창을 닫지 마세요).</p>
+<div id="caseList" class="posts"><p class="empty">불러오는 중…</p></div>
+<div class="more-row"><button type="button" class="btn ghost" id="caseMore" hidden>더 보기</button></div>
+<details class="panel tools"><summary>가끔 쓰는 것 <small>내부 메모 한꺼번에 넣기 · 기본 예시 사례 숨기기</small></summary>
+<h3>🔒 내부 메모 한꺼번에 넣기 <small>(Claude가 드린 목록을 붙여넣기)</small></h3>
 <p class="hint">한 줄에 하나씩 <code>글번호 = 메모</code> 또는 <code>가져오기묶음#순서 = 메모</code> 형식입니다. 내부 메모는 관리자 화면에서만 보이고 홈페이지에는 나오지 않습니다.</p>
 <textarea id="notesText" rows="6" placeholder="2026-06-a#4 = 현장사진/2026년/6월/○○○"></textarea>
 <div class="row-inline"><button type="button" class="btn small" id="notesGo">메모 넣기</button><span class="msg" id="notesMsg"></span></div>
+<label class="check"><input type="checkbox" id="hideSamples"> 홈페이지의 기본 예시 사례 12개 숨기기</label>
 </details>
-<div id="caseList" class="posts"><p class="empty">불러오는 중…</p></div>
-<div class="more-row"><button type="button" class="btn small ghost" id="caseMore" hidden>더 보기</button></div>
 </section>
 
-<!-- ===== 사진 대량 올리기 ===== -->
+<!-- ===== 여러 현장 한꺼번에 올리기 (예전 '사진 대량 올리기' 탭 — 설치사례에서 엶) ===== -->
 <section id="tab-bulk" role="tabpanel" hidden>
+<div class="head"><h1 class="h1">여러 현장 한꺼번에 올리기</h1><button type="button" class="link" data-go="cases">← 설치사례로</button></div>
 <div class="panel">
 <h2>예전 사진 한꺼번에 올리기</h2>
 <ol class="steps">
@@ -244,8 +201,61 @@
 <div id="bulkGroups" class="bgroups"></div>
 </section>
 
-<!-- ===== 공지사항 ===== -->
-<section id="tab-notice" role="tabpanel" hidden>
+
+<!-- ===== 방문 기록 ===== -->
+<section id="tab-visits" role="tabpanel" hidden>
+<div class="head"><h1 class="h1">방문 기록</h1></div>
+<div class="panel" id="visitPanel">
+<div class="ph-head"><h2>최근 방문 <small>(방문 1건씩 · 30분 안에 이어 본 페이지는 1건 · 90일 보관)</small></h2>
+<div class="seg" id="vRange" role="group" aria-label="기간"><button type="button" data-r="today" class="on">오늘</button><button type="button" data-r="yesterday">어제</button><button type="button" data-r="7d">최근 7일</button></div></div>
+<div class="vfilter"><label>경로 <select id="vSrc" aria-label="경로로 거르기"><option value="">전체</option></select></label>
+<label class="vchk"><input type="checkbox" id="vHideBot" checked> 로봇 의심 숨기기</label><label class="vchk"><input type="checkbox" id="vHideStaff" checked> 직원 숨기기</label></div>
+<p id="vSum" class="vsum"></p>
+<div id="vList" class="vlist"><p class="empty">불러오는 중…</p></div>
+<details class="srchelp"><summary>판정 기준 · 로봇으로 처리한 접속망 (<span id="netCount">0</span>)</summary>
+<ul>
+<li><b>직원</b>: 관리자에 로그인한 적 있는 기기, <code>?gs_staff=1</code>을 연 기기, 등록한 회사 인터넷 → 합계에서 빠짐</li>
+<li><b>로봇 의심</b>: 데이터센터 접속망(Google·Amazon·Microsoft·Tencent 등), 자동 프로그램·로봇 이름, 아주 오래된 크롬, 아래 목록에 등록한 접속망 → 합계에서 빠짐. 아이폰 비공개 릴레이(Cloudflare·Akamai·Fastly + 사파리)는 사람으로 봄</li>
+<li><b>확인 필요</b>: 해외 · 직접 입력 · 1쪽 · 행동 없음 → 합계에는 들어감. 로봇이 맞으면 "이 접속망은 로봇으로 처리"</li>
+<li><b>견적 문의를 했거나 전화번호를 누른 방문은 접속망과 관계없이 사람</b>으로 보고, 그때 합계에 넣습니다.</li>
+<li>"사람으로 표시·로봇으로 표시"는 이 목록의 표시만 바꿉니다(이미 지난 날짜별 합계는 그대로).</li>
+<li><b>재방문</b>(2026-11-12부터): 같은 기기·같은 브라우저로 다시 오면 경로 칸 아래에 "3번째 방문 · 첫 11/4 네이버 광고 '검색어'"가 나옵니다. "이 손님 방문 모두 보기"를 누르면 그 손님의 지난 방문(90일 안)이 보입니다. 회사 PC와 휴대폰, 카톡 안 화면과 크롬은 서로 다른 손님으로 잡혀 실제보다 적게 보입니다. "기록 시작 전에도 옴" = 이 기능을 올리기 전에도 온 적 있는 브라우저.</li>
+<li>행동: 머문 시간은 방문 전체, 스크롤은 처음 들어온 페이지에서 가장 깊이 내려간 정도, 누른 것은 사이트 전체(사례 열어 봄·전화·견적 버튼·견적 양식 입력). '사례 구역 봄'·'견적 구역 봄'은 첫 화면에서 그 구역이 화면 절반 이상을 1초 넘게 차지했다는 뜻(2026-11-11부터 기록). 사이트를 떠날 때 마지막 행동이 빠질 수 있습니다.</li>
+</ul>
+<ul id="netList" class="iplist"></ul>
+</details>
+<details class="more-help"><summary>검색어 · 지역 · 접속망 보는 법</summary><p class="hint">검색어는 들어온 주소에 담겨 온 경우만 보입니다(네이버·다음은 대부분, 구글은 주지 않음 → 구글 서치 콘솔에서 확인). 지역은 접속 위치로 추정한 대략의 시·도이고, 휴대폰 데이터는 서울·경기로 나오는 경우가 많습니다. 접속망은 통신사·서버 회사 이름이며 IP 주소는 저장하지 않습니다.</p></details>
+</div>
+
+<div class="panel" id="staffPanel">
+<h2>회사 사람 방문 빼기</h2>
+<div class="staff-grid">
+<div class="staff-box">
+<h3>1. 이 기기 빼기 <small>(휴대폰·PC 브라우저마다)</small></h3>
+<p>이 기기·이 브라우저로 홈페이지를 볼 때 '직원'으로 기록하고 통계에서 뺍니다. <b>관리자에 로그인하면 자동으로 표시</b>되고, 로그아웃해도 계속 빠집니다.</p>
+<p class="staff-state" id="staffState"></p>
+<button type="button" class="btn small" id="staffBtn">이 기기는 통계에서 빼기</button>
+<p class="hint">직원 휴대폰은 아래 주소를 <b>평소 홈페이지를 보는 브라우저</b>(크롬·삼성 인터넷·사파리)에서 한 번 열면 됩니다. 카카오톡으로 받은 링크는 카톡 안 브라우저에만 적용되므로, 카톡 안과 바깥 브라우저 둘 다 한 번씩 여는 것이 좋습니다.<br><code>gslift.kr/?gs_staff=1</code> · 다시 넣기: <code>gslift.kr/?gs_staff=0</code><br>브라우저 방문 기록·사이트 데이터를 지우면 풀리므로 다시 열어야 합니다.</p>
+</div>
+<div class="staff-box">
+<h3>2. 회사 인터넷 빼기 <small>(사무실·공장 와이파이)</small></h3>
+<p>회사 와이파이·유선 인터넷으로 들어온 방문은 기기와 상관없이 모두 뺍니다. 사무실·공장에서 이 화면을 열고 아래 버튼을 누르세요. 휴대폰 데이터(LTE·5G)로 볼 때는 이 방법으로 빠지지 않으니 1번도 함께 하세요.</p>
+<p class="staff-state" id="ipState"></p>
+<div class="staff-add"><input type="text" id="ipName" maxlength="30" placeholder="이름 (예: 김포 사무실 와이파이)" aria-label="인터넷 이름"><button type="button" class="btn small" id="ipAdd">지금 이 인터넷 주소 등록</button></div>
+<ul id="ipList" class="iplist"></ul>
+<p class="hint">통신사가 회사 인터넷 주소를 가끔 바꿉니다. 회사에서 본 방문이 다시 목록에 보이면 한 번 더 등록하세요. 등록 후 반영까지 최대 5분 걸립니다.</p>
+</div>
+</div>
+</div>
+
+<details class="more-help"><summary>방문자 수를 세는 법</summary><p class="hint">같은 날 같은 기기는 1명으로 셉니다. 관리자로 로그인한 상태의 방문, 검색엔진 로봇, 위에서 뺀 회사 기기·인터넷은 세지 않습니다. 더 자세한 통계는 Cloudflare → Web Analytics에서 볼 수 있습니다.</p></details>
+</section>
+
+<!-- ===== 홈페이지 내용 ===== -->
+<section id="tab-site" role="tabpanel" hidden>
+<div class="head"><h1 class="h1">홈페이지 내용</h1>
+<div class="seg" id="siteSeg" role="group" aria-label="고칠 곳"><button type="button" class="on" data-sub="notice">공지사항</button><button type="button" data-sub="hero">첫 화면 사진</button><button type="button" data-sub="yt">유튜브 영상</button><button type="button" data-sub="faq">자주 묻는 질문</button><button type="button" data-sub="co">회사 정보</button></div></div>
+<div id="tab-notice" class="site-sub" hidden>
 <div class="panel">
 <h2 id="ntFormTitle">새 공지 쓰기</h2>
 <p class="hint">홈페이지 "자주 묻는 질문" 위에 공지사항 칸이 생깁니다. 공지가 하나도 없으면 칸이 보이지 않습니다. (휴무 안내, 전화번호 변경, 신제품 소식 등)</p>
@@ -258,10 +268,9 @@
 </form>
 </div>
 <div id="ntList" class="list"><p class="empty">불러오는 중…</p></div>
-</section>
+</div>
 
-<!-- ===== 메인 화면 사진 ===== -->
-<section id="tab-hero" role="tabpanel" hidden>
+<div id="tab-hero" class="site-sub" hidden>
 <div class="panel">
 <h2>메인 화면 사진 (첫 화면 슬라이드)</h2>
 <p class="hint">홈페이지에 들어오면 처음 보이는 사진입니다. 세로 4:5로 잘리며 최대 10장, 5초마다 넘어갑니다. 한 장도 없으면 기본 사진이 나옵니다.</p>
@@ -282,10 +291,9 @@
 <button type="button" class="btn" id="heroSave">메인 화면에 저장</button>
 <p class="msg" id="heroMsg" role="status" aria-live="polite"></p>
 </div>
-</section>
+</div>
 
-<!-- ===== 유튜브 ===== -->
-<section id="tab-yt" role="tabpanel" hidden>
+<div id="tab-yt" class="site-sub" hidden>
 <div class="panel">
 <h2>홈페이지에 보여줄 유튜브 영상</h2>
 <p class="hint">유튜브 영상 주소를 붙여넣으세요 (예: https://youtu.be/… 또는 https://www.youtube.com/watch?v=…). 첫 번째 영상이 크게 나오고, 나머지는 아래 목록으로 나옵니다. 비워두면 채널의 최신 영상 목록이 나옵니다.</p>
@@ -301,10 +309,9 @@
 <li>시청자층이 <b>아동용</b>으로 설정된 영상은 일부 기능이 제한될 수 있습니다</li>
 </ol></details>
 </div>
-</section>
+</div>
 
-<!-- ===== 자주 묻는 질문 ===== -->
-<section id="tab-faq" role="tabpanel" hidden>
+<div id="tab-faq" class="site-sub" hidden>
 <div class="panel">
 <h2>자주 묻는 질문</h2>
 <p class="hint">홈페이지 "자주 묻는 질문" 칸에 이 순서대로 나옵니다. 첫 번째 질문은 펼쳐진 상태로 보입니다. 기간·가격 같은 내용은 실제와 맞는지 꼭 확인해 주세요.</p>
@@ -313,10 +320,9 @@
 <button type="button" class="btn" id="faqSave">저장</button>
 <p class="msg" id="faqMsg" role="status" aria-live="polite"></p>
 </div>
-</section>
+</div>
 
-<!-- ===== 회사 정보 ===== -->
-<section id="tab-co" role="tabpanel" hidden>
+<div id="tab-co" class="site-sub" hidden>
 <form class="panel" id="coForm" novalidate>
 <h2>회사 정보</h2>
 <p class="hint">여기서 바꾸면 홈페이지 곳곳(문의 칸, 오시는 길, 맨 아래, 휴대폰 하단 전화 버튼, 검색엔진용 회사 정보)에 함께 바뀝니다. 저장 후 반영까지 최대 30초 걸릴 수 있습니다.</p>
@@ -347,9 +353,11 @@
 <button type="submit" class="btn">저장</button>
 <p class="msg" id="coMsg" role="status" aria-live="polite"></p>
 </form>
+</div>
 </section>
 </main>
+</div>
 
-<script src="/admin/admin.js?v=fef0a696" defer></script>
+<script src="/admin/admin.js?v=970d860e" defer></script>
 </body>
 </html>
