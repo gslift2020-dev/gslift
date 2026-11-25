@@ -91,6 +91,11 @@
     // ⋯ 메뉴: 바깥을 누르면 닫기
     $$('details.more[open]').forEach(function (d) { if (!d.contains(e.target)) d.open = false; });
   });
+  // 단추 모양이 아닌 칸(role=button, 예: 맨 위 「오늘 방문자」)도 키보드 Enter·Space로 (2026-11-25)
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var g = e.target.closest && e.target.closest('[data-go][role=button]'); if (g && g.tagName !== 'BUTTON') { e.preventDefault(); openTab(g.dataset.go); }
+  });
 
   /* ================= 문의 ================= */
   var inquiries = [], filter = 'all', erpOn = false;
